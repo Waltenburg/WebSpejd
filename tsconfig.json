@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+      "module": "commonjs",
+      "outDir": "Deployed",
+      "noImplicitAny": true,
+      "removeComments": true,
+      "preserveConstEnums": true,
+      "sourceMap": false
+    },
+    "files": [
+        "server.ts",
+    ]
+}
