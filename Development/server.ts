@@ -4,7 +4,7 @@ import * as fs from 'fs'
 const hostname = '127.0.0.1';
 const port = 3000;
 const server: http.Server = http.createServer(createServer);
-server.listen(port, hostname)
+server.listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`))
 
 class Lob {
     navn: string;
@@ -47,10 +47,8 @@ function createServer(req: http.IncomingMessage, res: http.ServerResponse): void
     function sendResponse(error: NodeJS.ErrnoException | null, data: Buffer) {
         if (isError(error))
             console.log("error")
-        else{
+        else
             res.write(data)
-            console.log("Server created")
-        }
         res.end()
 
         function isError(error: NodeJS.ErrnoException | null): error is NodeJS.ErrnoException {

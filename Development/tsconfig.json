@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "module": "commonjs",
-      "outDir": "Deployed",
+      "outDir": "../Deployed",
       "noImplicitAny": true,
       "removeComments": true,
       "preserveConstEnums": true,

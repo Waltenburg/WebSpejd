@@ -5,7 +5,7 @@ var fs = require("fs");
 var hostname = '127.0.0.1';
 var port = 3000;
 var server = http.createServer(createServer);
-server.listen(port, hostname);
+server.listen(port, hostname, function () { return console.log("Server is now listening at http://".concat(hostname, ":").concat(port)); });
 var Lob = (function () {
     function Lob(navn, antalPoster) {
         this.navn = navn;
@@ -40,10 +40,8 @@ function createServer(req, res) {
     function sendResponse(error, data) {
         if (isError(error))
             console.log("error");
-        else {
+        else
             res.write(data);
-            console.log("Server created");
-        }
         res.end();
         function isError(error) {
             return !(!error);
