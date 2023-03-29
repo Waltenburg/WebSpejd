@@ -24,6 +24,7 @@ var MIME;
     MIME["JSON"] = "application/JSON";
     MIME["css"] = "text/css";
     MIME["jgp"] = "image/jpg";
+    MIME["ico"] = "image/x-icon";
     MIME["any"] = "*/*";
 })(MIME || (MIME = {}));
 process.chdir(__dirname);
@@ -35,13 +36,11 @@ const server = http.createServer((req, res) => {
     console.log(`Request type: ${method}, URL: ${url}`);
     switch (method) {
         case "GET":
-            if (url.substring(0, 6) == "/file/") {
-                const path = url.substring(6);
-                getFile(path, file => {
-                    res.writeHead(200, { 'Content-Type': determineContentType(path) });
+            if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")) {
+                getFile(url, file => {
+                    res.writeHead(200, { 'Content-Type': determineContentType(url) });
                     res.end(file);
                 }, () => {
-                    console.log("Finding file unsuccesful. Wiriting error");
                     res.writeHead(400);
                     res.end();
                 });
@@ -59,11 +58,11 @@ const server = http.createServer((req, res) => {
                         }
                         break;
                     case "/space":
-                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.html);
+                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.jgp);
                         break;
                     default:
                         if (requestAcceptsFormat(headers, MIME.html, true))
-                            sendFileToClient(res, "ErrorPage/404Error.html", MIME.html);
+                            sendFileToClient(res, "404Error.html", MIME.html);
                         else {
                             res.writeHead(404);
                             res.end();
@@ -80,9 +79,9 @@ const server = http.createServer((req, res) => {
 }).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`));
 let determineContentType = (path) => {
     let split = path.split(".");
-    let extension = split[split.length - 1];
-    const extensions = ["css", "html", "jpg"];
-    const MIMEType = [MIME.css, MIME.html, MIME.jgp];
+    let extension = split[split.length - 1].toLowerCase();
+    const extensions = ["css", "html", "jpg", "json", "ico"];
+    const MIMEType = [MIME.css, MIME.html, MIME.jgp, MIME.JSON, MIME.ico];
     const index = extensions.indexOf(extension);
     if (index >= 0)
         return MIMEType[index];
@@ -101,6 +100,8 @@ let sendFileToClient = (res, path, contentType, failCallback) => {
     });
 };
 let getFile = (path, succesCallback, failCallback) => {
+    if (path[0] == '/')
+        path = path.substring(1);
     fs.readFile(path, (error, data) => {
         if (isError(error)) {
             console.log("error reading file: " + path);

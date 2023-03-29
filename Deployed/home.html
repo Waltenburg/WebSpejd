@@ -4,12 +4,42 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
+    <title>WebSpejd - Login</title>
+    <style>
+        body, html {
+            height: 100%;
+        }
+        .bg{
+            background-image: url(images/bg-login.jpg);
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            z-index: -10;
+        }
+        .header{
+            text-align: center;
+            font-size: 100px;
+            font-family: Verdana, Geneva, Tahoma, sans-serifS;
+        }
+        p{
+            text-align: center;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 3em;
+        }
+    </style>
 </head>
 <body>
-    <h1>Velkommen til WebSpejd!</h1>
-    <p>Nu burde ny tekst dukke op</p>
-    <input id="input">
-    <button id="button" onclick="clicked()">Indsend</button>
+    <div class="bg">
+        <img width="240" height="240" src="images/logo.png" decoding="async" sizes="(max-width: 240px) 85vw, 240px">
+        <h1 class="header" style="margin-top: -20%;">CCMR </h1>
+        <h1 class="header">WebSpejd </h1>
+        <div style="z-index: -5; width: 700px; height: 1200px; opacity: 60%; background-color: #000000; margin: auto; margin-top: auto;">
+            <p style="color: white; opacity: 100%;">Log ind med det udleverede login</p>
+            <input id="input">
+            <button id="button" onclick="clicked()">Indsend</button>
+        </div>
+    </div>
     <script>
         const input = document.getElementById("input")
         console.log("I HAVE THE POWER!")

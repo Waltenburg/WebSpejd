@@ -33,6 +33,7 @@ enum MIME{
     JSON = 'application/JSON',
     css = "text/css",
     jgp = "image/jpg",
+    ico = "image/x-icon",
     any = "*/*",
 }
 
@@ -49,13 +50,11 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
     switch (method){
         case "GET":
             //Handling requests for files
-            if(url.substring(0,6) == "/file/"){
-                const path = url.substring(6) 
-                getFile(path, file => {
-                    res.writeHead(200, {'Content-Type': determineContentType(path)})
+            if(url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")){
+                getFile(url, file => {
+                    res.writeHead(200, {'Content-Type': determineContentType(url)})
                     res.end(file)
                 }, () => {
-                    console.log("Finding file unsuccesful. Wiriting error")
                     res.writeHead(400)
                     res.end()
                 })
@@ -71,11 +70,11 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
                         }
                         break
                     case "/space":
-                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.html)
+                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.jgp)
                         break
                     default:
                         if(requestAcceptsFormat(headers, MIME.html, true))
-                            sendFileToClient(res, "ErrorPage/404Error.html", MIME.html)
+                            sendFileToClient(res, "404Error.html", MIME.html)
                         else{
                             res.writeHead(404)
                             res.end()
@@ -105,10 +104,10 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
 // })
 let determineContentType = (path: string): MIME => {
     let split = path.split(".")
-    let extension = split[split.length - 1]
+    let extension = split[split.length - 1].toLowerCase()
 
-    const extensions: string[] = ["css", "html", "jpg"]
-    const MIMEType: MIME[] = [MIME.css, MIME.html, MIME.jgp]
+    const extensions: string[] = ["css", "html", "jpg", "json", "ico"]
+    const MIMEType: MIME[] = [MIME.css, MIME.html, MIME.jgp, MIME.JSON, MIME.ico]
     const index = extensions.indexOf(extension)
     if(index >= 0)
         return MIMEType[index]
@@ -127,6 +126,8 @@ let sendFileToClient = (res: http.ServerResponse, path: string, contentType: str
     })
 }
 let getFile = (path: string, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>): void => {
+    if(path[0] == '/')
+        path = path.substring(1)
     fs.readFile(path, (error: NodeJS.ErrnoException | null, data: Buffer): void => {
         if (isError(error)){
             console.log("error reading file: " + path)
