@@ -7,12 +7,15 @@
 </head>
 <body>
     <h1>Velkommen til WebSpejd!</h1>
-    <p>Et online værktøj til at melde hvornår patruljer kommer og går</p>
-    <p>Skriv her et tal og indsend</p>
-    <input type="text">
-    <button>Indsend</button>
+    <p>Nu burde ny tekst dukke op</p>
+    <input type="number">
+    <button id="button" onclick="clicked()">Indsend</button>
     <script>
         console.log("I HAVE THE POWER!")
+
+        function clicked(){
+            fetch('http://127.0.0.1:3000').then(response => response.text()).then(json => console.log(json))
+        }
     </script>
 </body>
 </html>
