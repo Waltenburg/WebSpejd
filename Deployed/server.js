@@ -1,29 +1,109 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var http = require("http");
-var fs = require("fs");
-var process = require("process");
+const http = require("http");
+const fs = require("fs");
+const process = require("process");
+class Lob {
+    constructor(navn, antalPoster) {
+        this.navn = navn;
+        this.antalPoster = antalPoster;
+    }
+}
+class Post {
+    constructor(navn, omvej, åbningstid, lukketid, omvejLukketid) {
+        this.navn = navn;
+        this.omvej = omvej;
+        this.åbningstid = åbningstid;
+        this.lukketid = lukketid;
+        this.omvejLukketid = omvejLukketid;
+    }
+}
+var MIME;
+(function (MIME) {
+    MIME["html"] = "text/html";
+    MIME["JSON"] = "application/JSON";
+    MIME["css"] = "text/css";
+    MIME["jgp"] = "image/jpg";
+    MIME["any"] = "*/*";
+})(MIME || (MIME = {}));
 process.chdir(__dirname);
-var hostname = '127.0.0.1';
-var port = 3000;
-var server = http.createServer(function (req, res) {
-    var headers = req.headers, method = req.method, url = req.url;
-    var body;
-    var reqData = null;
-    req.on("error", function (error) { return console.log(error); })
-        .on('data', function (chunk) { body.push(chunk); })
-        .on('end', function () {
-        if (body != undefined)
-            reqData = Buffer.concat(body).toString();
-        console.log("Request type: ".concat(method, ", URL: ").concat(url, ", Data: ").concat(reqData));
+const hostname = '127.0.0.1';
+const port = 3000;
+let post = new Post("FugleZoo", false, "1600", "1800", "1715");
+const server = http.createServer((req, res) => {
+    const { headers, method, url } = req;
+    console.log(`Request type: ${method}, URL: ${url}`);
+    switch (method) {
+        case "GET":
+            if (url.substring(0, 6) == "/file/") {
+                const path = url.substring(6);
+                getFile(path, file => {
+                    res.writeHead(200, { 'Content-Type': determineContentType(path) });
+                    res.end(file);
+                }, () => {
+                    console.log("Finding file unsuccesful. Wiriting error");
+                    res.writeHead(400);
+                    res.end();
+                });
+            }
+            else {
+                switch (url) {
+                    case "/":
+                    case "/home":
+                        if (requestAcceptsFormat(headers, MIME.html, true)) {
+                            sendFileToClient(res, "home.html", MIME.html);
+                        }
+                        else {
+                            res.writeHead(406);
+                            res.end();
+                        }
+                        break;
+                    case "/space":
+                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.html);
+                        break;
+                    default:
+                        if (requestAcceptsFormat(headers, MIME.html, true))
+                            sendFileToClient(res, "ErrorPage/404Error.html", MIME.html);
+                        else {
+                            res.writeHead(404);
+                            res.end();
+                        }
+                        break;
+                }
+            }
+            break;
+        case "PUT":
+            break;
+        default:
+            break;
+    }
+}).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`));
+let determineContentType = (path) => {
+    let split = path.split(".");
+    let extension = split[split.length - 1];
+    const extensions = ["css", "html", "jpg"];
+    const MIMEType = [MIME.css, MIME.html, MIME.jgp];
+    const index = extensions.indexOf(extension);
+    if (index >= 0)
+        return MIMEType[index];
+    return MIME.any;
+};
+let sendFileToClient = (res, path, contentType, failCallback) => {
+    getFile(path, file => {
+        res.end(file);
+    }, () => {
+        if (failCallback == null) {
+            res.writeHead(404);
+            res.end();
+        }
+        else
+            failCallback();
     });
-    res.setHeader('Content-Type', 'text/html');
-    getFile('index.html', function (file) { return res.end(file); }, function () { res.writeHead(500); res.end(); });
-}).listen(port, hostname, function () { return console.log("Server is now listening at http://".concat(hostname, ":").concat(port)); });
-var getFile = function (path, succesCallback, failCallback) {
-    fs.readFile(path, function (error, data) {
+};
+let getFile = (path, succesCallback, failCallback) => {
+    fs.readFile(path, (error, data) => {
         if (isError(error)) {
-            console.log("error reading file " + path);
+            console.log("error reading file: " + path);
             if (failCallback != null)
                 failCallback();
         }
@@ -32,35 +112,27 @@ var getFile = function (path, succesCallback, failCallback) {
         function isError(error) { return !(!error); }
     });
 };
-var Lob = (function () {
-    function Lob(navn, antalPoster) {
-        this.navn = navn;
-        this.antalPoster = antalPoster;
+let requestAcceptsFormat = (header, format, strict) => {
+    let acceptedFormats = header.accept?.split(/[,;]+/);
+    strict == undefined ? true : strict;
+    for (let i = 0; i < acceptedFormats.length; i++) {
+        if (acceptedFormats[i] == format || (!strict && acceptedFormats[i] == "*/*"))
+            return true;
     }
-    return Lob;
-}());
-var Post = (function () {
-    function Post(navn, omvej, åbningstid, lukketid, omvejLukketid) {
-        this.navn = navn;
-        this.omvej = omvej;
-        this.åbningstid = åbningstid;
-        this.lukketid = lukketid;
-        this.omvejLukketid = omvejLukketid;
-    }
-    return Post;
-}());
+    return false;
+};
 function saveAsCSV(data, fileName, path) {
-    var csv = data.map(function (row) { return row.join(','); }).join('\n');
-    fs.writeFile("".concat(path, "/").concat(fileName, ".csv"), csv, function (err) {
+    const csv = data.map(row => row.join(',')).join('\n');
+    fs.writeFile(`${path}/${fileName}.csv`, csv, (err) => {
         if (err)
             throw err;
     });
 }
 function loadCSV(fileName, path) {
-    var data = fs.readFileSync("".concat(path, "/").concat(fileName, ".csv")).toString().split("\n").map(function (e) { return e.split(","); });
+    var data = fs.readFileSync(`${path}/${fileName}.csv`).toString().split("\n").map(e => e.split(","));
     return data;
 }
-var data = [
+const data = [
     ['1', '2', '3'],
     ['4', '5', '6'],
     ['7', '8', '9'],

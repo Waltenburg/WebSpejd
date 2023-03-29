@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
       "module": "commonjs",
+      "target": "es2020",
       "outDir": "../Deployed",
       "noImplicitAny": true,
       "removeComments": true,
       "preserveConstEnums": true,
-      "sourceMap": false
+      "sourceMap": false,
     },
     "files": [
         "server.ts",
