@@ -21,34 +21,83 @@
             text-align: center;
             font-size: 100px;
             font-family: Verdana, Geneva, Tahoma, sans-serifS;
+            opacity: 100%;
         }
-        p{
+        h2{
             text-align: center;
             font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
             font-size: 3em;
+            opacity: 100%;
+        }
+        p{
+            text-align: left;
+            margin-left: 5%;
+            margin-bottom: 5px;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 2.5em;
+            opacity: 100%;
+            color: white;
+        }
+        button{
+            opacity: 100%;
+            font-size: 2.5em;
+            width: 30%;
+            display: block;
+            margin: auto;
+            margin-top: 1em;
+        }
+        input{
+            opacity: 100%;
+            width: 90%;
+            height: 50px;
+            margin: auto;
+            display: block;
+            font-size: 2em;
+            /* text-align: center; */
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
 </head>
 <body>
     <div class="bg">
         <img width="240" height="240" src="images/logo.png" decoding="async" sizes="(max-width: 240px) 85vw, 240px">
         <h1 class="header" style="margin-top: -20%;">CCMR </h1>
         <h1 class="header">WebSpejd </h1>
-        <div style="z-index: -5; width: 700px; height: 1200px; opacity: 60%; background-color: #000000; margin: auto; margin-top: auto;">
-            <p style="color: white; opacity: 100%;">Log ind med det udleverede login</p>
-            <input id="input">
+        <div style="width: 700px; height: 1200px; opacity: 80%; background-color: #000000; margin: auto; margin-top: auto;">
+            <h2 style="color: white; opacity: 100%;">Log ind med det udleverede login</h2>
+            <p>Løbs-ID</p>
+            <input value="#0000" id="ID" oninput="IDChanged()" ><br>
+            <p>Kode</p>
+            <input value="LukMigInd" type="text" id="kode">
+
             <button id="button" onclick="clicked()">Indsend</button>
         </div>
     </div>
     <script>
-        const input = document.getElementById("input")
-        console.log("I HAVE THE POWER!")
-
+        const ID = document.getElementById("ID")
+        const kode = document.getElementById("kode")
+        // // let encrypt = CryptoJS.AES.encrypt("ThisShallBe", "password")
+        // // let decrypt = CryptoJS.AES.decrypt(encrypt, "password")
+        // console.log(encrypt)
+        // console.log(decrypt.toString(CryptoJS.enc.Utf8))
+        console.log(ID.value)
+        let IDChanged = () =>{
+            const text = ID.value
+            if(text[0] != "#"){
+                ID.value = '#' + text
+                
+            }
+        }
         function clicked(){
-            fetch('/post',{
-                //method: "GET",
-                //body: JSON.stringify({"value": input.value}),
+            if(ID.value.match("^#[0-9]{4}\$") && kode.value.match("^[a-zA-Z0-9]{6,15}\$")){
+                const id = ID.value + kode.value
+                // const encrypted = CryptoJS.AES.encrypt("id, kode.value", "passvode")
+                // console.log(encrypted)
+            fetch('/login',{
+                method: "POST",
+                body: JSON.stringify(id),
             }).then(response => response.text()).then(json => console.log(JSON.parse(json)))
+            }
         }
     </script>
 </body>

@@ -36,47 +36,92 @@ const server = http.createServer((req, res) => {
     console.log(`Request type: ${method}, URL: ${url}`);
     switch (method) {
         case "GET":
-            if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")) {
-                getFile(url, file => {
-                    res.writeHead(200, { 'Content-Type': determineContentType(url) });
-                    res.end(file);
-                }, () => {
-                    res.writeHead(400);
-                    res.end();
-                });
-            }
-            else {
-                switch (url) {
-                    case "/":
-                    case "/home":
-                        if (requestAcceptsFormat(headers, MIME.html, true)) {
-                            sendFileToClient(res, "home.html", MIME.html);
-                        }
-                        else {
-                            res.writeHead(406);
-                            res.end();
-                        }
-                        break;
-                    case "/space":
-                        sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.jgp);
-                        break;
-                    default:
-                        if (requestAcceptsFormat(headers, MIME.html, true))
-                            sendFileToClient(res, "404Error.html", MIME.html);
-                        else {
-                            res.writeHead(404);
-                            res.end();
-                        }
-                        break;
-                }
-            }
+            handleGET(req, res);
             break;
-        case "PUT":
+        case "POST":
+            handlePOST(req, res);
             break;
         default:
+            res.writeHead(400);
+            res.end();
             break;
     }
 }).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`));
+let handlePOST = (req, res) => {
+    const { headers, method, url } = req;
+    switch (url) {
+        case "/login":
+            getData(req, buffer => {
+                const value = buffer.toString();
+                const id = value.substring(1, 5);
+                const kode = value.substring(6);
+                console.log(`id: ${id} kode: ${kode}`);
+                getFile();
+                res.writeHead(200);
+                res.end();
+            }, () => {
+                res.writeHead(400);
+                res.end();
+            });
+            break;
+        default:
+            res.writeHead(400);
+            res.end();
+    }
+};
+let handleGET = (req, res) => {
+    const { headers, method, url } = req;
+    if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")) {
+        getFile(url, file => {
+            res.writeHead(200, { 'Content-Type': determineContentType(url) });
+            res.end(file);
+        }, () => {
+            res.writeHead(400);
+            res.end();
+        });
+    }
+    else {
+        switch (url) {
+            case "/":
+            case "/home":
+                if (requestAcceptsFormat(headers, MIME.html, true)) {
+                    sendFileToClient(res, "home.html", MIME.html);
+                }
+                else {
+                    res.writeHead(406);
+                    res.end();
+                }
+                break;
+            case "/space":
+                sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.jgp);
+                break;
+            default:
+                if (requestAcceptsFormat(headers, MIME.html, true))
+                    sendFileToClient(res, "404Error.html", MIME.html);
+                else {
+                    res.writeHead(404);
+                    res.end();
+                }
+                break;
+        }
+    }
+};
+let getData = (req, succesCallback, failCallback) => {
+    let body = [];
+    req.on("error", error => {
+        console.log(error);
+        if (failCallback != null)
+            failCallback();
+    }).on('data', chunk => {
+        body.push(chunk);
+    }).on('end', () => {
+        if (body != undefined) {
+            succesCallback(Buffer.concat(body));
+        }
+        else if (failCallback != null)
+            failCallback();
+    });
+};
 let determineContentType = (path) => {
     let split = path.split(".");
     let extension = split[split.length - 1].toLowerCase();
@@ -133,9 +178,3 @@ function loadCSV(fileName, path) {
     var data = fs.readFileSync(`${path}/${fileName}.csv`).toString().split("\n").map(e => e.split(","));
     return data;
 }
-const data = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-];
-saveAsCSV(data, "testData", ".");

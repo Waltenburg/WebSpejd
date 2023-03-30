@@ -1,0 +1,6 @@
+{
+    "name": "webspejd",
+    "scripts": {
+        "start": "node server.js"
+    }
+}
