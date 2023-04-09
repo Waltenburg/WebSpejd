@@ -28,6 +28,23 @@ class Post {
         this.omvejLukketid = omvejLukketid;
     }
 }
+class User {
+    kode: string
+    post: BigInt
+    identifier: string
+    master: boolean
+    constructor(
+        kode: string,
+        post: BigInt,
+        identifier: string,
+        master: boolean
+    ) {
+        this.kode = kode
+        this.post = post
+        this.identifier = identifier
+        this.master = master
+    }
+}
 enum MIME {
     html = "text/html",
     JSON = 'application/JSON',
@@ -40,6 +57,8 @@ enum MIME {
 process.chdir(__dirname);
 const hostname = '127.0.0.1';
 const port = 3000;
+
+let activeUsers: User[] = []
 
 let post: Post = new Post("FugleZoo", false, "1600", "1800", "1715")
 const server: http.Server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse): void => {
@@ -55,81 +74,120 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
             handlePOST(req, res)
             break
         default:
-        res.writeHead(400)
-        res.end()
+            res.writeHead(400)
+            res.end()
             break
 
     }
 }).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`))
 
-let handlePOST = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+const handlePOST = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
-    switch (url){
+    switch (url) {
         case "/login":
-            getData(req, buffer => {
-                const value = buffer.toString()
-                const id = value.substring(1, 5)
-                const kode = value.substring(6)
-                console.log(`id: ${id} kode: ${kode}`)
-                getFile()
-                res.writeHead(200)
-                res.end()
-            }, () => {
-                res.writeHead(400)
-                res.end()
-            })
-        break
+            handleLogin(req, res)
+            break
         default:
             res.writeHead(400)
             res.end()
 
     }
 }
+const handleLogin = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    getData(req, buffer => {
+        const requestData: any = JSON.parse(buffer.toString()) //TODO
+        getJSON(`secured/users-${requestData.id}.json`, userObject => {
+            //@ts-expect-error
+            const users: User[] = userObject.users as User[]
+            let foundUser = false
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].kode == requestData.kode) {
+                    sendResponse(res, 200, "master: " + users[i].master.toString()) //Kode passede med en bruger
+                    users[i].identifier = requestData.identifier
+                    activeUsers.push(users[i])
+                    foundUser = true
+                    i = users.length
+                }
+            }
+            if (foundUser == false)
+                sendResponse(res, 400)
+        }, () =>
+            sendResponse(res, 401)) //Løbs ID does not exist
+    },
+        () => {
+            sendResponse(res, 400) //Error reading data from client
+        })
+}
+
 //Handle all GET http requests
-let handleGET = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+const handleGET = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
-    
     //Checking if url is path to file. If it is it sends file.
     if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")) {
         getFile(url, file => {
             //Sending file
             res.writeHead(200, { 'Content-Type': determineContentType(url) })
             res.end(file)
-        }, () => {
-            //File did not exist
-            res.writeHead(400)
-            res.end()
         })
     } else { //The request is not just for a file
         switch (url) {
             case "/":
             case "/home": //Sending homepage
-                if (requestAcceptsFormat(headers, MIME.html, true)) {
-                    sendFileToClient(res, "home.html", MIME.html)
-                } else { //Error reading file
-                    res.writeHead(406)
-                    res.end()
-                }
+                sendFileToClient(res, "home.html")
                 break
             case "/space": //Space
-                sendFileToClient(res, "ErrorPage/img/bg.jpg", MIME.jgp)
+                sendFileToClient(res, "ErrorPage/img/bg.jpg")
                 break
             default: //If server does not recognise url as valid, but client is asking for html the 404 errorpage is send to client
-                if (requestAcceptsFormat(headers, MIME.html, true))
-                    sendFileToClient(res, "404Error.html", MIME.html)
-                else { //If even finding the error page fails....
-                    res.writeHead(404)
-                    res.end()
-                }
+                sendFileToClientIfRequestAcceptsFormat(req, res, "404Error.html")
                 break
         }
     }
 }
+const sendResponse = (res: http.ServerResponse, status: number, data?: string) => {
+    res.writeHead(status)
+    if (data != null){
+        res.write(data, 'utf8')
+        console.log(data)
+    }
+    res.end()
+}
+const getJSON = (path: string, succesCallback: singleParamCallback<object>, failCallback?: singleParamCallback<void>) => {
+    //Removing "/"" at the start of paths 
+    if (path[0] == '/')
+        path = path.substring(1)
 
-let getData = (req: http.IncomingMessage, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>) => {
+    fs.readFile(path, "utf-8", (error: NodeJS.ErrnoException | null, data: string): void => {
+        if (isError(error)) {
+            console.log("error reading file: " + path)
+            if (failCallback != null)
+                failCallback()
+        }
+        else
+            succesCallback(JSON.parse(data))
+
+        function isError(error: NodeJS.ErrnoException | null): error is NodeJS.ErrnoException { return !(!error) }
+    })
+
+}
+
+//Send file only if the request will accept the file type
+const sendFileToClientIfRequestAcceptsFormat = (req: http.IncomingMessage, res: http.ServerResponse, path: string, strict?: boolean) => {
+    if (requestAcceptsFormat(req.headers, determineContentType(path), strict)) {
+        sendFileToClient(res, path)
+    } else {
+        res.writeHead(406)
+        res.end()
+    }
+}
+
+
+//Gets data from request "req". On succes succesCallback is called 
+//THIS SHOULD ALSO BE ABLE TO RETURN STRING
+const getData = (req: http.IncomingMessage, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>) => {
     let body: Buffer[] = []
     req.on("error", error => {
-        console.log(error)
+        console.log("error in reading data from request: \n" + error)
         if (failCallback != null)
             failCallback()
     }).on('data', chunk => {
@@ -143,7 +201,9 @@ let getData = (req: http.IncomingMessage, succesCallback: singleParamCallback<Bu
     })
 
 }
-let determineContentType = (path: string): MIME => {
+
+//Determines the MIME type of file with path "path". Eg. "Deployed/home.html" will return in MIME.html
+const determineContentType = (path: string): MIME => {
     let split = path.split(".")
     let extension = split[split.length - 1].toLowerCase()
 
@@ -154,9 +214,13 @@ let determineContentType = (path: string): MIME => {
         return MIMEType[index]
     return MIME.any
 }
-let sendFileToClient = (res: http.ServerResponse, path: string, contentType: string, failCallback?: singleParamCallback<void>): void => {
+
+//Sends file with "path" to client with response "res".
+//On error in reading file it calls failCallback if given. If not given 404 error will be send to client.
+const sendFileToClient = (res: http.ServerResponse, path: string, failCallback?: singleParamCallback<void>): void => {
     getFile(path,
         file => {
+            res.setHeader("content_type", determineContentType(path))
             res.end(file)
         }, () => {
             if (failCallback == null) {
@@ -166,10 +230,23 @@ let sendFileToClient = (res: http.ServerResponse, path: string, contentType: str
                 failCallback()
         })
 }
-let getFile = (path: string, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>): void => {
+const getFile = (path: string, succesCallback: singleParamCallback<Buffer | string>, failCallback?: singleParamCallback<void>): void => {
+    //Removing "/"" at the start of paths 
     if (path[0] == '/')
         path = path.substring(1)
-    fs.readFile(path, (error: NodeJS.ErrnoException | null, data: Buffer): void => {
+
+    //Setting correct encoding type. Extensions in "extensionsWithUTF8" will be encoded with utf8. 
+    //Everything else will not be encoded beacuse "encoding" = null
+    const fileExtension: string = path.split('.')[1]
+    const extensionsWithUTF8: string[] = ["css", "html", "txt", "js"]
+    let encoding;
+    if (extensionsWithUTF8.includes(fileExtension))
+        encoding = "utf8"
+    else
+        encoding = null
+
+    //@ts-expect-error having "encoding" as a variable string raises error in typescript but not in javascript
+    fs.readFile(path, encoding, (error: NodeJS.ErrnoException | null, data: Buffer | string): void => {
         if (isError(error)) {
             console.log("error reading file: " + path)
             if (failCallback != null)
@@ -180,7 +257,7 @@ let getFile = (path: string, succesCallback: singleParamCallback<Buffer>, failCa
         function isError(error: NodeJS.ErrnoException | null): error is NodeJS.ErrnoException { return !(!error) }
     })
 }
-let requestAcceptsFormat = (header: http.IncomingHttpHeaders, format: string, strict?: boolean): boolean => {
+const requestAcceptsFormat = (header: http.IncomingHttpHeaders, format: string, strict?: boolean): boolean => {
     let acceptedFormats: string[] = header.accept?.split(/[,;]+/)
     strict == undefined ? true : strict
     for (let i = 0; i < acceptedFormats.length; i++) {
@@ -189,8 +266,8 @@ let requestAcceptsFormat = (header: http.IncomingHttpHeaders, format: string, st
     }
     return false;
 }
-interface singleParamCallback<T> {
-    (file: T): void
+interface singleParamCallback<Type> {
+    (file: Type): void
 }
 
 function saveAsCSV(data: string[][], fileName: string, path: string) {

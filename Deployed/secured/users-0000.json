@@ -1,0 +1,16 @@
+{
+    "users": [
+        {
+        "kode": "LukMigInd",
+        "post": 1,
+        "identity": "",
+        "master": false
+        },
+        {
+            "kode": "HokusPokus",
+            "post": "N/A",
+            "identity": "",
+            "master": true
+        }
+    ]
+}
