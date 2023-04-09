@@ -1,3 +1,22 @@
+//TODO
+    //Server-side{
+        //Implementer check for identifier når postMandskab.html og master.html tilgås
+        //Implementer svar på updates på hvor patruljer er (3)
+            //Funktion der finder brugeren ud fra den sendte indentifier (2)
+            //Datastruktur der holder styr på hvor alle patruljer er (1)
+    //}
+    //Client-side{
+        //Løbende checks på om nye patruljer er ankommet (4)
+        //Sandwich menu
+        //Side hvor man kan se samtlige patruljers navn og nummer
+    //}
+//Status: Implementeret at der fra klientens side sendes en POST request når der foretages en handling (ikke testet)
+//Er denne succesfuld vil handlingen gennemføres client-side.
+
+//Ideer{
+    //Filter så man kan se hvilken rækkefølge patruljer er ankommet og afgået fra til post
+//}
+
 import * as http from 'http'
 import * as fs from 'fs'
 
@@ -87,6 +106,9 @@ const handlePOST = (req: http.IncomingMessage, res: http.ServerResponse): void =
         case "/login":
             handleLogin(req, res)
             break
+        case "/update":
+            handleUpdate(req, res)
+            break
         default:
             res.writeHead(400)
             res.end()
@@ -94,8 +116,8 @@ const handlePOST = (req: http.IncomingMessage, res: http.ServerResponse): void =
     }
 }
 const handleLogin = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    getData(req, buffer => {
-        const requestData: any = JSON.parse(buffer.toString()) //TODO
+    getDataFromReq(req, buffer => {
+        const requestData: any = JSON.parse(buffer.toString())
         getJSON(`secured/users-${requestData.id}.json`, userObject => {
             //@ts-expect-error
             const users: User[] = userObject.users as User[]
@@ -118,7 +140,15 @@ const handleLogin = (req: http.IncomingMessage, res: http.ServerResponse): void 
             sendResponse(res, 400) //Error reading data from client
         })
 }
+const handleUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    getDataFromReq(req, buffer => {
+        //Succes
+        const requestData: any = JSON.parse(buffer.toString())
 
+    }, () => {
+        //Fail
+    })
+}
 //Handle all GET http requests
 const handleGET = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
@@ -184,7 +214,7 @@ const sendFileToClientIfRequestAcceptsFormat = (req: http.IncomingMessage, res: 
 
 //Gets data from request "req". On succes succesCallback is called 
 //THIS SHOULD ALSO BE ABLE TO RETURN STRING
-const getData = (req: http.IncomingMessage, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>) => {
+const getDataFromReq = (req: http.IncomingMessage, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>) => {
     let body: Buffer[] = []
     req.on("error", error => {
         console.log("error in reading data from request: \n" + error)

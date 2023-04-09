@@ -62,13 +62,16 @@ const handlePOST = (req, res) => {
         case "/login":
             handleLogin(req, res);
             break;
+        case "/update":
+            handleUpdate(req, res);
+            break;
         default:
             res.writeHead(400);
             res.end();
     }
 };
 const handleLogin = (req, res) => {
-    getData(req, buffer => {
+    getDataFromReq(req, buffer => {
         const requestData = JSON.parse(buffer.toString());
         getJSON(`secured/users-${requestData.id}.json`, userObject => {
             const users = userObject.users;
@@ -87,6 +90,12 @@ const handleLogin = (req, res) => {
         }, () => sendResponse(res, 401));
     }, () => {
         sendResponse(res, 400);
+    });
+};
+const handleUpdate = (req, res) => {
+    getDataFromReq(req, buffer => {
+        const requestData = JSON.parse(buffer.toString());
+    }, () => {
     });
 };
 const handleGET = (req, res) => {
@@ -143,7 +152,7 @@ const sendFileToClientIfRequestAcceptsFormat = (req, res, path, strict) => {
         res.end();
     }
 };
-const getData = (req, succesCallback, failCallback) => {
+const getDataFromReq = (req, succesCallback, failCallback) => {
     let body = [];
     req.on("error", error => {
         console.log("error in reading data from request: \n" + error);

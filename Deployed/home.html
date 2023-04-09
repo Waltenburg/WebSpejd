@@ -66,7 +66,7 @@
                 }).then(response => {
                     HTTPResponse = response
                     return response.text()
-                }).then((userType) => {
+                }).then(userType => {
                     if(HTTPResponse.status == 200){
                         setCookie("identifier", loginData.identifier, 10/3600)
                         if(userType == "master: true")
