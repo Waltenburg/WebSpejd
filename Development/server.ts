@@ -4,6 +4,8 @@
         //Implementer svar på updates på hvor patruljer er (3)
             //Funktion der finder brugeren ud fra den sendte indentifier (2)
             //Datastruktur der holder styr på hvor alle patruljer er (1)
+                //Læs lob.json hver gang der kommer en request
+                //Mangler funktion der kan dette (1)
     //}
     //Client-side{
         //Løbende checks på om nye patruljer er ankommet (4)
@@ -36,16 +38,21 @@ class Lob {
 class Post {
     navn: string
     omvej: boolean
-    åbningstid: string
-    lukketid: string
-    omvejLukketid: string
-    constructor(navn: string, omvej: boolean, åbningstid: string, lukketid: string, omvejLukketid: string) {
+    åbningstid: bigint
+    lukketid: bigint
+    omvejLukketid: bigint
+    constructor(navn: string, omvej: boolean, åbningstid: bigint, lukketid: bigint, omvejLukketid: bigint) {
         this.navn = navn;
         this.omvej = omvej;
         this.åbningstid = åbningstid;
         this.lukketid = lukketid;
         this.omvejLukketid = omvejLukketid;
     }
+}
+class Patrulje {
+    navn: string
+    post: bigint
+    historie: bigint[] //[Tjek ind på første post, Tjek ud på første post, Tjek ind på 2. post....] 
 }
 class User {
     kode: string
@@ -79,7 +86,7 @@ const port = 3000;
 
 let activeUsers: User[] = []
 
-let post: Post = new Post("FugleZoo", false, "1600", "1800", "1715")
+//let post: Post = new Post("FugleZoo", false, "1600", "1800", "1715")
 const server: http.Server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
     console.log(`Request type: ${method}, URL: ${url}`)

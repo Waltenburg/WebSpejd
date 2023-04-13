@@ -18,6 +18,8 @@ class Post {
         this.omvejLukketid = omvejLukketid;
     }
 }
+class Patrulje {
+}
 class User {
     constructor(kode, post, identifier, master) {
         this.kode = kode;
@@ -39,7 +41,6 @@ process.chdir(__dirname);
 const hostname = '127.0.0.1';
 const port = 3000;
 let activeUsers = [];
-let post = new Post("FugleZoo", false, "1600", "1800", "1715");
 const server = http.createServer((req, res) => {
     const { headers, method, url } = req;
     console.log(`Request type: ${method}, URL: ${url}`);
