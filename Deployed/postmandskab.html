@@ -49,14 +49,13 @@
                 patrulje: pNum,
                 identifier: identifier
             }
-            sendJSON(data, (HTTPStatus, response) => {
-                if(HTTPStatus == 200)
+            sendJSON(data, "/patruljeUpdate", (HTTPStatus, response) => {
                     removePatruljePåPost(pNum)
-                else
-                    console.log("Kunne ikke tjekke patrulje ud. Prøv igen...")
+                    console.log('Tjekket patrulje ' + pNum + " ud")
+            }, () => {
+                console.log("Kunne ikke tjekke patrulje " + pNum + " ud. Prøv igen...")
             })
             
-            console.log('Tjekket patrulje ' + pNum + " ud")  
         }
         const clickedPatruljePåVej = val => {
             const pNum = parseInt(val.id.substring(1))
@@ -65,13 +64,11 @@
                 patrulje: pNum,
                 auth: identifier
             }
-            sendJSON(data, (HTTPStatus, response) => {
-                if(HTTPStatus == 200){
+            sendJSON(data, "/patruljeUpdate", (HTTPStatus, response) => {
                     removePatruljePåVej(pNum)
                     addPatruljeToPåPost(pNum)
-                }
-                else
-                    console.log("Kunne ikke tjekke patrulje ud. Prøv igen...")
+            }, () => {
+                console.log("Kunne ikke tjekke patrulje " + pNum + " ind. Prøv igen...")
             })
         }
         const removePatruljePåPost = patruljeNummer => {
@@ -129,7 +126,14 @@
                 }
             }
         }
-            
+        
+        //Getting initial data from server
+        if(identifier == null)
+            location.href = "/home"
+        
+        let data = GETJSON("/mandskabData", identifier, (status, data) => {
+
+        }, () => console.log("Error getting data. Please reload site"))
         
         console.log("Entire page loaded")
             addPatruljeToPåVej(4)

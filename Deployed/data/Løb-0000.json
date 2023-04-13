@@ -1,8 +1,30 @@
-[
+{
+    "Løbsdata":
     {
-        "Løb-ID": "0000",
-        "Løb-navn": "CCMR",
-        "Løb-beskrivelse": "CCMR er et løb for 12-15 årige spejdere, der gerne vil opleve samarbejde under pres",
-        "Antal-poster": "5"
-    }
-]
+        "id": "0000",
+        "navn": "CCMR",
+        "beskrivelse": "CCMR er et løb for 12-15 årige spejdere, der gerne vil opleve samarbejde under pres",
+        "antalPoster": "5"
+    },
+    "poster":[
+        {
+            "navn": "Fuglezoo",
+            "erOmvej": false,
+            "åbningstid": "2023 1 21 06:00",
+            "lukketid": "2023 1 21 08:00",
+            "omvejLukketid": "2023 1 21 07:00",
+            "patruljerPåPost": [1, 2, 3] 
+        }
+    ],
+    "patruljer":[
+        {
+            "navn": "Oggenokkerne",
+            "patruljeNummer": 1,
+            "påPost": true,
+            "senesteTjekInd": 1,
+            "næstePost": 2,
+            "historie": ["2023 1 21 06:03", "2023 1 21 07:05" ]
+        }
+    ]
+
+}
