@@ -10,6 +10,10 @@
     },
     "files": [
         "server.ts",
-        "sendData.ts"
+        "oldServer.ts",
+        "clientFiles/sendHTTPRequest.ts",
+        "clientFiles/home.ts",
+        "clientFiles/cookie.ts",
+        "clientFiles/mandskab.ts"
     ]
 }

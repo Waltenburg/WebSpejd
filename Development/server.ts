@@ -1,217 +1,174 @@
-//TODO
-//Server-side{
-//Implementer check for identifier når postMandskab.html og master.html tilgås
-//Implementer svar på updates på hvor patruljer er (3)
-//Funktion der finder brugeren ud fra den sendte indentifier (2)
-//Datastruktur der holder styr på hvor alle patruljer er (1)
-//Læs lob.json hver gang der kommer en request
-//Mangler funktion der kan dette (1)
-//}
-//Client-side{
-//Løbende checks på om nye patruljer er ankommet (4)
-//Sandwich menu
-//Side hvor man kan se samtlige patruljers navn og nummer
-//}
-//Status: Implementeret at der fra klientens side sendes en POST request når der foretages en handling (ikke testet)
-//Er denne succesfuld vil handlingen gennemføres client-side.
-
-//Ideer{
-//Filter så man kan se hvilken rækkefølge patruljer er ankommet og afgået fra til post
-//}
-
+//Sidste gang var jeg i gang med at rette mandskab.ts til, så det bliver med typer og så det passer med den nye kommunikationsform
 import * as http from 'http'
 import * as fs from 'fs'
 
 import process = require('process');
 
-class Løb {
-    lobsdata: Løbsdata
-    Poster: Post[]
-    patruljer: Patrulje[]
-    constructor(løbsdata: Løbsdata, Poster: Post[], patruljer: Patrulje[]) {
-        this.lobsdata = løbsdata
-        this.Poster = Poster
-        this.patruljer = patruljer
-    }
-}
-class Løbsdata {
-    id: string
-    navn: string
-    beskrivelse: string
-    antalPoster: number
-
-    constructor(
-        navn: string,
-        antalPoster: number,
-        id: string,
-        beskrivelse: string,
-    ) {
-        this.navn = navn
-        this.antalPoster = antalPoster
-        this.id = id
-        this.beskrivelse = beskrivelse
-    }
-}
-class Post {
-    navn: string
-    erOmvej: boolean
-    åbningstid: string //yyyy m(m) dd hh:mm - eg. "2023 4 3 6:2" -> 3. april 06:02 2023
-    lukketid: string
-    omvejLukketid: string
-    patruljerPåPost: bigint[]
-    constructor(navn: string, omvej: boolean, åbningstid: string, lukketid: string, omvejLukketid: string) {
-        this.navn = navn;
-        this.erOmvej = omvej;
-        this.åbningstid = åbningstid;
-        this.lukketid = lukketid;
-        this.omvejLukketid = omvejLukketid;
-    }
-}
-class Patrulje {
-    navn: string //Patruljens navn
-    patruljeNummer: bigint
-    påPost: boolean //true -> patruljen er lige nu på en post. False -> patruljen går mellem poster
-    senesteTjekInd: bigint //Sidste post som patruljen blev tjekket ind til
-    næstePost: bigint //Sidste post som patruljen er blevet sendt til. Er påPost == True er senesteTjekInd == næstePost 
-    historie: bigint[] //[Tjek ind på første post, Tjek ud på første post, Tjek ind på 2. post....] - null bruges hvis patruljen ikke har været på en post
-}
-class User {
-    kode: string
-    post: BigInt
-    identifier: string
-    master: boolean
-    constructor(
-        kode: string,
-        post: BigInt,
-        identifier: string,
-        master: boolean
-    ) {
-        this.kode = kode
-        this.post = post
-        this.identifier = identifier
-        this.master = master
-    }
-}
-enum MIME {
-    html = "text/html",
-    JSON = 'application/JSON',
-    css = "text/css",
-    jgp = "image/jpg",
-    ico = "image/x-icon",
-    any = "*/*",
-}
-
 process.chdir(__dirname);
 const hostname = '127.0.0.1';
 const port = 3000;
 
-let activeUsers: User[] = []
+enum MIME {
+    html = "text/html",
+    json = 'application/JSON',
+    css = "text/css",
+    jpg = "image/jpg",
+    png = "image/png",
+    ico = "image/x-icon",
+    any = "*/*",
+}
+class Loeb{
+    navn: string
+    beskrivelse: string
+    patruljer: string[]
+}
+class Post{
+    navn: string
+    beskrivelse: string
+    erOmvej: boolean
+    kanSendeVidereTil: number[]
 
-//let post: Post = new Post("FugleZoo", false, "1600", "1800", "1715")
+    toString(){
+        return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Kan sende patruljer til følgende poster: " + this.kanSendeVidereTil.toString()
+    }
+}
+class User {
+    kode: string
+    post: number
+    identifier: string[]
+    master: boolean
+}
+class PPEvent{
+    melding: string
+    tid: Date
+
+    toString(): string {
+        return this.tid.toTimeString() + "  -  " + this.melding
+    }
+}
+const readJSONFileSync = (path: string, critical?: boolean): object => {
+    //Removing "/"" at the start of paths 
+    if (path[0] == '/')
+        path = path.substring(1)
+    try{
+        return JSON.parse(fs.readFileSync(path, {encoding: "utf8"}))
+    }catch (err){
+        console.log("Error reading file " + path)
+        return null
+        if(critical)
+            process.exit(1)
+    }
+}
+const createJaggedArray = (numOfPatruljer: number): string[][] => {
+    let array: string[][] = []
+    for (let patruljer = 0; patruljer < numOfPatruljer; patruljer++) {
+        array.push([]);
+    }
+    return array
+}
+//#region Loading json files into variables
+const loeb: Loeb = readJSONFileSync("data/loeb.json", true) as Loeb
+console.log("Loeb loaded succesfully")
+
+const poster: Post[] = readJSONFileSync("data/poster.json", true) as Post[]
+console.log("Poster loaded succesfully")
+
+let ppMatrix: string[][] = readJSONFileSync("ppMatrix.json") as string[][]
+if(ppMatrix == null){
+    ppMatrix = createJaggedArray(loeb.patruljer.length)
+    fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
+    console.log("Patruljepost-matrix (ppMatrix.json) oprettet")
+}else
+    console.log("ppMatrix.json loaded succesfully")
+
+const users: User[] = readJSONFileSync("data/users.json", true) as User[]
+console.log("Users loaded succesfully")
+//#endregion
+
 const server: http.Server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
     console.log(`Request type: ${method}, URL: ${url}`)
-
-    switch (method) {
-        case "GET":
-            handleGET(req, res)
-            break //End of GET
-
-        case "POST":
-            handlePOST(req, res)
-            break
-        default:
-            res.writeHead(400)
-            res.end()
-            break
-
+    if (req.method == "GET") {
+        if (urlIsValidPathToFile(req.url))
+            sendFileToClient(res, req.url)
+        else {
+            switch (req.url) {
+                case "/":
+                case "/home":
+                    homeReq(req, res)
+                    break
+                case "/login":
+                    loginReq(req, res)
+                    break
+                case "/mandskab":
+                    mandskabReq(req, res)
+                    break
+                case "/getUpdate":
+                    getUpdateReq(req, res)
+                    break
+                case "/getData":
+                    getDataReq(req, res)
+                    break
+                case "/sendUpdate":
+                    sendUpdateReq(req, res)
+                    break
+                case "/master":
+                    masterReq(req, res)
+                    break
+                default:
+                    res.writeHead(400);
+                    res.end()
+                    break
+            }
+        }
+    }
+    else {
+        res.writeHead(400)
+        res.end()
     }
 }).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`))
 
-const handlePOST = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    const { headers, method, url } = req
-    switch (url) {
-        case "/login":
-            handleLogin(req, res)
-            break
-        case "/update":
-            handleUpdate(req, res)
-            break
-        default:
-            res.writeHead(400)
+
+//#region -  Alle funktioner der håndterer de specifikke requests url's der kommer
+const homeReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    sendFileToClient(res, "home.html")
+}
+const loginReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    const password = req.headers['password'] as string
+    const identifier = req.headers['id'] as string
+    users.forEach(user => {
+        if(user.kode == password){
+            user.identifier.push(identifier)
+            res.writeHead(200)
             res.end()
-
-    }
-}
-const handleLogin = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    getDataFromReq(req, buffer => {
-        const requestData: any = JSON.parse(buffer.toString())
-        getJSON(`secured/users-${requestData.id}.json`, userObject => {
-            //@ts-expect-error
-            const users: User[] = userObject.users as User[]
-            let foundUser = false
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].kode == requestData.kode) {
-                    sendResponse(res, 200, "master: " + users[i].master.toString()) //Kode passede med en bruger
-                    users[i].identifier = requestData.identifier
-                    activeUsers.push(users[i])
-                    foundUser = true
-                    i = users.length
-                }
-            }
-            if (foundUser == false)
-                sendResponse(res, 400)
-        }, () =>
-            sendResponse(res, 401)) //Løbs ID does not exist
-    },
-        () => {
-            sendResponse(res, 400) //Error reading data from client
-        })
-}
-const handleUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    getDataFromReq(req, buffer => {
-        //Succes
-        const requestData: any = JSON.parse(buffer.toString())
-
-    }, () => {
-        //Fail
-    })
-}
-//Handle all GET http requests
-const handleGET = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    const { headers, method, url } = req
-    //Checking if url is path to file. If it is it sends file.
-    if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_0-9]{2,}[.][a-zA-Z]{2,}\$")) {
-        getFile(url, file => {
-            console.log("Sending file to client")
-            //Sending file
-            res.writeHead(200, { 'Content-Type': determineContentType(url) })
-            res.end(file)
-        })
-    } else { //The request is not just for a file
-        switch (url) {
-            case "/":
-            case "/home": //Sending homepage
-                sendFileToClient(res, "home.html")
-                break
-            case "/space": //Space
-                sendFileToClient(res, "ErrorPage/img/bg.jpg")
-                break
-            default: //If server does not recognise url as valid, but client is asking for html the 404 errorpage is send to client
-                sendFileToClientIfRequestAcceptsFormat(req, res, "404Error.html")
-                break
         }
-    }
+    });
+    console.log(password + " - " + identifier)
+    res.end();
 }
-const sendResponse = (res: http.ServerResponse, status: number, data?: string) => {
-    res.writeHead(status)
-    if (data != null) {
-        res.write(data, 'utf8')
-        console.log(data)
-    }
-    res.end()
+const mandskabReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    sendFileToClient(res, "mandskab.html")
 }
-const getJSON = (path: string, succesCallback: singleParamCallback<object>, failCallback?: singleParamCallback<void>) => {
+const getUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+
+}
+const getDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+
+}
+const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+
+}
+const masterReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+
+}
+//#endregion
+
+const urlIsValidPathToFile = (str: string): boolean => {
+    if(str.includes(".json"))
+        return false
+    return (str.split('/').slice(-1)[0].match("\^[a-zA-Z\-_0-9]{2,}[.][a-zA-Z]{2,}\$")) != null
+}
+const readJSONFile = (path: string, succesCallback: singleParamCallback<object>, failCallback?: singleParamCallback<void>): object => {
     //Removing "/"" at the start of paths 
     if (path[0] == '/')
         path = path.substring(1)
@@ -222,56 +179,15 @@ const getJSON = (path: string, succesCallback: singleParamCallback<object>, fail
             if (failCallback != null)
                 failCallback()
         }
-        else
-            succesCallback(JSON.parse(data))
+        else{
+            const obj = JSON.parse(data)
+            succesCallback(obj)
+            return obj
+        }
 
         function isError(error: NodeJS.ErrnoException | null): error is NodeJS.ErrnoException { return !(!error) }
     })
-
-}
-
-//Send file only if the request will accept the file type
-const sendFileToClientIfRequestAcceptsFormat = (req: http.IncomingMessage, res: http.ServerResponse, path: string, strict?: boolean) => {
-    if (requestAcceptsFormat(req.headers, determineContentType(path), strict)) {
-        sendFileToClient(res, path)
-    } else {
-        res.writeHead(406)
-        res.end()
-    }
-}
-
-
-//Gets data from request "req". On succes succesCallback is called 
-//THIS SHOULD ALSO BE ABLE TO RETURN STRING
-const getDataFromReq = (req: http.IncomingMessage, succesCallback: singleParamCallback<Buffer>, failCallback?: singleParamCallback<void>) => {
-    let body: Buffer[] = []
-    req.on("error", error => {
-        console.log("error in reading data from request: \n" + error)
-        if (failCallback != null)
-            failCallback()
-    }).on('data', chunk => {
-        body.push(chunk)
-    }).on('end', () => {
-        if (body != undefined) {
-            succesCallback(Buffer.concat(body))
-        } else
-            if (failCallback != null)
-                failCallback()
-    })
-
-}
-
-//Determines the MIME type of file with path "path". Eg. "Deployed/home.html" will return in MIME.html
-const determineContentType = (path: string): MIME => {
-    let split = path.split(".")
-    let extension = split[split.length - 1].toLowerCase()
-
-    const extensions: string[] = ["css", "html", "jpg", "json", "ico"]
-    const MIMEType: MIME[] = [MIME.css, MIME.html, MIME.jgp, MIME.JSON, MIME.ico]
-    const index = extensions.indexOf(extension)
-    if (index >= 0)
-        return MIMEType[index]
-    return MIME.any
+    return null
 }
 
 //Sends file with "path" to client with response "res".
@@ -316,27 +232,21 @@ const getFile = (path: string, succesCallback: singleParamCallback<Buffer | stri
         function isError(error: NodeJS.ErrnoException | null): error is NodeJS.ErrnoException { return !(!error) }
     })
 }
-const requestAcceptsFormat = (header: http.IncomingHttpHeaders, format: string, strict?: boolean): boolean => {
-    let acceptedFormats: string[] = header.accept?.split(/[,;]+/)
-    strict == undefined ? true : strict
-    for (let i = 0; i < acceptedFormats.length; i++) {
-        if (acceptedFormats[i] == format || (!strict && acceptedFormats[i] == "*/*"))
-            return true
-    }
-    return false;
+
+const determineContentType = (path: string): MIME => {
+    let split = path.split(".")
+    let extension = split[split.length - 1].toLowerCase()
+
+    const extensions: string[] = ["css", "html", "jpg", "png", "json", "ico"]
+    const MIMEType: MIME[] = [MIME.css, MIME.html, MIME.jpg, MIME.png, MIME.json, MIME.ico]
+    const index = extensions.indexOf(extension)
+    if (index >= 0)
+        return MIMEType[index]
+    return MIME.any
 }
+
 interface singleParamCallback<Type> {
     (file: Type): void
 }
 
-function saveAsCSV(data: string[][], fileName: string, path: string) {
-    const csv: string = data.map(row => row.join(',')).join('\n')
-    fs.writeFile(`${path}/${fileName}.csv`, csv, (err) => {
-        if (err)
-            throw err;
-    })
-}
-function loadCSV(fileName: string, path: string): string[][] {
-    var data = fs.readFileSync(`${path}/${fileName}.csv`).toString().split("\n").map(e => e.split(","));
-    return data
-}
+//Start

@@ -1,0 +1,14 @@
+[
+    {
+        "kode": "LukMigInd",
+        "post": 1,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "HokusPokus",
+        "post": -1,
+        "identifier": [],
+        "master": true
+    }
+]

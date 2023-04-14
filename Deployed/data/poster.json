@@ -1,0 +1,8 @@
+[
+    {
+        "navn": "Fuglezoo",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "kanSendeVidereTil": [1, 2] 
+    }
+]

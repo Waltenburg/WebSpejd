@@ -3,134 +3,142 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http = require("http");
 const fs = require("fs");
 const process = require("process");
-class Lob {
-    constructor(navn, antalPoster) {
-        this.navn = navn;
-        this.antalPoster = antalPoster;
-    }
-}
-class Post {
-    constructor(navn, omvej, åbningstid, lukketid, omvejLukketid) {
-        this.navn = navn;
-        this.omvej = omvej;
-        this.åbningstid = åbningstid;
-        this.lukketid = lukketid;
-        this.omvejLukketid = omvejLukketid;
-    }
-}
-class Patrulje {
-}
-class User {
-    constructor(kode, post, identifier, master) {
-        this.kode = kode;
-        this.post = post;
-        this.identifier = identifier;
-        this.master = master;
-    }
-}
-var MIME;
-(function (MIME) {
-    MIME["html"] = "text/html";
-    MIME["JSON"] = "application/JSON";
-    MIME["css"] = "text/css";
-    MIME["jgp"] = "image/jpg";
-    MIME["ico"] = "image/x-icon";
-    MIME["any"] = "*/*";
-})(MIME || (MIME = {}));
 process.chdir(__dirname);
 const hostname = '127.0.0.1';
 const port = 3000;
-let activeUsers = [];
+var MIME;
+(function (MIME) {
+    MIME["html"] = "text/html";
+    MIME["json"] = "application/JSON";
+    MIME["css"] = "text/css";
+    MIME["jpg"] = "image/jpg";
+    MIME["png"] = "image/png";
+    MIME["ico"] = "image/x-icon";
+    MIME["any"] = "*/*";
+})(MIME || (MIME = {}));
+class Loeb {
+}
+class Post {
+    toString() {
+        return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Kan sende patruljer til følgende poster: " + this.kanSendeVidereTil.toString();
+    }
+}
+class User {
+}
+class PPEvent {
+    toString() {
+        return this.tid.toTimeString() + "  -  " + this.melding;
+    }
+}
+const readJSONFileSync = (path, critical) => {
+    if (path[0] == '/')
+        path = path.substring(1);
+    try {
+        return JSON.parse(fs.readFileSync(path, { encoding: "utf8" }));
+    }
+    catch (err) {
+        console.log("Error reading file " + path);
+        return null;
+        if (critical)
+            process.exit(1);
+    }
+};
+const createJaggedArray = (numOfPatruljer) => {
+    let array = [];
+    for (let patruljer = 0; patruljer < numOfPatruljer; patruljer++) {
+        array.push([]);
+    }
+    return array;
+};
+const loeb = readJSONFileSync("data/loeb.json", true);
+console.log("Loeb loaded succesfully");
+const poster = readJSONFileSync("data/poster.json", true);
+console.log("Poster loaded succesfully");
+let ppMatrix = readJSONFileSync("ppMatrix.json");
+if (ppMatrix == null) {
+    ppMatrix = createJaggedArray(loeb.patruljer.length);
+    fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
+    console.log("Patruljepost-matrix (ppMatrix.json) oprettet");
+}
+else
+    console.log("ppMatrix.json loaded succesfully");
+const users = readJSONFileSync("data/users.json", true);
+console.log("Users loaded succesfully");
 const server = http.createServer((req, res) => {
     const { headers, method, url } = req;
     console.log(`Request type: ${method}, URL: ${url}`);
-    switch (method) {
-        case "GET":
-            handleGET(req, res);
-            break;
-        case "POST":
-            handlePOST(req, res);
-            break;
-        default:
-            res.writeHead(400);
-            res.end();
-            break;
-    }
-}).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`));
-const handlePOST = (req, res) => {
-    const { headers, method, url } = req;
-    switch (url) {
-        case "/login":
-            handleLogin(req, res);
-            break;
-        case "/update":
-            handleUpdate(req, res);
-            break;
-        default:
-            res.writeHead(400);
-            res.end();
-    }
-};
-const handleLogin = (req, res) => {
-    getDataFromReq(req, buffer => {
-        const requestData = JSON.parse(buffer.toString());
-        getJSON(`secured/users-${requestData.id}.json`, userObject => {
-            const users = userObject.users;
-            let foundUser = false;
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].kode == requestData.kode) {
-                    sendResponse(res, 200, "master: " + users[i].master.toString());
-                    users[i].identifier = requestData.identifier;
-                    activeUsers.push(users[i]);
-                    foundUser = true;
-                    i = users.length;
-                }
+    if (req.method == "GET") {
+        if (urlIsValidPathToFile(req.url))
+            sendFileToClient(res, req.url);
+        else {
+            switch (req.url) {
+                case "/":
+                case "/home":
+                    homeReq(req, res);
+                    break;
+                case "/login":
+                    loginReq(req, res);
+                    break;
+                case "/mandskab":
+                    mandskabReq(req, res);
+                    break;
+                case "/getUpdate":
+                    getUpdateReq(req, res);
+                    break;
+                case "/getData":
+                    getDataReq(req, res);
+                    break;
+                case "/sendUpdate":
+                    sendUpdateReq(req, res);
+                    break;
+                case "/master":
+                    masterReq(req, res);
+                    break;
+                default:
+                    res.writeHead(400);
+                    res.end();
+                    break;
             }
-            if (foundUser == false)
-                sendResponse(res, 400);
-        }, () => sendResponse(res, 401));
-    }, () => {
-        sendResponse(res, 400);
-    });
-};
-const handleUpdate = (req, res) => {
-    getDataFromReq(req, buffer => {
-        const requestData = JSON.parse(buffer.toString());
-    }, () => {
-    });
-};
-const handleGET = (req, res) => {
-    const { headers, method, url } = req;
-    if (url.split('/').slice(-1)[0].match("\^[a-zA-Z\-_]{2,}[.][a-zA-Z]{2,}\$")) {
-        getFile(url, file => {
-            res.writeHead(200, { 'Content-Type': determineContentType(url) });
-            res.end(file);
-        });
-    }
-    else {
-        switch (url) {
-            case "/":
-            case "/home":
-                sendFileToClient(res, "home.html");
-                break;
-            case "/space":
-                sendFileToClient(res, "ErrorPage/img/bg.jpg");
-                break;
-            default:
-                sendFileToClientIfRequestAcceptsFormat(req, res, "404Error.html");
-                break;
         }
     }
-};
-const sendResponse = (res, status, data) => {
-    res.writeHead(status);
-    if (data != null) {
-        res.write(data, 'utf8');
-        console.log(data);
+    else {
+        res.writeHead(400);
+        res.end();
     }
+}).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`));
+const homeReq = (req, res) => {
+    sendFileToClient(res, "home.html");
+};
+const loginReq = (req, res) => {
+    const password = req.headers['password'];
+    const identifier = req.headers['id'];
+    users.forEach(user => {
+        if (user.kode == password) {
+            user.identifier.push(identifier);
+            res.writeHead(200);
+            res.end();
+        }
+    });
+    console.log(password + " - " + identifier);
     res.end();
 };
-const getJSON = (path, succesCallback, failCallback) => {
+const mandskabReq = (req, res) => {
+    sendFileToClient(res, "mandskab.html");
+};
+const getUpdateReq = (req, res) => {
+};
+const getDataReq = (req, res) => {
+};
+const sendUpdateReq = (req, res) => {
+};
+const masterReq = (req, res) => {
+};
+const urlIsValidPathToFile = (str) => {
+    if (str.includes(".json"))
+        return false;
+    return (str.split('/').slice(-1)[0].match("\^[a-zA-Z\-_0-9]{2,}[.][a-zA-Z]{2,}\$")) != null;
+};
+const readJSONFile = (path, succesCallback, failCallback) => {
     if (path[0] == '/')
         path = path.substring(1);
     fs.readFile(path, "utf-8", (error, data) => {
@@ -139,45 +147,14 @@ const getJSON = (path, succesCallback, failCallback) => {
             if (failCallback != null)
                 failCallback();
         }
-        else
-            succesCallback(JSON.parse(data));
+        else {
+            const obj = JSON.parse(data);
+            succesCallback(obj);
+            return obj;
+        }
         function isError(error) { return !(!error); }
     });
-};
-const sendFileToClientIfRequestAcceptsFormat = (req, res, path, strict) => {
-    if (requestAcceptsFormat(req.headers, determineContentType(path), strict)) {
-        sendFileToClient(res, path);
-    }
-    else {
-        res.writeHead(406);
-        res.end();
-    }
-};
-const getDataFromReq = (req, succesCallback, failCallback) => {
-    let body = [];
-    req.on("error", error => {
-        console.log("error in reading data from request: \n" + error);
-        if (failCallback != null)
-            failCallback();
-    }).on('data', chunk => {
-        body.push(chunk);
-    }).on('end', () => {
-        if (body != undefined) {
-            succesCallback(Buffer.concat(body));
-        }
-        else if (failCallback != null)
-            failCallback();
-    });
-};
-const determineContentType = (path) => {
-    let split = path.split(".");
-    let extension = split[split.length - 1].toLowerCase();
-    const extensions = ["css", "html", "jpg", "json", "ico"];
-    const MIMEType = [MIME.css, MIME.html, MIME.jgp, MIME.JSON, MIME.ico];
-    const index = extensions.indexOf(extension);
-    if (index >= 0)
-        return MIMEType[index];
-    return MIME.any;
+    return null;
 };
 const sendFileToClient = (res, path, failCallback) => {
     getFile(path, file => {
@@ -213,23 +190,13 @@ const getFile = (path, succesCallback, failCallback) => {
         function isError(error) { return !(!error); }
     });
 };
-const requestAcceptsFormat = (header, format, strict) => {
-    let acceptedFormats = header.accept?.split(/[,;]+/);
-    strict == undefined ? true : strict;
-    for (let i = 0; i < acceptedFormats.length; i++) {
-        if (acceptedFormats[i] == format || (!strict && acceptedFormats[i] == "*/*"))
-            return true;
-    }
-    return false;
+const determineContentType = (path) => {
+    let split = path.split(".");
+    let extension = split[split.length - 1].toLowerCase();
+    const extensions = ["css", "html", "jpg", "png", "json", "ico"];
+    const MIMEType = [MIME.css, MIME.html, MIME.jpg, MIME.png, MIME.json, MIME.ico];
+    const index = extensions.indexOf(extension);
+    if (index >= 0)
+        return MIMEType[index];
+    return MIME.any;
 };
-function saveAsCSV(data, fileName, path) {
-    const csv = data.map(row => row.join(',')).join('\n');
-    fs.writeFile(`${path}/${fileName}.csv`, csv, (err) => {
-        if (err)
-            throw err;
-    });
-}
-function loadCSV(fileName, path) {
-    var data = fs.readFileSync(`${path}/${fileName}.csv`).toString().split("\n").map(e => e.split(","));
-    return data;
-}
