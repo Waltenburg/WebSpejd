@@ -7,7 +7,7 @@ const onLoadFunction = () => {
 };
 const loginClicked = () => {
     let identifier;
-    if (kode.value.match("^[a-zA-Z0-9]{6,15}\$") != null) {
+    if (kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null) {
         identifier = generateIdentifyer(20);
         const loginHeader = new Headers({
             "password": kode.value,
@@ -20,11 +20,14 @@ const loginClicked = () => {
             else
                 location.assign("/mandskab");
         };
-        const wrongPassword = (status) => {
+        const wrongPassword = () => {
             kode.style.setProperty("color", "red");
         };
         sendRequest("/login", loginHeader, loginSucces, wrongPassword);
     }
+};
+const codeChanged = () => {
+    kode.style.setProperty("color", "black");
 };
 function loginWithExistingUser() {
     location.assign("postmandskab.html");

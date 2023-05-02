@@ -1,7 +1,19 @@
 [
     {
-        "kode": "LukMigInd",
+        "kode": "post1",
         "post": 1,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "post2",
+        "post": 2,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "post3",
+        "post": 3,
         "identifier": [],
         "master": false
     },

@@ -7,7 +7,7 @@ const onLoadFunction = () => {
 }
 const loginClicked = () => {
     let identifier: string
-    if(kode.value.match("^[a-zA-Z0-9]{6,15}\$") != null){
+    if(kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null){
         identifier = generateIdentifyer(20)
         const loginHeader: Headers = new Headers({
             "password": kode.value,
@@ -20,42 +20,14 @@ const loginClicked = () => {
             else
                 location.assign("/mandskab")
         }
-        const wrongPassword = (status: number) => {
+        const wrongPassword = () => {
             kode.style.setProperty("color", "red")
         }
         sendRequest("/login", loginHeader, loginSucces, wrongPassword)
-    }
-
-    
-    
-    
-    
-    // let HTTPResponse
-    // if (kode.value.match("^[a-zA-Z0-9]{6,15}\$") != null) {
-    //     const loginData = {
-    //         kode: kode.value,
-    //         identifier: generateIdentifyer(20)
-    //     }
-    //     identifier = loginData.identifier
-    //     fetch('/login', {
-    //         method: "POST",
-    //         headers: {
-    //             "Content-Type": "application/json",
-    //         },
-    //         body: JSON.stringify(loginData)
-    //     }).then(response => {
-    //         HTTPResponse = response
-    //         return response.text()
-    //     }).then(userType => {
-    //         if(HTTPResponse.status == 200){
-    //             setCookie("identifier", loginData.identifier, 10/24/60)
-    //             if(userType == "master: true")
-    //                 location.assign("master.html") 
-    //             else
-    //                 location.assign("postmandskab.html")
-    //         }
-    //     })
-    // }               
+    }              
+}
+const codeChanged = () => {
+    kode.style.setProperty("color", "black")
 }
 function loginWithExistingUser(){
         location.assign("postmandskab.html")

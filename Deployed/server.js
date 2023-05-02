@@ -17,13 +17,52 @@ var MIME;
     MIME["any"] = "*/*";
 })(MIME || (MIME = {}));
 class Loeb {
+    constructor(obj) {
+        this.navn = obj.navn;
+        this.beskrivelse = obj.beskrivelse;
+        this.patruljer = obj.patruljer;
+    }
 }
 class Post {
+    constructor(obj) {
+        this.navn = obj.navn;
+        this.beskrivelse = obj.beskrivelse;
+        this.erOmvej = obj.erOmvej;
+        this.kanSendeVidereTil = obj.kanSendeVidereTil;
+    }
+    static createArray(obj) {
+        let arr = [];
+        obj.forEach((element) => {
+            arr.push(new Post(element));
+        });
+        return arr;
+    }
     toString() {
         return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Kan sende patruljer til følgende poster: " + this.kanSendeVidereTil.toString();
     }
 }
 class User {
+    constructor(obj) {
+        this.kode = obj.kode;
+        this.post = obj.post;
+        this.identifier = obj.identifier;
+        this.master = obj.master;
+    }
+    type() {
+        if (this.master)
+            return 0;
+        return this.post;
+    }
+    printIdentifiers() {
+        console.log(this.identifier);
+    }
+    static createArray(obj) {
+        let arr = [];
+        obj.forEach((element) => {
+            arr.push(new User(element));
+        });
+        return arr;
+    }
 }
 class PPEvent {
     toString() {
@@ -38,9 +77,9 @@ const readJSONFileSync = (path, critical) => {
     }
     catch (err) {
         console.log("Error reading file " + path);
-        return null;
         if (critical)
             process.exit(1);
+        return null;
     }
 };
 const createJaggedArray = (numOfPatruljer) => {
@@ -50,11 +89,11 @@ const createJaggedArray = (numOfPatruljer) => {
     }
     return array;
 };
-const loeb = readJSONFileSync("data/loeb.json", true);
+const loeb = new Loeb(readJSONFileSync("data/loeb.json", true));
 console.log("Loeb loaded succesfully");
-const poster = readJSONFileSync("data/poster.json", true);
+const poster = Post.createArray(readJSONFileSync("data/poster.json", true));
 console.log("Poster loaded succesfully");
-let ppMatrix = readJSONFileSync("ppMatrix.json");
+let ppMatrix = readJSONFileSync("data/ppMatrix.json");
 if (ppMatrix == null) {
     ppMatrix = createJaggedArray(loeb.patruljer.length);
     fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
@@ -62,11 +101,10 @@ if (ppMatrix == null) {
 }
 else
     console.log("ppMatrix.json loaded succesfully");
-const users = readJSONFileSync("data/users.json", true);
-console.log("Users loaded succesfully");
+const users = User.createArray(readJSONFileSync("data/users.json", true));
+console.log(users.length.toString() + " users loaded succesfully");
 const server = http.createServer((req, res) => {
     const { headers, method, url } = req;
-    console.log(`Request type: ${method}, URL: ${url}`);
     if (req.method == "GET") {
         if (urlIsValidPathToFile(req.url))
             sendFileToClient(res, req.url);
@@ -112,15 +150,24 @@ const homeReq = (req, res) => {
 const loginReq = (req, res) => {
     const password = req.headers['password'];
     const identifier = req.headers['id'];
-    users.forEach(user => {
+    let succes = false;
+    for (let i = 0; i < users.length; i++) {
+        const user = users[i];
         if (user.kode == password) {
             user.identifier.push(identifier);
+            if (user.master)
+                res.setHeader("isMaster", "true");
             res.writeHead(200);
             res.end();
+            succes = true;
+            break;
         }
-    });
-    console.log(password + " - " + identifier);
-    res.end();
+    }
+    console.log("User logging in: " + password + " - " + identifier);
+    if (!succes) {
+        res.writeHead(403);
+        res.end();
+    }
 };
 const mandskabReq = (req, res) => {
     sendFileToClient(res, "mandskab.html");
@@ -128,10 +175,62 @@ const mandskabReq = (req, res) => {
 const getUpdateReq = (req, res) => {
 };
 const getDataReq = (req, res) => {
+    const userPost = recognizeUser(req.headers['id']);
+    if (userPost == -1)
+        res.writeHead(403);
+    else if (userPost == 0) {
+        res.writeHead(403);
+    }
+    else {
+        res.setHeader("data", JSON.stringify({
+            "påPost": patruljerPåPost(userPost),
+            "påVej": patruljerPåVej(userPost),
+            "post": userPost
+        }));
+    }
+    res.end();
 };
 const sendUpdateReq = (req, res) => {
 };
 const masterReq = (req, res) => {
+};
+const canPatruljeBeCheckedUd = (pNum, post) => {
+    return ppMatrix[pNum].length == 3 * post + 2;
+};
+const canPatruljeBeCheckedIn = (pNum, post) => {
+    return ppMatrix[pNum].length == 3 * post + 1;
+};
+const patruljerPåPost = (post) => {
+    console.log("Post der undersøges: " + post.toString());
+    let patruljer = [];
+    for (let i = 0; i < ppMatrix.length; i++) {
+        if (ppMatrix[i].length == (post - 1) * 3 + 2)
+            patruljer.push(i + 1);
+    }
+    return patruljer;
+};
+const patruljerPåVej = (post) => {
+    let patruljer = [];
+    for (let i = 0; i < ppMatrix.length; i++) {
+        if (ppMatrix[i].length == (post - 1) * 3 + 1)
+            patruljer.push(i + 1);
+    }
+    return patruljer;
+};
+const recognizeUser = (id) => {
+    let type = -1;
+    for (let u = 0; u < users.length; u++) {
+        const user = users[u];
+        user.printIdentifiers();
+        for (let i = 0; i < user.identifier.length; i++) {
+            if (id == user.identifier[i]) {
+                type = user.type();
+                u = users.length;
+                break;
+            }
+        }
+    }
+    return type;
 };
 const urlIsValidPathToFile = (str) => {
     if (str.includes(".json"))
