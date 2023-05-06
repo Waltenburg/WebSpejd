@@ -1,8 +1,26 @@
 [
     {
-        "navn": "Fuglezoo",
+        "navn": "Post 1 - Fuglezoo",
         "beskrivelse": "En flot post i Fuglezoo",
         "erOmvej": false,
-        "kanSendeVidereTil": [1, 2] 
+        "omvejÅben": null
+    },
+    {
+        "navn": "Omvej mellem post 1 og 2",
+        "beskrivelse": "Omvej",
+        "erOmvej": true,
+        "omvejÅben": true
+    },
+    {
+        "navn": "Post 2 - Svømmehal",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Post 3 - Teglværk",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
     }
 ]

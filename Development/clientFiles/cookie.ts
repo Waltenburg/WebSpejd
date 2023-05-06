@@ -15,3 +15,9 @@ function setCookie(cname: string, cvalue: string, exdays: number) {
     var expires = "expires="+d.toUTCString();
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
+function deleteCookie(cname: string) {
+    var d = new Date();
+    d.setTime(d.getTime() - 100000);
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=;" + expires + ";path=/";
+}

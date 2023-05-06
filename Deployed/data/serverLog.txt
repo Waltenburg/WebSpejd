@@ -1,0 +1,162 @@
+
+2023-5-5 19:12:41 - PROGRAM STARTED - Loading files
+2023-5-5 19:12:41 - All files loaded succesfully
+2023-5-5 19:12:41 - Server running
+2023-5-5 19:13:0 - Program exiting with code: SIGINT
+2023-5-5 19:13:12 - Program exiting with code: SIGINT
+2023-5-5 19:13:18 - Program exiting with code: SIGINT
+2023-5-5 19:13:19 - Program exiting with code: SIGINT
+2023-5-5 19:13:19 - Program exiting with code: SIGINT
+2023-5-5 19:13:19 - Program exiting with code: SIGINT
+2023-5-5 19:13:19 - Program exiting with code: SIGINT
+2023-5-5 19:13:20 - Program exiting with code: SIGINT
+2023-5-5 19:13:20 - Program exiting with code: SIGINT
+2023-5-5 19:13:20 - Program exiting with code: SIGINT
+2023-5-5 19:13:20 - Program exiting with code: SIGINT
+2023-5-5 19:13:20 - Program exiting with code: SIGINT
+2023-5-5 19:20:15 - PROGRAM STARTED - Loading files
+2023-5-5 19:20:15 - All files loaded succesfully
+2023-5-5 19:20:15 - Server running
+2023-5-5 19:20:26 - Program exiting with code: SIGINT
+2023-5-5 19:22:13 - PROGRAM STARTED - Loading files
+2023-5-5 19:22:13 - All files loaded succesfully
+2023-5-5 19:22:13 - Server running
+2023-5-5 19:29:46 - Program exiting with code: SIGINT
+2023-5-5 19:29:47 - PROGRAM STARTED - Loading files
+2023-5-5 19:29:47 - All files loaded succesfully
+2023-5-5 19:29:48 - Server running
+2023-5-5 19:40:35 - Program exiting with code: SIGINT
+2023-5-5 19:40:38 - PROGRAM STARTED - Loading files
+2023-5-5 19:40:38 - All files loaded succesfully
+2023-5-5 19:40:38 - Server running
+2023-5-5 19:44:4 - Program exiting with code: SIGINT
+2023-5-5 19:44:6 - PROGRAM STARTED - Loading files
+2023-5-5 19:44:6 - All files loaded succesfully
+2023-5-5 19:44:6 - Server running
+2023-5-5 19:45:5 - Program exiting with code: SIGINT
+2023-5-5 19:45:8 - PROGRAM STARTED - Loading files
+2023-5-5 19:45:8 - All files loaded succesfully
+2023-5-5 19:45:8 - Server running
+2023-5-5 19:47:0 - Program exiting with code: SIGINT
+2023-5-5 19:47:2 - PROGRAM STARTED - Loading files
+2023-5-5 19:47:2 - All files loaded succesfully
+2023-5-5 19:47:2 - Server running
+2023-5-5 19:47:52 - Program exiting with code: SIGINT
+2023-5-5 19:47:54 - PROGRAM STARTED - Loading files
+2023-5-5 19:47:54 - All files loaded succesfully
+2023-5-5 19:47:54 - Server running
+2023-5-5 19:48:5 - Program exiting with code: SIGINT
+2023-5-5 19:48:7 - PROGRAM STARTED - Loading files
+2023-5-5 19:48:7 - All files loaded succesfully
+2023-5-5 19:48:7 - Server running
+2023-5-5 19:51:10 - PROGRAM STARTED - Loading files
+2023-5-5 19:51:10 - All files loaded succesfully
+2023-5-5 19:51:10 - Server running
+2023-5-5 19:53:42 - PROGRAM STARTED - Loading files
+2023-5-5 19:53:42 - All files loaded succesfully
+2023-5-5 19:53:42 - Server running
+2023-5-5 20:0:7 - PROGRAM STARTED - Loading files
+2023-5-5 20:0:7 - All files loaded succesfully
+2023-5-5 20:0:7 - Server running
+2023-5-5 20:2:26 - PROGRAM STARTED - Loading files
+2023-5-5 20:2:26 - All files loaded succesfully
+2023-5-5 20:2:26 - Server running
+2023-5-5 20:13:5 - PROGRAM STARTED - Loading files
+2023-5-5 20:13:5 - All files loaded succesfully
+2023-5-5 20:13:5 - Server running
+2023-5-5 20:14:18 - PROGRAM STARTED - Loading files
+2023-5-5 20:14:18 - All files loaded succesfully
+2023-5-5 20:14:18 - Server running
+2023-5-5 20:19:50 - PROGRAM STARTED - Loading files
+2023-5-5 20:19:50 - All files loaded succesfully
+2023-5-5 20:19:50 - Server running
+2023-5-5 20:22:59 - PROGRAM STARTED - Loading files
+2023-5-5 20:22:59 - All files loaded succesfully
+2023-5-5 20:22:59 - Server running
+2023-5-5 20:30:13 - PROGRAM STARTED - Loading files
+2023-5-5 20:30:13 - All files loaded succesfully
+2023-5-5 20:30:13 - Server running
+2023-5-5 20:32:4 - PROGRAM STARTED - Loading files
+2023-5-5 20:32:4 - All files loaded succesfully
+2023-5-5 20:32:4 - Server running
+2023-5-5 20:34:3 - PROGRAM STARTED - Loading files
+2023-5-5 20:34:3 - All files loaded succesfully
+2023-5-5 20:34:3 - Server running
+2023-5-5 20:36:19 - PROGRAM STARTED - Loading files
+2023-5-5 20:36:19 - All files loaded succesfully
+2023-5-5 20:36:19 - Server running
+2023-5-5 20:40:5 - PROGRAM STARTED - Loading files
+2023-5-5 20:40:5 - All files loaded succesfully
+2023-5-5 20:40:5 - Server running
+2023-5-5 20:40:18 - PROGRAM STARTED - Loading files
+2023-5-5 20:40:18 - All files loaded succesfully
+2023-5-5 20:40:18 - Server running
+2023-5-5 20:55:23 - PROGRAM STARTED - Loading files
+2023-5-5 20:55:23 - All files loaded succesfully
+2023-5-5 20:55:23 - Server running
+2023-5-5 20:57:51 - PROGRAM STARTED - Loading files
+2023-5-5 20:57:51 - All files loaded succesfully
+2023-5-5 20:57:51 - Server running
+2023-5-5 22:45:16 - PROGRAM STARTED - Loading files
+2023-5-5 22:45:16 - All files loaded succesfully
+2023-5-5 22:45:16 - Server running
+2023-5-5 22:46:40 - PROGRAM STARTED - Loading files
+2023-5-5 22:46:40 - All files loaded succesfully
+2023-5-5 22:46:40 - Server running
+2023-5-5 23:5:34 - PROGRAM STARTED - Loading files
+2023-5-5 23:5:34 - All files loaded succesfully
+2023-5-5 23:5:34 - Server running
+2023-5-5 23:11:11 - PROGRAM STARTED - Loading files
+2023-5-5 23:11:11 - All files loaded succesfully
+2023-5-5 23:11:11 - Server running
+2023-5-5 23:15:54 - PROGRAM STARTED - Loading files
+2023-5-5 23:15:54 - All files loaded succesfully
+2023-5-5 23:15:54 - Server running
+2023-5-5 23:43:31 - PROGRAM STARTED - Loading files
+2023-5-5 23:43:31 - All files loaded succesfully
+2023-5-5 23:43:32 - Server running
+2023-5-5 23:55:32 - PROGRAM STARTED - Loading files
+2023-5-5 23:55:32 - All files loaded succesfully
+2023-5-5 23:55:32 - Server running
+2023-5-6 14:24:50 - PROGRAM STARTED - Loading files
+2023-5-6 14:24:50 - All files loaded succesfully
+2023-5-6 14:24:50 - Server running
+2023-5-6 14:42:56 - PROGRAM STARTED - Loading files
+2023-5-6 14:42:56 - All files loaded succesfully
+2023-5-6 14:42:56 - Server running
+2023-5-6 14:49:39 - PROGRAM STARTED - Loading files
+2023-5-6 14:49:39 - All files loaded succesfully
+2023-5-6 14:49:39 - Server running
+2023-5-6 15:42:22 - PROGRAM STARTED - Loading files
+2023-5-6 15:42:22 - All files loaded succesfully
+2023-5-6 15:42:22 - Server running
+2023-5-6 15:49:56 - PROGRAM STARTED - Loading files
+2023-5-6 15:49:56 - All files loaded succesfully
+2023-5-6 15:49:56 - Server running
+2023-5-6 15:50:58 - PROGRAM STARTED - Loading files
+2023-5-6 15:50:58 - All files loaded succesfully
+2023-5-6 15:50:58 - Server running
+2023-5-6 15:51:35 - PROGRAM STARTED - Loading files
+2023-5-6 15:51:35 - All files loaded succesfully
+2023-5-6 15:51:35 - Server running
+2023-5-6 15:51:45 - PROGRAM STARTED - Loading files
+2023-5-6 15:51:45 - All files loaded succesfully
+2023-5-6 15:51:45 - Server running
+2023-5-6 15:52:59 - PROGRAM STARTED - Loading files
+2023-5-6 15:52:59 - All files loaded succesfully
+2023-5-6 15:52:59 - Server running
+2023-5-6 15:53:31 - PROGRAM STARTED - Loading files
+2023-5-6 15:53:31 - All files loaded succesfully
+2023-5-6 15:53:31 - Server running
+2023-5-6 15:55:58 - PROGRAM STARTED - Loading files
+2023-5-6 15:55:58 - All files loaded succesfully
+2023-5-6 15:55:58 - Server running
+2023-5-6 15:57:31 - PROGRAM STARTED - Loading files
+2023-5-6 15:57:31 - All files loaded succesfully
+2023-5-6 15:57:31 - Server running
+2023-5-6 15:58:46 - PROGRAM STARTED - Loading files
+2023-5-6 15:58:46 - All files loaded succesfully
+2023-5-6 15:58:46 - Server running
+2023-5-6 16:3:34 - PROGRAM STARTED - Loading files
+2023-5-6 16:3:34 - All files loaded succesfully
+2023-5-6 16:3:34 - Server running

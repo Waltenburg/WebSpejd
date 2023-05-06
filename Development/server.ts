@@ -31,13 +31,13 @@ class Post{
     navn: string
     beskrivelse: string
     erOmvej: boolean
-    kanSendeVidereTil: number[]
+    omvejÅben: boolean
 
     constructor(obj: any){
         this.navn = obj.navn
         this.beskrivelse = obj.beskrivelse
         this.erOmvej = obj.erOmvej
-        this.kanSendeVidereTil = obj.kanSendeVidereTil
+        this.omvejÅben = obj.omvejÅben
     }
 
     static createArray(obj: any): Post[]{
@@ -49,26 +49,26 @@ class Post{
     }
 
     toString(){
-        return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Kan sende patruljer til følgende poster: " + this.kanSendeVidereTil.toString()
+        return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString()
     }
 }
 class User {
     kode: string
-    post: number
+    postIndex: number
     identifier: string[]
     master: boolean
 
     constructor(obj: any){
         this.kode = obj.kode
-        this.post = obj.post
+        this.postIndex = obj.postIndex
         this.identifier = obj.identifier
         this.master = obj.master
     }
 
     type(): number{
         if(this.master)
-            return 0
-        return this.post
+            return null
+        return this.postIndex
     }
     printIdentifiers(): void{
         console.log(this.identifier)
@@ -110,29 +110,70 @@ const createJaggedArray = (numOfPatruljer: number): string[][] => {
     }
     return array
 }
+const getTimeString = (date?: Date) => {
+    if(date == undefined)
+        date = new Date()
+   return date.getFullYear() +'-'+ (date.getMonth() + 1) +'-'+ (date.getDay()) + ' ' + date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
+}
+const writeToServerLog = (message: string) => {
+    serverLogWriteStream.write("\n" + getTimeString() + " - " + message)
+}
+const writeToPatruljeLog = (melding: string) => {
+    patruljeLogWriteStream.write(getTimeString() + " - " + melding + "\n")
+}
+const sendAllPatruljerTowardsFirstPost = () => {
+    const time = getTimeString()
+    ppMatrix.forEach((patrulje) => {
+        patrulje.push(time)
+    })
+}
+//@ts-ignore
+// const cleanUpServer = (options, event) => {
+//     try{
+//         writeToServerLog("Program exiting with code: " + event)
+//     }catch{
+//         process.exit()
+//     }
+//     process.exit()
+// }
+// [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
+//     process.on(eventType, cleanUpServer.bind(null, eventType));
+//   })
+
+const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", {flags:'a'})
+const serverLogWriteStream = fs.createWriteStream("data/serverLog.txt", {flags:'a'});
+
+
+writeToServerLog("PROGRAM STARTED - Loading files")
 //#region Loading json files into variables
 const loeb: Loeb = new Loeb(readJSONFileSync("data/loeb.json", true))
 console.log("Loeb loaded succesfully")
 
 const poster: Post[] = Post.createArray(readJSONFileSync("data/poster.json", true))
-console.log("Poster loaded succesfully")
+console.log(poster.length.toString() + " poster loaded succesfully")
 
 let ppMatrix: string[][] = readJSONFileSync("data/ppMatrix.json") as string[][]
 if(ppMatrix == null){
     ppMatrix = createJaggedArray(loeb.patruljer.length)
     fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
-    console.log("Patruljepost-matrix (ppMatrix.json) oprettet")
+    console.log("Patruljepost-matrix (ppMatrix.json) oprettet med " + ppMatrix.length + " patruljer")
+
+    sendAllPatruljerTowardsFirstPost()
+    fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
 }else
     console.log("ppMatrix.json loaded succesfully")
 
+
 const users: User[] = User.createArray(readJSONFileSync("data/users.json", true))
 console.log(users.length.toString() + " users loaded succesfully")
+writeToServerLog("All files loaded succesfully")
 //#endregion
 
 const server: http.Server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse): void => {
     const { headers, method, url } = req
     //console.log(`Request type: ${method}, URL: ${url}`)
     if (req.method == "GET") {
+        console.log(url)
         if (urlIsValidPathToFile(req.url))
             sendFileToClient(res, req.url)
         else {
@@ -170,8 +211,10 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
         res.writeHead(400)
         res.end()
     }
-}).listen(port, hostname, () => console.log(`Server is now listening at http://${hostname}:${port}`))
-
+}).listen(port, hostname, () => {
+    console.log(`Server is now listening at http://${hostname}:${port}`)
+    writeToServerLog("Server running")
+})
 
 //#region -  Alle funktioner der håndterer de specifikke requests url's der kommer
 const homeReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
@@ -207,22 +250,79 @@ const getUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void
 }
 const getDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const userPost = recognizeUser(req.headers['id'] as string)
+    console.log("Get data request with post: " + userPost.toString())
     if(userPost == -1) //Bruger ikke recognized
         res.writeHead(403)
-    else if(userPost == 0){ //Bruger er master
+    else if(userPost == null){ //Bruger er master
         res.writeHead(403) //Skal fjernes ved implementering af master
     }
     else{ //Bruger er mandskab
+        let omvejÅben: boolean
+        if(userPost >= poster.length - 1 || poster[userPost].erOmvej){ //Sidste post eller posten er en omvej
+            omvejÅben = false
+        }else
+            omvejÅben = poster[userPost + 1].erOmvej
+
         res.setHeader("data", JSON.stringify({
             "påPost": patruljerPåPost(userPost),
             "påVej": patruljerPåVej(userPost),
-            "post": userPost
+            "post": poster[userPost].navn,
+            "omvejÅben": omvejÅben,
         }))
     }
     res.end()
 }
 const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-
+    const headers = req.headers
+    const userPostIndex = recognizeUser(headers['id'] as string)
+    let status = 200
+    console.log("update recieved")
+    if(userPostIndex >= 0 || userPostIndex == null){
+        console.log("User recognized as user " + userPostIndex)
+        try{
+            const update = req.headers['update'] as string //{patruljenummer}%{melding}%{post/omvej}
+            const split = update.split('%')
+            const pIndex = Number.parseInt(split[0]) - 1
+            const melding = split[1]
+            const makeChanges = req.headers['commit-type'] as string == "commit"
+            if(melding == "ud"){
+                console.log("Patrulje skal tjekkes ud")
+                if(canPatruljeBeCheckedUd(pIndex, userPostIndex)){
+                    if(makeChanges){
+                        const postOrOmvej = split[2]
+                        checkPatruljeUdAndTowardsNext(pIndex, userPostIndex, postOrOmvej)//Check patrulje ud og sæt som gå mod enten post eller omvej
+                        if(userPostIndex < poster.length - 1){
+                            let postIndexAddition = 1
+                            if(postOrOmvej == "post" && poster[userPostIndex + 1].erOmvej)
+                                postIndexAddition = 2
+                            writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes UD fra ${poster[userPostIndex].navn} og går mod ${poster[userPostIndex + postIndexAddition].navn}`)
+                        }
+                        else
+                            writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes UD fra ${poster[userPostIndex].navn} og går mod MÅL`)
+                    }
+                }
+                else
+                    status = 400
+            }else if(melding == "ind"){
+                if(canPatruljeBeCheckedIn(pIndex, userPostIndex)){
+                    if(makeChanges){
+                        checkPatruljeInd(pIndex)
+                        writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes IND på post ${userPostIndex + 1}`)
+                    }
+                }else
+                    status = 400
+            }
+        }catch(error){
+            console.log("Error in update: " + error)
+            status = 400
+        }
+    }
+    else{
+        status = 403
+    }
+    fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
+    res.writeHead(status)
+    res.end()
 }
 const masterReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
 
@@ -240,7 +340,7 @@ const patruljerPåPost = (post: number): number[] =>{
     console.log("Post der undersøges: " + post.toString())
     let patruljer: number[] = []
     for (let i = 0; i < ppMatrix.length; i++) {
-        if(ppMatrix[i].length == (post - 1) * 3 + 2)
+        if(ppMatrix[i].length == post * 3 + 2)
             patruljer.push(i + 1)
     }
     return patruljer
@@ -248,25 +348,43 @@ const patruljerPåPost = (post: number): number[] =>{
 const patruljerPåVej = (post: number): number[] =>{
     let patruljer: number[] = []
     for (let i = 0; i < ppMatrix.length; i++) {
-        if(ppMatrix[i].length == (post - 1) * 3 + 1)
+        if(ppMatrix[i].length == post * 3 + 1)
             patruljer.push(i + 1)
     }
     return patruljer
 }
 const recognizeUser = (id: string ): number => {
-    let type: number = -1
+    let userPostIndex: number = -1
     for (let u = 0; u < users.length; u++) {
         const user = users[u];
         user.printIdentifiers()
         for (let i = 0; i < user.identifier.length; i++) {
             if(id == user.identifier[i]){
-                type = user.type()
+                userPostIndex = user.type()
                 u = users.length
                 break
             }
         }
     }
-    return type
+    return userPostIndex
+}
+const checkPatruljeUdAndTowardsNext = (pIndex: number, currentPostIndex: number, omvejOrPost: string) => {
+    const date = new Date()
+    ppMatrix[pIndex].push(getTimeString(date))
+    if(currentPostIndex < poster.length - 1){//Hvis det ikke er sidste post, skal der gøres noget mere
+        const nextPostIsOmvej = poster[currentPostIndex + 1].erOmvej
+        const patruljeSkalPåOmvej = omvejOrPost == "omvej"
+        if(nextPostIsOmvej && !patruljeSkalPåOmvej){ //Tilføjer tomme felter hvis næste post er en omvej og patruljen IKKE skal på omvej
+            for (let i = 0; i < 3; i++) {
+                ppMatrix[pIndex].push("") 
+            }
+        }
+        ppMatrix[pIndex].push(getTimeString(date))
+    }
+}
+const checkPatruljeInd = (pIndex: number) => {
+    ppMatrix[pIndex].push(getTimeString())
+
 }
 //#endregion
 
