@@ -1,18 +1,19 @@
-2023-5-6 16:4:36 - Patrulje 1 tjekkes IND på post 1
-2023-5-6 16:4:36 - Patrulje 5 tjekkes IND på post 1
-2023-5-6 16:4:37 - Patrulje 4 tjekkes IND på post 1
-2023-5-6 16:4:37 - Patrulje 9 tjekkes IND på post 1
-2023-5-6 16:4:47 - Patrulje 4 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
-2023-5-6 16:4:50 - Patrulje 1 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
-2023-5-6 16:4:52 - Patrulje 9 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
-2023-5-6 16:4:54 - Patrulje 5 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
-2023-5-6 16:5:8 - Patrulje 4 tjekkes IND på post 2
-2023-5-6 16:5:9 - Patrulje 5 tjekkes IND på post 2
-2023-5-6 16:5:12 - Patrulje 5 tjekkes UD fra Omvej mellem post 1 og 2 og går mod Post 2 - Svømmehal
-2023-5-6 16:5:16 - Patrulje 4 tjekkes UD fra Omvej mellem post 1 og 2 og går mod Post 2 - Svømmehal
-2023-5-6 16:5:36 - Patrulje 1 tjekkes IND på post 3
-2023-5-6 16:5:37 - Patrulje 4 tjekkes IND på post 3
-2023-5-6 16:5:38 - Patrulje 5 tjekkes IND på post 3
-2023-5-6 16:5:38 - Patrulje 9 tjekkes IND på post 3
-2023-5-6 16:5:41 - Patrulje 9 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
-2023-5-6 16:5:42 - Patrulje 1 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-5-0 20:40:18 - Patrulje 3 tjekkes IND på post 1
+2023-5-0 20:40:18 - Patrulje 6 tjekkes IND på post 1
+2023-5-0 20:40:19 - Patrulje 9 tjekkes IND på post 1
+2023-5-0 20:40:19 - Patrulje 13 tjekkes IND på post 1
+2023-5-0 20:40:20 - Patrulje 12 tjekkes IND på post 1
+2023-5-0 20:40:35 - Patrulje 12 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:36 - Patrulje 3 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:36 - Patrulje 9 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:37 - Patrulje 6 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:38 - Patrulje 11 tjekkes IND på post 1
+2023-5-0 20:40:38 - Patrulje 10 tjekkes IND på post 1
+2023-5-0 20:40:39 - Patrulje 1 tjekkes IND på post 1
+2023-5-0 20:40:39 - Patrulje 7 tjekkes IND på post 1
+2023-5-0 20:40:52 - Patrulje 3 tjekkes IND på post 3
+2023-5-0 20:40:53 - Patrulje 9 tjekkes IND på post 3
+2023-5-0 20:40:53 - Patrulje 6 tjekkes IND på post 3
+2023-5-0 20:40:55 - Patrulje 13 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:55 - Patrulje 10 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-5-0 20:40:57 - Patrulje 7 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal

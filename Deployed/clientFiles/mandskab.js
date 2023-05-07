@@ -13,7 +13,9 @@ let noPatruljerPåVejText;
 let patruljerPåVej = [];
 let patruljeElementsPåVej = [];
 let undoDepth = 0;
-const undoTime = 2 * 1000;
+let undoTime = 5 * 1000;
+let timeBetweenUpdates = 5 * 1000;
+let lastUpdateTimeString = new Date().getTime().toString();
 const createPatruljeElement = (patruljeNummer) => {
     let newPatrulje = document.createElement("input");
     newPatrulje.classList.add("patrulje");
@@ -38,7 +40,7 @@ const clickedPatruljePåPost = (val, commit) => {
         undoButton.disabled = false;
         removePatruljePåPost(pNum);
         undoActions.push(() => {
-            addPatruljeToPåPost(pNum);
+            addPatruljePåPost(pNum);
         });
         setTimeout(() => {
             if (undoDepth > 0) {
@@ -49,6 +51,7 @@ const clickedPatruljePåPost = (val, commit) => {
                 }), (status, headers) => {
                     console.log('Tjekket patrulje ' + pNum + " ud");
                     undoActions.shift();
+                    lastUpdateTimeString = new Date().getTime().toString();
                 }, status => {
                     undoActions.shift()();
                     cantCheckOutCallback();
@@ -74,7 +77,7 @@ const clickedPatruljePåVej = (val, commit) => {
         undoDepth++;
         undoButton.disabled = false;
         removePatruljePåVej(pNum);
-        addPatruljeToPåPost(pNum, true);
+        addPatruljePåPost(pNum, true);
         undoActions.push(() => {
             addPatruljeToPåVej(pNum);
             removePatruljePåPost(pNum);
@@ -88,6 +91,7 @@ const clickedPatruljePåVej = (val, commit) => {
                 }), (status, headers) => {
                     console.log('Tjekket patrulje ' + pNum + " ind");
                     undoActions.shift();
+                    lastUpdateTimeString = new Date().getTime().toString();
                 }, status => {
                     undoActions.shift()();
                 });
@@ -147,7 +151,7 @@ const postOmvejChanged = () => {
         });
     }
 };
-const addPatruljeToPåPost = (patruljeNummer, timeout) => {
+const addPatruljePåPost = (patruljeNummer, timeout) => {
     const newElement = createPatruljeElement(patruljeNummer);
     newElement.setAttribute("onclick", "clickedPatruljePåPost(this)");
     if (timeout) {
@@ -193,6 +197,8 @@ const logOut = () => {
     deleteCookie("identifier");
     location.href = "/home";
 };
+class PatruljePostData {
+}
 const onLoadFunctionMandskab = () => {
     listPåPost = document.getElementById("listCheckOut");
     listPåVej = document.getElementById("listCheckIn");
@@ -203,11 +209,9 @@ const onLoadFunctionMandskab = () => {
     sendRequest("/getData", new Headers({
         "id": identifier
     }), (status, headers) => {
-        class PatruljePostData {
-        }
         const data = JSON.parse(headers.get("data"));
         data.påPost.forEach(pNum => {
-            addPatruljeToPåPost(pNum);
+            addPatruljePåPost(pNum);
         });
         data.påVej.forEach(pNum => {
             addPatruljeToPåVej(pNum);
@@ -223,5 +227,59 @@ const onLoadFunctionMandskab = () => {
     });
     console.log("Entire page loaded");
 };
+const getUpdateFunc = () => {
+    const headers = new Headers({
+        "id": identifier,
+        'last-update': lastUpdateTimeString
+    });
+    lastUpdateTimeString = new Date().getTime().toString();
+    sendRequest("/getUpdate", headers, (status, headers) => {
+        if (headers.get('update') == "true") {
+            const data = JSON.parse(headers.get("data"));
+            const updatePåPost = getDiffArr(patruljerPåPost, data.påPost);
+            updatePåPost[0].forEach(patrulje => {
+                removePatruljePåPost(patrulje);
+            });
+            updatePåPost[1].forEach(patrulje => {
+                addPatruljePåPost(patrulje);
+            });
+            const updatePåVej = getDiffArr(patruljerPåVej, data.påVej);
+            updatePåVej[0].forEach(patrulje => {
+                removePatruljePåVej(patrulje);
+            });
+            updatePåVej[1].forEach(patrulje => {
+                addPatruljeToPåVej(patrulje);
+            });
+        }
+    }, status => {
+        clearInterval(updateInterval);
+        if (confirm("Fejl ved opdatering. Log ind igen")) {
+            logOut();
+        }
+        else {
+            updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
+        }
+    });
+};
+let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
 if (identifier == null)
     location.href = "/home";
+function getDiffArr(Arr1, Arr2) {
+    let arr1 = Arr1.slice();
+    let arr2 = Arr2.slice();
+    for (let i = 0; i < arr1.length; i++) {
+        const vi = arr1[i];
+        let sameValueFound = false;
+        for (let j = 0; j < arr2.length; j++) {
+            const vj = arr2[j];
+            if (vi == vj) {
+                sameValueFound = true;
+                arr1.splice(i, 1);
+                arr2.splice(j, 1);
+                i--;
+                break;
+            }
+        }
+    }
+    return [arr1, arr2];
+}

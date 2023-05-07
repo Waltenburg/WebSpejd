@@ -1,4 +1,3 @@
-
 const identifier = getCookie("identifier")
 const patruljeUpdateURL = "update"
 let postOrOmvej = "post"
@@ -7,17 +6,20 @@ let listPåVej: HTMLElement
 let postOmvejSelector: HTMLInputElement
 let undoButton: HTMLInputElement
 let undoActions: callback[] = []
+
 let patruljerPåPost: number[] = [] //De patruljer der er på posten i nummeret rækkefølge
 let patruljeElementsPåPost: HTMLInputElement[] = [] //De tilhørende elementer 
+
 let noPatruljerPåPostText: HTMLParagraphElement
 let noPatruljerPåVejText: HTMLParagraphElement
-
 
 let patruljerPåVej: number[] = [] //De patruljer der er på vej til posten i nummeret rækkefølge
 let patruljeElementsPåVej: HTMLInputElement[]= [] //De tilhørende elementer
 
 let undoDepth = 0
-const undoTime = 2 * 1000
+let undoTime = 5 * 1000
+let timeBetweenUpdates = 5 * 1000
+let lastUpdateTimeString = new Date().getTime().toString()
 
 const createPatruljeElement = (patruljeNummer: number): HTMLInputElement => {
     let newPatrulje: HTMLInputElement = document.createElement("input")
@@ -43,7 +45,7 @@ const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
         undoButton.disabled = false
         removePatruljePåPost(pNum)
         undoActions.push(() => {
-            addPatruljeToPåPost(pNum)
+            addPatruljePåPost(pNum)
         })
         setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
             if(undoDepth > 0){
@@ -54,6 +56,7 @@ const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
                 }), (status, headers) => { //Check in succesfull
                         console.log('Tjekket patrulje ' + pNum + " ud")
                         undoActions.shift()
+                        lastUpdateTimeString = new Date().getTime().toString()
                 }, status => { //Check in failed
                     undoActions.shift()()
                     cantCheckOutCallback()
@@ -65,7 +68,6 @@ const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
         cantCheckOutCallback()
     })
 }
-
 
 const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
     const pNum = parseInt(val.id.substring(1))
@@ -81,7 +83,7 @@ const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
         undoDepth++
         undoButton.disabled = false
         removePatruljePåVej(pNum)
-        addPatruljeToPåPost(pNum, true)
+        addPatruljePåPost(pNum, true)
         undoActions.push(() => {
             addPatruljeToPåVej(pNum)
             removePatruljePåPost(pNum)
@@ -95,6 +97,7 @@ const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
                 }), (status, headers) => { //Check in succesfull
                         console.log('Tjekket patrulje ' + pNum + " ind")
                         undoActions.shift()
+                        lastUpdateTimeString = new Date().getTime().toString()
                 }, status => { //Check in failed
                     undoActions.shift()()
                 })
@@ -157,7 +160,7 @@ const postOmvejChanged = () => {
     }
 }
 
-const addPatruljeToPåPost = (patruljeNummer: number, timeout?: boolean) => {
+const addPatruljePåPost = (patruljeNummer: number, timeout?: boolean) => {
     const newElement = createPatruljeElement(patruljeNummer)
     newElement.setAttribute("onclick", "clickedPatruljePåPost(this)")
     if(timeout){
@@ -204,6 +207,12 @@ const logOut = () => {
     deleteCookie("identifier")
     location.href = "/home"
 }
+class PatruljePostData{
+    påPost: number[]
+    påVej: number[]
+    post: string
+    omvejÅben: boolean
+}
 const onLoadFunctionMandskab = () => {
     listPåPost = document.getElementById("listCheckOut")
     listPåVej = document.getElementById("listCheckIn")
@@ -216,15 +225,9 @@ const onLoadFunctionMandskab = () => {
     sendRequest("/getData", new Headers({
         "id": identifier
     }), (status, headers) => {
-        class PatruljePostData{
-            påPost: number[]
-            påVej: number[]
-            post: string
-            omvejÅben: boolean
-        }
         const data = JSON.parse(headers.get("data")) as PatruljePostData
         data.påPost.forEach(pNum => {
-            addPatruljeToPåPost(pNum)
+            addPatruljePåPost(pNum)
         });
         data.påVej.forEach(pNum => {
             addPatruljeToPåVej(pNum)
@@ -242,6 +245,45 @@ const onLoadFunctionMandskab = () => {
 
     console.log("Entire page loaded")
 }
+const getUpdateFunc = () => {
+    const headers = new Headers({
+        "id": identifier,
+        'last-update': lastUpdateTimeString
+    })
+    lastUpdateTimeString = new Date().getTime().toString()
+    sendRequest("/getUpdate", headers, (status, headers) => {
+        if(headers.get('update') == "true"){ //Update has arrived since last time client checked
+            const data = JSON.parse(headers.get("data")) as PatruljePostData
+
+            const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
+            updatePåPost[0].forEach(patrulje => {
+                removePatruljePåPost(patrulje)
+            })
+            updatePåPost[1].forEach(patrulje => {
+                addPatruljePåPost(patrulje)
+            })
+
+            const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
+            updatePåVej[0].forEach(patrulje => {
+                removePatruljePåVej(patrulje)
+            })
+            updatePåVej[1].forEach(patrulje => {
+                addPatruljeToPåVej(patrulje)
+            })
+
+        }
+    }, status => {
+        clearInterval(updateInterval)
+
+        if(confirm("Fejl ved opdatering. Log ind igen")){
+            logOut()
+        }
+        else{
+            updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
+        }
+    })
+}
+let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
 //Getting initial data from server
 if(identifier == null)
     location.href = "/home"
@@ -249,3 +291,26 @@ if(identifier == null)
 interface callback{
     () : void
 }
+//function getDiffArr<T>(arr1: T)
+
+//Returns a tuple with the first value being all values in Arr1 that arent in Arr2
+//and second value being all vales in Arr2 that arent in Arr1
+function getDiffArr<T>(Arr1: T[], Arr2: T[]): [T[], T[]] {
+    let arr1 = Arr1.slice()
+    let arr2 = Arr2.slice()
+    for (let i = 0; i < arr1.length; i++) {
+        const vi = arr1[i];
+        let sameValueFound = false
+        for (let j = 0; j < arr2.length; j++) {
+            const vj = arr2[j];
+            if(vi == vj){
+                sameValueFound = true
+                arr1.splice(i, 1)
+                arr2.splice(j, 1)
+                i--
+                break
+            }
+        }
+    }
+    return [arr1, arr2];
+  }

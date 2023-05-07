@@ -11,5 +11,9 @@ const sendRequest = (url, dataHeaders, succesReciever, onFail) => {
         else
             console.log("Response was not OK. Status: " + response.status);
     })
-        .catch(err => console.log("Error in communication with server. Error: " + err));
+        .catch(err => {
+        console.log("Error in communication with server. Error: " + err);
+        if (onFail != null)
+            onFail(null);
+    });
 };
