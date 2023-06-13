@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.server = void 0;
 const http = require("http");
 const fs = require("fs");
-const process = require("process");
 var server;
 (function (server_1) {
     process.chdir(__dirname);
@@ -20,11 +20,16 @@ var server;
     })(MIME || (MIME = {}));
     class Loeb {
         constructor(obj) {
+            this.patruljeIkkeUdgået = (pNum) => {
+                return !this.udgåedePatruljer[pNum];
+            };
             this.navn = obj.navn;
             this.beskrivelse = obj.beskrivelse;
             this.patruljer = obj.patruljer;
+            this.udgåedePatruljer = obj.udgåedePatruljer;
         }
     }
+    server_1.Loeb = Loeb;
     class Post {
         constructor(obj) {
             this.navn = obj.navn;
@@ -43,6 +48,7 @@ var server;
             return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString();
         }
     }
+    server_1.Post = Post;
     class User {
         constructor(obj) {
             this.kode = obj.kode;
@@ -52,7 +58,7 @@ var server;
         }
         type() {
             if (this.master)
-                return null;
+                return Infinity;
             return this.postIndex;
         }
         printIdentifiers() {
@@ -119,9 +125,9 @@ var server;
     const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", { flags: 'a' });
     const serverLogWriteStream = fs.createWriteStream("data/serverLog.txt", { flags: 'a' });
     writeToServerLog("PROGRAM STARTED - Loading files");
-    const loeb = new Loeb(readJSONFileSync("data/loeb.json", true));
+    let loeb = new Loeb(readJSONFileSync("data/loeb.json", true));
     console.log("Loeb loaded succesfully");
-    const poster = Post.createArray(readJSONFileSync("data/poster.json", true));
+    let poster = Post.createArray(readJSONFileSync("data/poster.json", true));
     console.log(poster.length.toString() + " poster loaded succesfully");
     let ppMatrix = readJSONFileSync("data/ppMatrix.json");
     if (ppMatrix == null) {
@@ -150,13 +156,13 @@ var server;
                 switch (req.url) {
                     case "/":
                     case "/home":
-                        homeReq(req, res);
+                        sendFileToClient(res, "home.html");
                         break;
                     case "/login":
                         loginReq(req, res);
                         break;
                     case "/mandskab":
-                        mandskabReq(req, res);
+                        sendFileToClient(res, "mandskab.html");
                         break;
                     case "/getUpdate":
                         getUpdateReq(req, res);
@@ -168,7 +174,13 @@ var server;
                         sendUpdateReq(req, res);
                         break;
                     case "/master":
-                        masterReq(req, res);
+                        sendFileToClient(res, "master.html");
+                        break;
+                    case "/masterData":
+                        masterDataReq(req, res);
+                        break;
+                    case "/masterUpdate":
+                        masterUpdateReq(req, res);
                         break;
                     default:
                         res.writeHead(400);
@@ -185,9 +197,6 @@ var server;
         console.log(`Server is now listening at http://${hostname}:${port}`);
         writeToServerLog("Server running");
     });
-    const homeReq = (req, res) => {
-        sendFileToClient(res, "home.html");
-    };
     const loginReq = (req, res) => {
         const password = req.headers['password'];
         const identifier = req.headers['id'];
@@ -209,9 +218,6 @@ var server;
             res.writeHead(403);
             res.end();
         }
-    };
-    const mandskabReq = (req, res) => {
-        sendFileToClient(res, "mandskab.html");
     };
     const getUpdateReq = (req, res) => {
         const userPost = recognizeUser(req.headers['id']);
@@ -311,19 +317,32 @@ var server;
         res.writeHead(status);
         res.end();
     };
-    const masterReq = (req, res) => {
+    const masterDataReq = (req, res) => {
+        const isMaster = recognizeUser(req.headers['id']) == Infinity;
+        if (isMaster) {
+            res.setHeader("data", JSON.stringify({
+                "loeb": loeb,
+                "ppMatrix": ppMatrix,
+                "poster": poster
+            }));
+        }
+        else
+            res.writeHead(403);
+        res.end();
+    };
+    const masterUpdateReq = (req, res) => {
     };
     const canPatruljeBeCheckedUd = (pNum, post) => {
-        return ppMatrix[pNum].length == 3 * post + 2;
+        return (ppMatrix[pNum].length == 3 * post + 2 && loeb.patruljeIkkeUdgået(pNum));
     };
     const canPatruljeBeCheckedIn = (pNum, post) => {
-        return ppMatrix[pNum].length == 3 * post + 1;
+        return (ppMatrix[pNum].length == 3 * post + 1 && loeb.patruljeIkkeUdgået(pNum));
     };
     const patruljerPåPost = (post) => {
         console.log("Post der undersøges: " + post.toString());
         let patruljer = [];
         for (let i = 0; i < ppMatrix.length; i++) {
-            if (ppMatrix[i].length == post * 3 + 2)
+            if (ppMatrix[i].length == post * 3 + 2 && loeb.patruljeIkkeUdgået(i))
                 patruljer.push(i + 1);
         }
         return patruljer;
@@ -331,7 +350,7 @@ var server;
     const patruljerPåVej = (post) => {
         let patruljer = [];
         for (let i = 0; i < ppMatrix.length; i++) {
-            if (ppMatrix[i].length == post * 3 + 1)
+            if (ppMatrix[i].length == post * 3 + 1 && loeb.patruljeIkkeUdgået(i))
                 patruljer.push(i + 1);
         }
         return patruljer;
@@ -443,4 +462,4 @@ var server;
             return MIMEType[index];
         return MIME.any;
     };
-})(server || (server = {}));
+})(server = exports.server || (exports.server = {}));

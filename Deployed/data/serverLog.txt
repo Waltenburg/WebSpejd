@@ -6,3 +6,54 @@
 2023-5-0 20:38:52 - PROGRAM STARTED - Loading files
 2023-5-0 20:38:52 - All files loaded succesfully
 2023-5-0 20:38:52 - Server running
+2023-5-1 22:0:44 - Program exiting with code: SIGINT
+2023-5-5 21:42:42 - PROGRAM STARTED - Loading files
+2023-5-5 21:42:43 - All files loaded succesfully
+2023-5-5 21:42:43 - Server running
+2023-5-5 21:48:34 - Program exiting with code: SIGINT
+2023-5-5 21:49:59 - PROGRAM STARTED - Loading files
+2023-5-5 21:49:59 - All files loaded succesfully
+2023-5-5 21:49:59 - Server running
+2023-5-1 20:17:37 - Program exiting with code: SIGINT
+2023-5-1 20:17:55 - PROGRAM STARTED - Loading files
+2023-5-1 20:17:55 - All files loaded succesfully
+2023-5-1 20:17:56 - Server running
+2023-5-2 16:13:47 - Program exiting with code: SIGINT
+2023-5-2 16:13:48 - PROGRAM STARTED - Loading files
+2023-5-2 16:13:48 - All files loaded succesfully
+2023-5-2 16:13:48 - Server running
+2023-5-2 16:14:13 - Program exiting with code: SIGINT
+2023-5-2 16:14:29 - PROGRAM STARTED - Loading files
+2023-5-2 16:14:29 - All files loaded succesfully
+2023-5-2 16:14:29 - Server running
+2023-5-5 11:56:51 - Program exiting with code: SIGINT
+2023-5-1 19:24:30 - PROGRAM STARTED - Loading files
+2023-5-1 19:24:30 - All files loaded succesfully
+2023-5-1 19:24:30 - Server running
+2023-5-1 19:34:13 - Program exiting with code: SIGINT
+2023-5-1 19:34:15 - PROGRAM STARTED - Loading files
+2023-5-1 19:34:15 - All files loaded succesfully
+2023-5-1 19:34:15 - Server running
+2023-5-1 19:35:17 - Program exiting with code: SIGINT
+2023-5-1 19:35:18 - PROGRAM STARTED - Loading files
+2023-5-1 19:35:18 - All files loaded succesfully
+2023-5-1 19:35:18 - Server running
+2023-5-1 19:43:27 - Program exiting with code: SIGINT
+2023-5-1 19:43:28 - PROGRAM STARTED - Loading files
+2023-5-1 19:43:28 - All files loaded succesfully
+2023-5-1 19:43:28 - Server running
+2023-5-1 19:44:31 - Program exiting with code: SIGINT
+2023-5-1 19:44:32 - PROGRAM STARTED - Loading files
+2023-5-1 19:44:32 - All files loaded succesfully
+2023-5-1 19:44:32 - Server running
+2023-5-1 20:13:2 - Program exiting with code: SIGINT
+2023-5-1 20:13:3 - PROGRAM STARTED - Loading files
+2023-5-1 20:13:3 - All files loaded succesfully
+2023-5-1 20:13:3 - Server running
+2023-6-0 12:49:44 - Program exiting with code: SIGINT
+2023-6-0 12:49:45 - PROGRAM STARTED - Loading files
+2023-6-0 12:49:45 - All files loaded succesfully
+2023-6-0 12:49:46 - Server running
+2023-6-2 14:59:18 - PROGRAM STARTED - Loading files
+2023-6-2 14:59:19 - All files loaded succesfully
+2023-6-2 14:59:19 - Server running

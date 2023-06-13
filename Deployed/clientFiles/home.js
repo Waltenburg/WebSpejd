@@ -14,7 +14,7 @@ const loginClicked = () => {
             "id": identifier
         });
         const loginSucces = (status, headers) => {
-            setCookie("identifier", identifier, 10 / 24 / 60);
+            setCookie("identifier", identifier, 1 / 24);
             if (headers.get("ismaster") == "true")
                 location.assign("/master");
             else

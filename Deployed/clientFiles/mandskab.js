@@ -24,12 +24,14 @@ const createPatruljeElement = (patruljeNummer) => {
     newPatrulje.value = "#" + patruljeNummer.toString();
     return newPatrulje;
 };
+const checkError = (indOrUd, pNum) => {
+    alert("Kunne ikke tjekke patrulje " + pNum + " " + indOrUd + ". Prøv igen...");
+    console.log("Kunne ikke tjekke patrulje " + pNum + " ud. Prøv igen...");
+    lastUpdateTimeString = "0";
+    getUpdateFunc();
+};
 const clickedPatruljePåPost = (val, commit) => {
     const pNum = parseInt(val.id.substring(1));
-    const cantCheckOutCallback = () => {
-        alert("Kunne ikke tjekke patrulje " + pNum + " ud. Prøv igen...");
-        console.log("Kunne ikke tjekke patrulje " + pNum + " ud. Prøv igen...");
-    };
     const postOrOmvejAtCLickedTime = postOrOmvej;
     sendRequest("/sendUpdate", new Headers({
         "id": identifier,
@@ -44,6 +46,7 @@ const clickedPatruljePåPost = (val, commit) => {
         });
         setTimeout(() => {
             if (undoDepth > 0) {
+                lastUpdateTimeString = new Date().getTime().toString();
                 sendRequest("/sendUpdate", new Headers({
                     "id": identifier,
                     "update": pNum.toString() + "%ud" + "%" + postOrOmvejAtCLickedTime,
@@ -51,24 +54,19 @@ const clickedPatruljePåPost = (val, commit) => {
                 }), (status, headers) => {
                     console.log('Tjekket patrulje ' + pNum + " ud");
                     undoActions.shift();
-                    lastUpdateTimeString = new Date().getTime().toString();
                 }, status => {
                     undoActions.shift()();
-                    cantCheckOutCallback();
+                    checkError("ud", pNum);
                 });
                 decreaseUndoDepth();
             }
         }, undoTime);
     }, status => {
-        cantCheckOutCallback();
+        checkError("ud", pNum);
     });
 };
 const clickedPatruljePåVej = (val, commit) => {
     const pNum = parseInt(val.id.substring(1));
-    const cantCheckInCallback = () => {
-        alert("Kunne ikke tjekke patrulje " + pNum + " ind. Prøv igen...");
-        console.log("Kunne ikke tjekke patrulje " + pNum + " ind. Prøv igen...");
-    };
     sendRequest("/sendUpdate", new Headers({
         "id": identifier,
         "update": pNum.toString() + "%ind",
@@ -94,12 +92,13 @@ const clickedPatruljePåVej = (val, commit) => {
                     lastUpdateTimeString = new Date().getTime().toString();
                 }, status => {
                     undoActions.shift()();
+                    checkError("ind", pNum);
                 });
                 decreaseUndoDepth();
             }
         }, undoTime);
     }, status => {
-        cantCheckInCallback();
+        checkError("ind", pNum);
     });
 };
 const decreaseUndoDepth = () => {

@@ -14,5 +14,6 @@
         "clientFiles/home.ts",
         "clientFiles/cookie.ts",
         "clientFiles/mandskab.ts",
+        "clientFiles/master.ts"
     ]
 }

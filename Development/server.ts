@@ -1,8 +1,8 @@
 import * as http from 'http'
 import * as fs from 'fs'
 
-import process = require('process');
-namespace server {
+//import process = require('process');
+export namespace server {
 //#region -  Setup
 process.chdir(__dirname);
 const hostname = '127.0.0.1';
@@ -22,17 +22,22 @@ enum MIME {
     ico = "image/x-icon",
     any = "*/*",
 }
-class Loeb{
+export class Loeb{
     navn: string
     beskrivelse: string
     patruljer: string[]
+    udgåedePatruljer: boolean[]
     constructor(obj: any){
         this.navn = obj.navn
         this.beskrivelse = obj.beskrivelse
         this.patruljer = obj.patruljer
+        this.udgåedePatruljer = obj.udgåedePatruljer
+    }
+    patruljeIkkeUdgået = (pNum: number) => {
+        return !this.udgåedePatruljer[pNum]
     }
 }
-class Post{
+export class Post{
     navn: string
     beskrivelse: string
     erOmvej: boolean
@@ -72,7 +77,7 @@ class User {
 
     type(): number{
         if(this.master)
-            return null
+            return Infinity
         return this.postIndex
     }
     printIdentifiers(): void{
@@ -146,10 +151,10 @@ const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", {fla
 const serverLogWriteStream = fs.createWriteStream("data/serverLog.txt", {flags:'a'});
 writeToServerLog("PROGRAM STARTED - Loading files")
 
-const loeb: Loeb = new Loeb(readJSONFileSync("data/loeb.json", true))
+let loeb: Loeb = new Loeb(readJSONFileSync("data/loeb.json", true))
 console.log("Loeb loaded succesfully")
 
-const poster: Post[] = Post.createArray(readJSONFileSync("data/poster.json", true))
+let poster: Post[] = Post.createArray(readJSONFileSync("data/poster.json", true))
 console.log(poster.length.toString() + " poster loaded succesfully")
 
 let ppMatrix: string[][] = readJSONFileSync("data/ppMatrix.json") as string[][]
@@ -185,13 +190,13 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
             switch (req.url) {
                 case "/":
                 case "/home":
-                    homeReq(req, res)
+                    sendFileToClient(res, "home.html")
                     break
                 case "/login":
                     loginReq(req, res)
                     break
                 case "/mandskab":
-                    mandskabReq(req, res)
+                    sendFileToClient(res, "mandskab.html")
                     break
                 case "/getUpdate":
                     getUpdateReq(req, res)
@@ -203,7 +208,13 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
                     sendUpdateReq(req, res)
                     break
                 case "/master":
-                    masterReq(req, res)
+                    sendFileToClient(res, "master.html")
+                    break
+                case "/masterData":
+                    masterDataReq(req, res)
+                    break
+                case "/masterUpdate":
+                    masterUpdateReq(req, res)
                     break
                 default:
                     res.writeHead(400);
@@ -222,9 +233,6 @@ const server: http.Server = http.createServer((req: http.IncomingMessage, res: h
 })
 
 //#region -  Alle funktioner der håndterer de specifikke requests url's der kommer
-const homeReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    sendFileToClient(res, "home.html")
-}
 const loginReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const password = req.headers['password'] as string
     const identifier = req.headers['id'] as string
@@ -246,9 +254,6 @@ const loginReq = (req: http.IncomingMessage, res: http.ServerResponse): void => 
         res.writeHead(403)
         res.end();
     }
-}
-const mandskabReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-    sendFileToClient(res, "mandskab.html")
 }
 const getUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const userPost = recognizeUser(req.headers['id'] as string)
@@ -344,23 +349,36 @@ const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse, over
     res.writeHead(status)
     res.end()
 }
-const masterReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-
+const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    const isMaster = recognizeUser(req.headers['id'] as string) == Infinity
+    if(isMaster){
+        res.setHeader("data", JSON.stringify({
+            "loeb": loeb,
+            "ppMatrix": ppMatrix,
+            "poster": poster
+        }))
+    }
+    else
+        res.writeHead(403)
+    res.end()
+}
+const masterUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+    
 }
 //#endregion
 
 //#region -  Funktioner der håndtere patruljer, poster og brugere
 const canPatruljeBeCheckedUd = (pNum: number, post: number): boolean => {
-    return ppMatrix[pNum].length == 3 * post + 2
+    return (ppMatrix[pNum].length == 3 * post + 2  && loeb.patruljeIkkeUdgået(pNum))
 }
 const canPatruljeBeCheckedIn = (pNum: number, post: number): boolean => {
-    return ppMatrix[pNum].length == 3 * post + 1
+    return (ppMatrix[pNum].length == 3 * post + 1 && loeb.patruljeIkkeUdgået(pNum))
 }
 const patruljerPåPost = (post: number): number[] =>{
     console.log("Post der undersøges: " + post.toString())
     let patruljer: number[] = []
     for (let i = 0; i < ppMatrix.length; i++) {
-        if(ppMatrix[i].length == post * 3 + 2)
+        if(ppMatrix[i].length == post * 3 + 2 && loeb.patruljeIkkeUdgået(i))
             patruljer.push(i + 1)
     }
     return patruljer
@@ -368,7 +386,7 @@ const patruljerPåPost = (post: number): number[] =>{
 const patruljerPåVej = (post: number): number[] =>{
     let patruljer: number[] = []
     for (let i = 0; i < ppMatrix.length; i++) {
-        if(ppMatrix[i].length == post * 3 + 1)
+        if(ppMatrix[i].length == post * 3 + 1 && loeb.patruljeIkkeUdgået(i))
             patruljer.push(i + 1)
     }
     return patruljer
