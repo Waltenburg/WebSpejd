@@ -12,7 +12,7 @@
     <script src="clientFiles/home.js"></script>
 </head>
 
-<body onload="onLoadFunction()">
+<body onload="Client.Home.onLoadFunction()">
     <div class="bg">
         <img width="240" height="240" src="images/logo.png" decoding="async" sizes="(max-width: 240px) 85vw, 240px">
         <h1 class="header" style="margin-top: -20%;">CCMR </h1>
@@ -21,10 +21,10 @@
             style="width: 700px; height: 1200px; opacity: 80%; background-color: #000000; margin: auto; margin-top: auto;">
             <h2 style="color: white; opacity: 100%;">Log ind med dit udleverede login</h2>
             <p>Kode</p>
-            <input value="post1" type="text" id="kode" onfocus="codeChanged()">
+            <input value="post1" type="text" id="kode" onfocus="Client.Home.codeChanged()">
 
-            <button id="button" onclick="loginClicked()">Log ind med ny bruger</button>
-            <button id="loginWithExistingUser" onclick="loginWithExistingUser()">Log ind med eksisterende bruger</button>
+            <button id="button" onclick="Client.Home.loginClicked()">Log ind med ny bruger</button>
+            <button id="loginWithExistingUser" onclick="Client.Home.loginWithExistingUser()">Log ind med eksisterende bruger</button>
         </div>
     </div>
 </body>

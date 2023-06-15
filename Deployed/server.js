@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.server = void 0;
 const http = require("http");
 const fs = require("fs");
 var server;
@@ -29,7 +28,6 @@ var server;
             this.udgåedePatruljer = obj.udgåedePatruljer;
         }
     }
-    server_1.Loeb = Loeb;
     class Post {
         constructor(obj) {
             this.navn = obj.navn;
@@ -48,7 +46,6 @@ var server;
             return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString();
         }
     }
-    server_1.Post = Post;
     class User {
         constructor(obj) {
             this.kode = obj.kode;
@@ -462,4 +459,4 @@ var server;
             return MIMEType[index];
         return MIME.any;
     };
-})(server = exports.server || (exports.server = {}));
+})(server || (server = {}));

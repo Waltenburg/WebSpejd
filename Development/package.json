@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@types/node": "^18.15.10",
-    "@types/plotly.js": "latest",
+    "@types/plotly.js": "^2.12.18",
     "typescript": "latest"
   }
 }

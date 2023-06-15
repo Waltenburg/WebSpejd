@@ -1,172 +1,146 @@
-//import * as plotly from 'plotly.js'
-import * as s from "../server"
+/// <reference path="sendHTTPRequest.ts"/>
+namespace Client{
+    export namespace Master{
+        const identity = getCookie("identifier")
+        let ppMatrix: string[][]
+        let loeb: Loeb
+        let poster: Post[]
 
-const identity = getCookie("identifier")
-let ppMatrix: string[][]
-let loeb: object
-let poster: object[]
-let overviewLayout: object
+        let patruljeCollection: Data[] = []
 
-let patruljeCollection: Data[] = []
+        class Data{
+            x
+            y: number[]
+            z: number[]
+            text: string[]
+            label: string[]
+            name: string
+            mode
+            type
+            hoverinfo
+            marker
+            line
+            constructor(x: number[], y: number[], patrulje: string, hoverText: string[]){
+                this.x = x
+                this.y = y
+                this.name = patrulje
+                this.text = hoverText
+                this.mode = "lines+markers"
+                this.type = "scatter"
+                this.hoverinfo = "text"
+                this.marker = {
+                    size: 8
+                }
+                this.line = {
+                    dash: "dot",
+                    width: 2
+                }
+            }
 
-const createPatruljePlot = (): void => {
-    //Creating array
-    for (let i = 0; i < ppMatrix.length; i++) {
-        let patruljeY: number[] = []
-        let patruljeX: number[] = []
-        for (let t = 0; t < ppMatrix[i].length; t++) {
-            const pTimeStamp = ppMatrix[i][t];
-            if(pTimeStamp != ""){
-                patruljeX.push(t)
-                patruljeY.push(i + 1)
+        }
+
+        export const createPatruljePlot = (): void => {
+            //Creating array
+            const meldinger = ["På vej mod ", "Tjekket ind på ", "Tjekket ud fra "]
+            for (let patruljeIndex = 0; patruljeIndex < ppMatrix.length; patruljeIndex++) {
+                let patruljeY: number[] = []
+                let patruljeX: number[] = []
+                let plotText: string[] = []
+                for (let t = 0; t < ppMatrix[patruljeIndex].length; t++) {
+                    const pTimeStamp = ppMatrix[patruljeIndex][t];
+                    if(pTimeStamp != ""){
+                        patruljeX.push(t)
+                        patruljeY.push(-(patruljeIndex + 1))
+                        plotText.push("Patrulje " + (patruljeIndex + 1).toString() + "<br>" + meldinger[t % 3] + poster[Math.floor(t/3)].navn  + "<br>" + pTimeStamp)
+
+                    }
+                }
+                patruljeCollection.push(new Data(patruljeX, patruljeY, loeb.patruljer[patruljeIndex], plotText))
+            }
+            //@ts-ignore
+            Plotly.newPlot('patruljeOversigt', patruljeCollection, generateLayout())
+        }
+        const generateLayout = (): object => {
+            return {
+                title:'Patruljeoversigt',
+                showlegend: false,
+                font:{
+                    size: 13.5
+                },
+                xaxis: {
+                    ticktext: getPostNames(),
+                    tickvals: getTickVals(),
+                    showgrid: false,
+                    range: [-0.2, poster.length * 3 + 0.2],
+                    mirror: "all"
+                },
+                yaxis:{
+                    autotick: false,
+                    dtick: 1,
+                    zeroline: false,
+                    range: [-(ppMatrix.length + 0.5), -0.5, ],
+                    showgrid: false,
+                    //ticktext: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30'],
+                    title: "Patruljer",
+                    // autorange: "reversed"
+                }
             }
         }
-        patruljeCollection.push(new Data(patruljeX, patruljeY))
-    }
-    //@ts-ignore
-    Plotly.newPlot('plot', patruljeCollection, overviewLayout)
-} 
-const onLoad = () => {
-    sendRequest("/masterData", new Headers({
-        "id": identity
-    }), (status: number, headers: Headers) =>{ //Succes
-        console.log("Data recieved")
-        const data = JSON.parse(headers.get("data"))
-        ppMatrix = data.ppMatrix
-        loeb = data.loeb
-        poster = data.poster
-        overviewLayout = {
-            title:'Patruljeoversigt',
-            showlegend: false,
-            xaxis: {
-                ticktext: getPostNames(),
-                tickvals: getTickVals(),
-                showgrid: false,
-            },
-            yaxis:{
-                autotick: false,
-                dtick: 1,
-                zeroline: false,
-                range: [0.9, ppMatrix.length + 0.1],
-                title: "Patruljer"
-            }
+        export const onLoad = () => {
+            sendRequest("/masterData", new Headers({
+                "id": identity
+            }), (status: number, headers: Headers) =>{ //Succes
+                const data = JSON.parse(headers.get("data"))
+                ppMatrix = data.ppMatrix
+                loeb = data.loeb
+                poster = data.poster
+
+                createPatruljePlot()
+            }, (status: number) => { //Fail
+                console.log("Request failed")
+                logOut()
+            })
         }
-        createPatruljePlot()
-    }, (status: number) => { //Fail
-        console.log("Request failed")
-    })
-}
+        const getPostNames = (): string[] => {
+            let names: string[] = []
+            poster.forEach(post => {
+                names.push(post.navn)
+            });
+            return names
+        }
+        const getTickVals = (): number[] => {
+            let vals: number[] = []
+            for (let i = 0; i < poster.length; i++) {
+                vals.push(i * 3 + 1)
+            }
+            return vals
+        }
+        const logOut = (deleteUser?: boolean) => {
+            if(deleteUser)
+                deleteCookie("identifier")
+            location.href = "/home"
+        }
 
-const getPostNames = (): string[] => {
-    let names: string[] = []
-    poster.forEach(post => {
-        //@ts-ignore
-        names.push(post.navn)
-    });
-return names
-}
-const getTickVals = (): number[] => {
-    let vals: number[] = []
-    for (let i = 0; i < poster.length; i++) {
-        vals.push(i * 3 + 2)
+        // const getMasterUpdateFunc = () => {
+        //     const headers = new Headers({
+        //         "id": identifier,
+        //         'last-update': lastUpdateTimeString
+        //     })
+        //     lastUpdateTimeString = new Date().getTime().toString()
+        //     sendRequest("/getMasterUpdate", headers, (status, headers) => {
+        //         if(headers.get('update') == "true"){ //Update has arrived since last time client checked
+                    
+        //         }
+        //     }, status => {
+        //         clearInterval(updateInterval)
+        //         if(confirm("Fejl ved opdatering. Log ind igen")){
+        //             logOut()
+        //         }
+        //         else{
+        //             updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
+        //         }
+        //     })
+        // }
+        // let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
     }
-    return vals
 }
-class DataCollection{
-    static type: "scatter"
-    data: Data[]
-}
-class Data{
-    x: number[]
-    y: number[]
-    name: string
-    text: string[]
-
-    static mode: "markers"
-    static line: {
-        dash: 'dot',
-        width: 4
-    }
-    constructor(x: number[], y: number[], patrulje?: string){
-        this.x = x
-        this.y = y
-    }
-
-}
-
-
-
-// let patruljer = [1, 2, 3, 5]
-// let status = [2, 5, 4, 6]
-
-// var patrulje1 = {
-//     x: [1, 2, 3, 7, 8],
-//     y: [1, 1, 1, 1, 1],
-//     mode: 'lines+markers',
-//     name: 'Patrulje 1',
-//     text: ["Mod post 1", "Tjek ind post 1", "d", "f"],
-//     marker: {size: 13} 
-// };
-// var sep1 = {
-//     x: [3.5, 3.5],
-//     y: [1, 4],
-//     mode: "lines",
-//     line: {
-//         color: "rgb(230, 230, 230)",
-//         width: 2
-//     }
-// }
-// var sep2 = {
-//     x: [6.5, 6.5],
-//     y: [1, 4],
-//     mode: "lines",
-//     line: {
-//         color: "rgb(230, 230, 230)",
-//         width: 2
-//     }
-// }
-// var patrulje2 = {
-//     x: [1, 2, 3, 4, 5],
-//     y: [2, 2, 2, 2, 2],
-//     mode: 'lines+markers',
-//     name: 'Patrulje 2'
-// };
-// var patrulje3 = {
-//     x: [1, 2, 3, 7, 8],
-//     y: [3, 3, 3, 3, 3],
-//     mode: 'lines+markers',
-//     name: 'Patrulje 1',
-//     text: ["Mod post 1", "Tjek ind post 1", "d", "f"],
-//     marker: {size: 13} 
-// };
-// var patrulje4 = {
-//     x: [1, 2, 3, 7, 8],
-//     y: [4, 4, 4, 4, 4],
-//     mode: 'lines+markers',
-//     name: 'Patrulje 1',
-//     text: ["Mod post 1", "Tjek ind post 1", "d", "f"],
-//     line: {
-//         dash: 'dot',
-//         width: 4
-        
-//     },
-//     marker: {size: 13} 
-// };
-
-// var data = [sep1, sep2, patrulje1, patrulje2, patrulje3, patrulje4];
-// var layout = {
-//     title:'Patruljeoversigt',
-//     showlegend: false,
-//     xaxis: {
-//         ticktext: ["Post 1", "Omvej 1", "Post 2"],
-//         tickvals: [2, 5, 8],
-//         showgrid: false,
-//     },
-//     yaxis:{
-//         autotick: false,
-//         dtick: 1,
-//         title: "Patruljer"
-//     }
-// };
-
-// plotly.newPlot('plot', data, layout);

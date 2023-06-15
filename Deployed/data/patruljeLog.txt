@@ -172,3 +172,86 @@
 2023-6-0 19:10:7 - Patrulje 6 tjekkes IND på post 3
 2023-6-0 19:10:19 - Patrulje 19 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
 2023-6-0 19:10:20 - Patrulje 17 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:33:54 - Patrulje 7 tjekkes IND på post 1
+2023-6-2 20:33:56 - Patrulje 5 tjekkes IND på post 1
+2023-6-2 20:33:56 - Patrulje 4 tjekkes IND på post 1
+2023-6-2 20:33:57 - Patrulje 1 tjekkes IND på post 1
+2023-6-2 20:33:57 - Patrulje 9 tjekkes IND på post 1
+2023-6-2 20:33:58 - Patrulje 13 tjekkes IND på post 1
+2023-6-2 20:33:59 - Patrulje 12 tjekkes IND på post 1
+2023-6-2 20:33:59 - Patrulje 14 tjekkes IND på post 1
+2023-6-2 20:34:0 - Patrulje 15 tjekkes IND på post 1
+2023-6-2 20:34:0 - Patrulje 16 tjekkes IND på post 1
+2023-6-2 20:34:0 - Patrulje 17 tjekkes IND på post 1
+2023-6-2 20:34:0 - Patrulje 18 tjekkes IND på post 1
+2023-6-2 20:34:0 - Patrulje 19 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 20 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 21 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 22 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 23 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 24 tjekkes IND på post 1
+2023-6-2 20:34:1 - Patrulje 25 tjekkes IND på post 1
+2023-6-2 20:34:2 - Patrulje 26 tjekkes IND på post 1
+2023-6-2 20:34:2 - Patrulje 27 tjekkes IND på post 1
+2023-6-2 20:34:2 - Patrulje 8 tjekkes IND på post 1
+2023-6-2 20:34:2 - Patrulje 10 tjekkes IND på post 1
+2023-6-2 20:34:3 - Patrulje 11 tjekkes IND på post 1
+2023-6-2 20:34:3 - Patrulje 28 tjekkes IND på post 1
+2023-6-2 20:34:3 - Patrulje 29 tjekkes IND på post 1
+2023-6-2 20:34:3 - Patrulje 30 tjekkes IND på post 1
+2023-6-2 20:34:3 - Patrulje 2 tjekkes IND på post 1
+2023-6-2 20:34:4 - Patrulje 6 tjekkes IND på post 1
+2023-6-2 20:34:8 - Patrulje 1 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:8 - Patrulje 4 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:8 - Patrulje 5 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:8 - Patrulje 7 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:8 - Patrulje 9 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:8 - Patrulje 14 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:9 - Patrulje 13 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:10 - Patrulje 12 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:11 - Patrulje 15 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:16 - Patrulje 2 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:17 - Patrulje 6 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:18 - Patrulje 8 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:18 - Patrulje 10 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:19 - Patrulje 16 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:20 - Patrulje 23 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:20 - Patrulje 24 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:21 - Patrulje 26 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:22 - Patrulje 33 tjekkes IND på post 1
+2023-6-2 20:34:22 - Patrulje 35 tjekkes IND på post 1
+2023-6-2 20:34:23 - Patrulje 31 tjekkes IND på post 1
+2023-6-2 20:34:25 - Patrulje 34 tjekkes IND på post 1
+2023-6-2 20:34:26 - Patrulje 11 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:27 - Patrulje 19 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:27 - Patrulje 20 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:27 - Patrulje 18 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:28 - Patrulje 21 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:28 - Patrulje 22 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:33 - Patrulje 17 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:42 - Patrulje 25 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:43 - Patrulje 27 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:43 - Patrulje 28 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:43 - Patrulje 29 tjekkes UD fra Post 1 - Fuglezoo og går mod Omvej mellem post 1 og 2
+2023-6-2 20:34:49 - Patrulje 33 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:50 - Patrulje 31 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:53 - Patrulje 34 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-2 20:34:53 - Patrulje 30 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-3 22:6:42 - Patrulje 32 tjekkes IND på post 1
+2023-6-3 22:6:48 - Patrulje 32 tjekkes UD fra Post 1 - Fuglezoo og går mod Post 2 - Svømmehal
+2023-6-3 22:7:51 - Patrulje 32 tjekkes IND på post 3
+2023-6-3 22:7:54 - Patrulje 1 tjekkes IND på post 3
+2023-6-3 22:7:54 - Patrulje 5 tjekkes IND på post 3
+2023-6-3 22:7:56 - Patrulje 9 tjekkes IND på post 3
+2023-6-3 22:7:57 - Patrulje 31 tjekkes IND på post 3
+2023-6-3 22:8:0 - Patrulje 1 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-3 22:8:2 - Patrulje 32 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-3 22:8:4 - Patrulje 5 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-3 22:20:27 - Patrulje 32 tjekkes IND på post 4
+2023-6-3 22:20:34 - Patrulje 32 tjekkes UD fra Post 3 - Teglværk og går mod MÅL
+2023-6-4 18:0:27 - Patrulje 7 tjekkes IND på post 3
+2023-6-4 18:0:28 - Patrulje 4 tjekkes IND på post 3
+2023-6-4 18:0:29 - Patrulje 9 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-4 18:0:30 - Patrulje 31 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-4 18:2:49 - Patrulje 7 tjekkes UD fra Post 2 - Svømmehal og går mod Post 3 - Teglværk
+2023-6-4 18:3:5 - Patrulje 9 tjekkes IND på post 4

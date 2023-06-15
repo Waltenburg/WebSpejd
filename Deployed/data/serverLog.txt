@@ -57,3 +57,27 @@
 2023-6-2 14:59:18 - PROGRAM STARTED - Loading files
 2023-6-2 14:59:19 - All files loaded succesfully
 2023-6-2 14:59:19 - Server running
+2023-6-2 17:3:35 - Program exiting with code: SIGINT
+2023-6-2 17:18:50 - PROGRAM STARTED - Loading files
+2023-6-2 17:18:50 - All files loaded succesfully
+2023-6-2 17:18:50 - Server running
+2023-6-2 20:32:54 - Program exiting with code: SIGINT
+2023-6-2 20:32:56 - PROGRAM STARTED - Loading files
+2023-6-2 20:32:56 - All files loaded succesfully
+2023-6-2 20:32:56 - Server running
+2023-6-2 20:33:6 - Program exiting with code: SIGINT
+2023-6-2 20:33:7 - PROGRAM STARTED - Loading files
+2023-6-2 20:33:7 - All files loaded succesfully
+2023-6-2 20:33:7 - Server running
+2023-6-3 21:59:55 - Program exiting with code: SIGINT
+2023-6-3 21:59:56 - PROGRAM STARTED - Loading files
+2023-6-3 21:59:57 - All files loaded succesfully
+2023-6-3 21:59:57 - Server running
+2023-6-3 22:1:39 - Program exiting with code: SIGINT
+2023-6-3 22:1:40 - PROGRAM STARTED - Loading files
+2023-6-3 22:1:41 - All files loaded succesfully
+2023-6-3 22:1:41 - Server running
+2023-6-3 22:28:9 - Program exiting with code: SIGINT
+2023-6-4 16:12:43 - PROGRAM STARTED - Loading files
+2023-6-4 16:12:43 - All files loaded succesfully
+2023-6-4 16:12:43 - Server running

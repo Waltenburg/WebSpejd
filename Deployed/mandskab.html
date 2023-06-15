@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="clientFiles/mandskabStyle.css">
 </head>
 
-<body style="background-color: rgb(51, 51, 51);" onload="onLoadFunctionMandskab()">
+<body style="background-color: rgb(51, 51, 51);" onload="Client.Mandskab.onLoadFunction()">
     <h1 id="postNum">Post</h1><br>
     <div id="listCheckOut">
         <h2>Patruljer der kan tjekkes ud</h2>
@@ -18,7 +18,7 @@
         <!-- <p>Vælg om patruljen skal mod post eller omvej...</p> -->
         <div style="width: 100%; text-align: center;">
             <span class="h2" style="font-size: 2.5em; color: #04AA6D; vertical-align: super;">Post</span>
-            <input id="postOmvejSelector" type="range" class="selector" min="0" max="1" value="0" oninput="postOmvejChanged()">
+            <input id="postOmvejSelector" type="range" class="selector" min="0" max="1" value="0" oninput="Client.Mandskab.postOmvejChanged()">
             <span id="OmvejSelectorText" class="h2" style="font-size: 2.5em; color: #d4be19; vertical-align: super;">Omvej</span>
             <p id="ingenPåPost">Der er ikke ingen patruljer på din post</p>
         </div><br>
@@ -30,7 +30,7 @@
         <!-- <h2 style="font-size: 2.5em;">De er tjekket ud af den forrige post</h2><br> -->
         <!-- <input id="p5" class="patrulje" type="button" value="#5"> -->
     </div>
-    <input id="undo" class="action" type="button" value="Undo" onclick="undoButtonClicked()" style="left: 20px;" disabled>
-    <input type="button" class="action" value="Log ud" onclick="logOut()" style="right: 20px; background-color: darkslategrey;">
+    <input id="undo" class="action" type="button" value="Undo" onclick="Client.Mandskab.undoButtonClicked()" style="left: 20px;" disabled>
+    <input type="button" class="action" value="Log ud" onclick="Client.Mandskab.logOut()" style="right: 20px; background-color: darkslategrey;">
 </body>
 </html>
