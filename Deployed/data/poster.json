@@ -1,24 +1,60 @@
 [
     {
-        "navn": "Post 1 - Fuglezoo",
+        "navn": "Post 1",
         "beskrivelse": "En flot post i Fuglezoo",
         "erOmvej": false,
         "omvejÅben": null
     },
     {
-        "navn": "Omvej mellem post 1 og 2",
+        "navn": "Omvej 1->2",
         "beskrivelse": "Omvej",
         "erOmvej": true,
         "omvejÅben": true
     },
     {
-        "navn": "Post 2 - Svømmehal",
+        "navn": "Post 2",
         "beskrivelse": "En flot post i Fuglezoo",
         "erOmvej": false,
         "omvejÅben": null
     },
     {
-        "navn": "Post 3 - Teglværk",
+        "navn": "Post 3",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Omvej 3->4",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": true,
+        "omvejÅben": true
+    },
+    {
+        "navn": "Post 4",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Post 5",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Post 6",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Post 7",
+        "beskrivelse": "En flot post i Fuglezoo",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "Post 8",
         "beskrivelse": "En flot post i Fuglezoo",
         "erOmvej": false,
         "omvejÅben": null

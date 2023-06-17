@@ -9,20 +9,21 @@ namespace Client{
         let listPåVej: HTMLElement
         let postOmvejSelector: HTMLInputElement
         let undoButton: HTMLInputElement
-        let undoActions: callback[] = []
-
+        
         let patruljerPåPost: number[] = [] //De patruljer der er på posten i nummeret rækkefølge
         let patruljeElementsPåPost: HTMLInputElement[] = [] //De tilhørende elementer 
-
+        
         let noPatruljerPåPostText: HTMLParagraphElement
         let noPatruljerPåVejText: HTMLParagraphElement
-
+        
         let patruljerPåVej: number[] = [] //De patruljer der er på vej til posten i nummeret rækkefølge
         let patruljeElementsPåVej: HTMLInputElement[]= [] //De tilhørende elementer
-
+        
         let undoDepth = 0
-        let undoTime = 5 * 1000
-        let timeBetweenUpdates = 5 * 1000
+        let undoTime = 3 * 1000
+        let undoActions: callback[] = []
+        let commitTimeoutArr: NodeJS.Timeout[] = []
+        let timeBetweenUpdates = 2 * 1000
         let lastUpdateTimeString = new Date().getTime().toString()
 
         const createPatruljeElement = (patruljeNummer: number): HTMLInputElement => {
@@ -42,6 +43,7 @@ namespace Client{
         export const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
             const postOrOmvejAtCLickedTime = postOrOmvej
+            //lastUpdateTimeString = new Date().getTime().toString()
             sendRequest("/sendUpdate", new Headers({
                 "id": identifier,
                 "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
@@ -51,11 +53,12 @@ namespace Client{
                 undoButton.disabled = false
                 removePatruljePåPost(pNum)
                 undoActions.push(() => {
+                    console.log("UNDO")
                     addPatruljePåPost(pNum)
                 })
-                setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
+                commitTimeoutArr.push(setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
                     if(undoDepth > 0){
-                        lastUpdateTimeString = new Date().getTime().toString()
+                        //lastUpdateTimeString = new Date().getTime().toString()
                         sendRequest("/sendUpdate", new Headers({
                             "id": identifier,
                             "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
@@ -70,7 +73,8 @@ namespace Client{
                         })
                         decreaseUndoDepth()
                     }
-                }, undoTime)
+                    commitTimeoutArr.shift()
+                }, undoTime))
             }, status => { //Test failed
                 checkError("ud", pNum)
             })
@@ -78,6 +82,7 @@ namespace Client{
 
         export const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
+            //lastUpdateTimeString = new Date().getTime().toString()
             sendRequest("/sendUpdate", new Headers({
                 "id": identifier,
                 "update": pNum.toString() + "%ind",
@@ -91,7 +96,7 @@ namespace Client{
                     addPatruljeToPåVej(pNum)
                     removePatruljePåPost(pNum)
                 })
-                setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
+                commitTimeoutArr.push(setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
                     if(undoDepth > 0){
                         sendRequest("/sendUpdate", new Headers({
                             "id": identifier,
@@ -100,14 +105,15 @@ namespace Client{
                         }), (status, headers) => { //Check in succesfull
                                 console.log('Tjekket patrulje ' + pNum + " ind")
                                 undoActions.shift()
-                                lastUpdateTimeString = new Date().getTime().toString()
+                                //lastUpdateTimeString = new Date().getTime().toString()
                         }, status => { //Check in failed
                             undoActions.shift()()
                             checkError("ind", pNum)
                         })
                         decreaseUndoDepth()
                     }
-                }, undoTime)
+                    commitTimeoutArr.shift()
+                }, undoTime))
             }, status => { //Test failed
                 checkError("ind", pNum)
             })
@@ -125,6 +131,7 @@ namespace Client{
             // undoActions.pop() //Disse tre linjer gør det samme som den ene nedenunder
             undoActions.pop()()
             decreaseUndoDepth()
+            clearTimeout(commitTimeoutArr.pop())
         }
         const removePatruljePåPost = (patruljeNummer: number) => {
             const i = patruljerPåPost.indexOf(patruljeNummer)
@@ -150,7 +157,7 @@ namespace Client{
             if(patruljerPåVej.length == 0)
                 noPatruljerPåVejText.style.display = ''
         }
-        const postOmvejChanged = () => {
+        export const postOmvejChanged = () => {
             if(postOmvejSelector.value == "0"){
                 postOrOmvej = "post"
                 patruljeElementsPåPost.forEach(element => {
@@ -228,7 +235,6 @@ namespace Client{
             undoButton = document.getElementById("undo") as HTMLInputElement
             noPatruljerPåPostText = document.getElementById("ingenPåPost") as HTMLParagraphElement
             noPatruljerPåVejText = document.getElementById("ingenPåVej") as HTMLParagraphElement
-
             //Get data from server
             sendRequest("/getData", new Headers({
                 "id": identifier
@@ -254,42 +260,44 @@ namespace Client{
             console.log("Entire page loaded")
         }
         const getUpdateFunc = () => {
-            const headers = new Headers({
-                "id": identifier,
-                'last-update': lastUpdateTimeString
-            })
-            lastUpdateTimeString = new Date().getTime().toString()
-            sendRequest("/getUpdate", headers, (status, headers) => {
-                if(headers.get('update') == "true"){ //Update has arrived since last time client checked
-                    const data = JSON.parse(headers.get("data")) as PatruljePostData
-
-                    const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
-                    updatePåPost[0].forEach(patrulje => {
-                        removePatruljePåPost(patrulje)
-                    })
-                    updatePåPost[1].forEach(patrulje => {
-                        addPatruljePåPost(patrulje)
-                    })
-
-                    const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
-                    updatePåVej[0].forEach(patrulje => {
-                        removePatruljePåVej(patrulje)
-                    })
-                    updatePåVej[1].forEach(patrulje => {
-                        addPatruljeToPåVej(patrulje)
-                    })
-
-                }
-            }, status => {
-                clearInterval(updateInterval)
-
-                if(confirm("Fejl ved opdatering. Log ind igen")){
-                    logOut()
-                }
-                else{
-                    updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
-                }
-            })
+            if(undoDepth == 0){
+                const headers = new Headers({
+                    "id": identifier,
+                    'last-update': lastUpdateTimeString
+                })
+                lastUpdateTimeString = new Date().getTime().toString()
+                sendRequest("/getUpdate", headers, (status, headers) => {
+                    if(headers.get('update') == "true"){ //Update has arrived since last time client checked
+                        const data = JSON.parse(headers.get("data")) as PatruljePostData
+    
+                        const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
+                        updatePåPost[0].forEach(patrulje => {
+                            removePatruljePåPost(patrulje)
+                        })
+                        updatePåPost[1].forEach(patrulje => {
+                            addPatruljePåPost(patrulje)
+                        })
+    
+                        const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
+                        updatePåVej[0].forEach(patrulje => {
+                            removePatruljePåVej(patrulje)
+                        })
+                        updatePåVej[1].forEach(patrulje => {
+                            addPatruljeToPåVej(patrulje)
+                        })
+    
+                    }
+                }, status => {
+                    clearInterval(updateInterval)
+    
+                    if(confirm("Fejl ved opdatering. Log ind igen")){
+                        logOut()
+                    }
+                    else{
+                        updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
+                    }
+                })
+            }
         }
         let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
         //Getting initial data from server
@@ -298,29 +306,6 @@ namespace Client{
 
         interface callback{
             () : void
-        }
-        //function getDiffArr<T>(arr1: T)
-
-        //Returns a tuple with the first value being all values in Arr1 that arent in Arr2
-        //and second value being all vales in Arr2 that arent in Arr1
-        function getDiffArr<T>(Arr1: T[], Arr2: T[]): [T[], T[]] {
-            let arr1 = Arr1.slice()
-            let arr2 = Arr2.slice()
-            for (let i = 0; i < arr1.length; i++) {
-                const vi = arr1[i];
-                let sameValueFound = false
-                for (let j = 0; j < arr2.length; j++) {
-                    const vj = arr2[j];
-                    if(vi == vj){
-                        sameValueFound = true
-                        arr1.splice(i, 1)
-                        arr2.splice(j, 1)
-                        i--
-                        break
-                    }
-                }
-            }
-            return [arr1, arr2];
         }
     }
     

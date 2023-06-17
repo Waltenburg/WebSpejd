@@ -8,10 +8,36 @@
     <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
     <script src="clientFiles/cookie.js"></script>
     <script src="clientFiles/sendHTTPRequest.js"></script>
-    <script src="clientFiles/master.js"></script>
+    <!-- <script src="clientFiles/master.js"></script> -->
+    <link rel="stylesheet" type="text/css" href="clientFiles/masterSections.css">
+    <link rel="stylesheet" type="text/css" href="clientFiles/masterStyle.css">
 </head>
 <body onload="Client.Master.onLoad()">
-    <div id="patruljeOversigt" style="width: 95%; height: 700px;"></div>
-    <div id=""></div>
+    <section id="top">
+        <h1>CCMR PART XXVII</h1>
+    </section>
+    <section id="marginLeft"></section>
+    <section id="marginRight"></section>
+    <section id="left">
+        <section id="patruljeOversigt"></section>
+        <section id="updates">
+            <h2>Seneste meldinger</h2>
+            <ul id="updatesList">
+            </ul>
+        </section>
+    </section>
+    <section id="right">
+        <section id="poster"></section>
+        <section id="patruljer"></section>
+        <section id="ppMatrix"></section>
+    </section>
+    
+    <!-- <div>
+        <h2>Seneste meldinger</h2>
+        <ul id="senesteUpdates">
+        </ul>
+    </div>
+    <div id="patruljeOversigt" style="width: 50%; height: 800px;"></div>
+    <div id=""></div> -->
 </body>
 </html>

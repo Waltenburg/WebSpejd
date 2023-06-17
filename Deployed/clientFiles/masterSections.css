@@ -1,0 +1,55 @@
+
+section{
+    width: 48%;
+    position: absolute;
+}
+#top{
+    top: 0;
+    height: 8%;
+    width: 100%;
+}
+#marginLeft{
+    top: 8%;
+    left: 0%;
+    height: 92%;
+    width: 2%;
+}
+#marginRight{
+    top: 8%;
+    right: 0%;
+    height: 92%;
+    width: 2%;
+}
+#left{
+    top: 8%;
+    left: 2%;
+    height: 92%;
+}
+#right{
+    top: 8%;
+    right: 2%;
+    height: 92%;
+}
+#patruljeOversigt{
+    height: 50%;
+    width: 100%;
+}
+#updates{
+    height: 50%;
+    width: 100%;
+    top: 50% 
+}
+#poster{
+    height: 33%;
+    width: 100%;
+}
+#patruljer{
+    height: 33%;
+    width: 100%;
+    top: 33%;
+}
+#ppMatrix{
+    height: 34%;
+    width: 100%;
+    bottom: 0;
+}

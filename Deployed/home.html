@@ -23,8 +23,10 @@
             <p>Kode</p>
             <input value="post1" type="text" id="kode" onfocus="Client.Home.codeChanged()">
 
-            <button id="button" onclick="Client.Home.loginClicked()">Log ind med ny bruger</button>
-            <button id="loginWithExistingUser" onclick="Client.Home.loginWithExistingUser()">Log ind med eksisterende bruger</button>
+            <button id="button" onclick="Client.Home.loginClicked(false)">Log ind med kode</button>
+            <button id="loginInMandskab" onclick="location.assign('/mandskab')" disabled>Log ind med gemt mandskabsbruger</button>
+            <button id="loginInMaster" onclick="location.assign('/master')" disabled>Log ind med gemt masterbruger</button>
+            <!-- <button id="loginWithExistingUser" onclick="Client.Home.loginClicked(true)" disabled>Log ind med eksisterende bruger</button> -->
         </div>
     </div>
 </body>

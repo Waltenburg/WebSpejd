@@ -9,7 +9,6 @@ var Client;
         let listPåVej;
         let postOmvejSelector;
         let undoButton;
-        let undoActions = [];
         let patruljerPåPost = [];
         let patruljeElementsPåPost = [];
         let noPatruljerPåPostText;
@@ -17,8 +16,10 @@ var Client;
         let patruljerPåVej = [];
         let patruljeElementsPåVej = [];
         let undoDepth = 0;
-        let undoTime = 5 * 1000;
-        let timeBetweenUpdates = 5 * 1000;
+        let undoTime = 3 * 1000;
+        let undoActions = [];
+        let commitTimeoutArr = [];
+        let timeBetweenUpdates = 2 * 1000;
         let lastUpdateTimeString = new Date().getTime().toString();
         const createPatruljeElement = (patruljeNummer) => {
             let newPatrulje = document.createElement("input");
@@ -46,11 +47,11 @@ var Client;
                 undoButton.disabled = false;
                 removePatruljePåPost(pNum);
                 undoActions.push(() => {
+                    console.log("UNDO");
                     addPatruljePåPost(pNum);
                 });
-                setTimeout(() => {
+                commitTimeoutArr.push(setTimeout(() => {
                     if (undoDepth > 0) {
-                        lastUpdateTimeString = new Date().getTime().toString();
                         Client.sendRequest("/sendUpdate", new Headers({
                             "id": identifier,
                             "update": pNum.toString() + "%ud" + "%" + postOrOmvejAtCLickedTime,
@@ -64,7 +65,8 @@ var Client;
                         });
                         decreaseUndoDepth();
                     }
-                }, undoTime);
+                    commitTimeoutArr.shift();
+                }, undoTime));
             }, status => {
                 checkError("ud", pNum);
             });
@@ -84,7 +86,7 @@ var Client;
                     addPatruljeToPåVej(pNum);
                     removePatruljePåPost(pNum);
                 });
-                setTimeout(() => {
+                commitTimeoutArr.push(setTimeout(() => {
                     if (undoDepth > 0) {
                         Client.sendRequest("/sendUpdate", new Headers({
                             "id": identifier,
@@ -93,14 +95,14 @@ var Client;
                         }), (status, headers) => {
                             console.log('Tjekket patrulje ' + pNum + " ind");
                             undoActions.shift();
-                            lastUpdateTimeString = new Date().getTime().toString();
                         }, status => {
                             undoActions.shift()();
                             checkError("ind", pNum);
                         });
                         decreaseUndoDepth();
                     }
-                }, undoTime);
+                    commitTimeoutArr.shift();
+                }, undoTime));
             }, status => {
                 checkError("ind", pNum);
             });
@@ -115,6 +117,7 @@ var Client;
         Mandskab.undoButtonClicked = () => {
             undoActions.pop()();
             decreaseUndoDepth();
+            clearTimeout(commitTimeoutArr.pop());
         };
         const removePatruljePåPost = (patruljeNummer) => {
             const i = patruljerPåPost.indexOf(patruljeNummer);
@@ -140,7 +143,7 @@ var Client;
             if (patruljerPåVej.length == 0)
                 noPatruljerPåVejText.style.display = '';
         };
-        const postOmvejChanged = () => {
+        Mandskab.postOmvejChanged = () => {
             if (postOmvejSelector.value == "0") {
                 postOrOmvej = "post";
                 patruljeElementsPåPost.forEach(element => {
@@ -164,14 +167,14 @@ var Client;
                 }, undoTime);
             }
             insertElement(patruljeNummer, newElement, patruljerPåPost, patruljeElementsPåPost, listPåPost);
-            postOmvejChanged();
+            Mandskab.postOmvejChanged();
             noPatruljerPåPostText.style.display = 'none';
         };
         const addPatruljeToPåVej = (patruljeNummer) => {
             const newElement = createPatruljeElement(patruljeNummer);
             newElement.setAttribute("onclick", "Client.Mandskab.clickedPatruljePåVej(this)");
             insertElement(patruljeNummer, newElement, patruljerPåVej, patruljeElementsPåVej, listPåVej);
-            postOmvejChanged();
+            Mandskab.postOmvejChanged();
             noPatruljerPåVejText.style.display = 'none';
         };
         const insertElement = (patruljeNummer, patruljeElement, patruljeNummerArray, patruljeElementArray, parent) => {
@@ -228,67 +231,50 @@ var Client;
                     document.getElementById("postOmvejSelector").disabled = true;
                     document.getElementById("OmvejSelectorText").innerHTML += " (Lukket)";
                 }
-                postOmvejChanged();
+                Mandskab.postOmvejChanged();
             }, () => {
                 location.replace(window.location.origin);
             });
             console.log("Entire page loaded");
         };
         const getUpdateFunc = () => {
-            const headers = new Headers({
-                "id": identifier,
-                'last-update': lastUpdateTimeString
-            });
-            lastUpdateTimeString = new Date().getTime().toString();
-            Client.sendRequest("/getUpdate", headers, (status, headers) => {
-                if (headers.get('update') == "true") {
-                    const data = JSON.parse(headers.get("data"));
-                    const updatePåPost = getDiffArr(patruljerPåPost, data.påPost);
-                    updatePåPost[0].forEach(patrulje => {
-                        removePatruljePåPost(patrulje);
-                    });
-                    updatePåPost[1].forEach(patrulje => {
-                        addPatruljePåPost(patrulje);
-                    });
-                    const updatePåVej = getDiffArr(patruljerPåVej, data.påVej);
-                    updatePåVej[0].forEach(patrulje => {
-                        removePatruljePåVej(patrulje);
-                    });
-                    updatePåVej[1].forEach(patrulje => {
-                        addPatruljeToPåVej(patrulje);
-                    });
-                }
-            }, status => {
-                clearInterval(updateInterval);
-                if (confirm("Fejl ved opdatering. Log ind igen")) {
-                    Mandskab.logOut();
-                }
-                else {
-                    updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
-                }
-            });
+            if (undoDepth == 0) {
+                const headers = new Headers({
+                    "id": identifier,
+                    'last-update': lastUpdateTimeString
+                });
+                lastUpdateTimeString = new Date().getTime().toString();
+                Client.sendRequest("/getUpdate", headers, (status, headers) => {
+                    if (headers.get('update') == "true") {
+                        const data = JSON.parse(headers.get("data"));
+                        const updatePåPost = Client.getDiffArr(patruljerPåPost, data.påPost);
+                        updatePåPost[0].forEach(patrulje => {
+                            removePatruljePåPost(patrulje);
+                        });
+                        updatePåPost[1].forEach(patrulje => {
+                            addPatruljePåPost(patrulje);
+                        });
+                        const updatePåVej = Client.getDiffArr(patruljerPåVej, data.påVej);
+                        updatePåVej[0].forEach(patrulje => {
+                            removePatruljePåVej(patrulje);
+                        });
+                        updatePåVej[1].forEach(patrulje => {
+                            addPatruljeToPåVej(patrulje);
+                        });
+                    }
+                }, status => {
+                    clearInterval(updateInterval);
+                    if (confirm("Fejl ved opdatering. Log ind igen")) {
+                        Mandskab.logOut();
+                    }
+                    else {
+                        updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
+                    }
+                });
+            }
         };
         let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
         if (identifier == null)
             location.href = "/home";
-        function getDiffArr(Arr1, Arr2) {
-            let arr1 = Arr1.slice();
-            let arr2 = Arr2.slice();
-            for (let i = 0; i < arr1.length; i++) {
-                const vi = arr1[i];
-                let sameValueFound = false;
-                for (let j = 0; j < arr2.length; j++) {
-                    const vj = arr2[j];
-                    if (vi == vj) {
-                        sameValueFound = true;
-                        arr1.splice(i, 1);
-                        arr2.splice(j, 1);
-                        i--;
-                        break;
-                    }
-                }
-            }
-            return [arr1, arr2];
-        }
     })(Mandskab = Client.Mandskab || (Client.Mandskab = {}));
 })(Client || (Client = {}));

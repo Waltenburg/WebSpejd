@@ -10,5 +10,7 @@
     },
     "files": [
         "server.ts",
+        "serverClasses.ts",
+        "files.ts"
     ]
 }

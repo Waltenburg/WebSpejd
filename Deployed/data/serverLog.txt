@@ -81,3 +81,256 @@
 2023-6-4 16:12:43 - PROGRAM STARTED - Loading files
 2023-6-4 16:12:43 - All files loaded succesfully
 2023-6-4 16:12:43 - Server running
+2023-6-4 19:2:37 - PROGRAM STARTED - Loading files
+2023-6-4 19:2:37 - All files loaded succesfully
+2023-6-4 19:2:37 - Server running
+2023-6-4 19:58:27 - Program exiting with code: SIGINT
+2023-6-4 19:58:28 - PROGRAM STARTED - Loading files
+2023-6-4 19:58:28 - All files loaded succesfully
+2023-6-4 19:58:28 - Server running
+2023-6-4 20:4:43 - Program exiting with code: SIGINT
+2023-6-4 20:4:44 - PROGRAM STARTED - Loading files
+2023-6-4 20:4:44 - All files loaded succesfully
+2023-6-4 20:4:44 - Server running
+2023-6-4 20:5:36 - Program exiting with code: SIGINT
+2023-6-4 20:5:36 - PROGRAM STARTED - Loading files
+2023-6-4 20:5:36 - All files loaded succesfully
+2023-6-4 20:5:36 - Server running
+2023-6-4 20:6:53 - Program exiting with code: SIGINT
+2023-6-4 20:6:54 - PROGRAM STARTED - Loading files
+2023-6-4 20:6:54 - All files loaded succesfully
+2023-6-4 20:6:54 - Server running
+2023-6-4 20:8:29 - Program exiting with code: SIGINT
+2023-6-4 20:8:30 - PROGRAM STARTED - Loading files
+2023-6-4 20:8:30 - All files loaded succesfully
+2023-6-4 20:8:30 - Server running
+2023-6-4 20:13:5 - Program exiting with code: SIGINT
+2023-6-15 20:13:6 - PROGRAM STARTED - Loading files
+2023-6-15 20:13:6 - All files loaded succesfully
+2023-6-15 20:13:6 - Server running
+2023-6-15 20:13:12 - Program exiting with code: SIGINT
+2023-6-15 20:13:13 - PROGRAM STARTED - Loading files
+2023-6-15 20:13:13 - All files loaded succesfully
+2023-6-15 20:13:13 - Server running
+2023-6-15 20:26:28 - Program exiting with code: SIGINT
+2023-6-15 20:26:31 - PROGRAM STARTED - Loading files
+2023-6-15 20:26:31 - All files loaded succesfully
+2023-6-15 20:26:31 - Server running
+2023-6-15 22:53:42 - Program exiting with code: SIGINT
+2023-6-15 22:53:43 - PROGRAM STARTED - Loading files
+2023-6-15 22:53:43 - All files loaded succesfully
+2023-6-15 22:53:43 - Server running
+2023-6-15 22:57:18 - Program exiting with code: SIGINT
+2023-6-15 22:57:18 - PROGRAM STARTED - Loading files
+2023-6-15 22:57:18 - All files loaded succesfully
+2023-6-15 22:57:18 - Server running
+2023-6-15 22:58:30 - Program exiting with code: TypeError: Cannot read properties of undefined (reading 'navn')
+2023-6-15 23:3:0 - PROGRAM STARTED - Loading files
+2023-6-15 23:3:0 - All files loaded succesfully
+2023-6-15 23:3:0 - Server running
+2023-6-15 23:33:19 - Program exiting with code: SIGINT
+2023-6-15 23:33:20 - PROGRAM STARTED - Loading files
+2023-6-15 23:33:20 - All files loaded succesfully
+2023-6-15 23:33:20 - Server running
+2023-6-16 10:28:7 - PROGRAM STARTED - Loading files
+2023-6-16 10:28:7 - All files loaded succesfully
+2023-6-16 10:28:7 - Server running
+2023-6-16 10:33:18 - Program exiting with code: SIGINT
+2023-6-16 10:33:25 - PROGRAM STARTED - Loading files
+2023-6-16 10:33:25 - All files loaded succesfully
+2023-6-16 10:33:26 - Server running
+2023-6-16 10:38:25 - Program exiting with code: SIGINT
+2023-6-16 10:38:34 - PROGRAM STARTED - Loading files
+2023-6-16 10:38:34 - All files loaded succesfully
+2023-6-16 10:38:34 - Server running
+2023-6-16 10:39:39 - Program exiting with code: SIGINT
+2023-6-16 10:58:56 - PROGRAM STARTED - Loading files
+2023-6-16 10:58:56 - All files loaded succesfully
+2023-6-16 10:58:56 - Server running
+2023-6-16 11:0:42 - Program exiting with code: SIGINT
+2023-6-16 11:0:43 - PROGRAM STARTED - Loading files
+2023-6-16 11:0:43 - All files loaded succesfully
+2023-6-16 11:0:43 - Server running
+2023-6-16 11:4:46 - Program exiting with code: SIGINT
+2023-6-16 11:4:47 - PROGRAM STARTED - Loading files
+2023-6-16 11:4:47 - All files loaded succesfully
+2023-6-16 11:4:47 - Server running
+2023-6-16 11:12:11 - Program exiting with code: SIGINT
+2023-6-16 11:12:12 - PROGRAM STARTED - Loading files
+2023-6-16 11:12:12 - All files loaded succesfully
+2023-6-16 11:12:12 - Server running
+2023-6-16 11:12:24 - Program exiting with code: SIGINT
+2023-6-16 11:12:25 - PROGRAM STARTED - Loading files
+2023-6-16 11:12:25 - All files loaded succesfully
+2023-6-16 11:12:25 - Server running
+2023-6-16 11:12:59 - Program exiting with code: SIGINT
+2023-6-16 11:15:26 - PROGRAM STARTED - Loading files
+2023-6-16 11:15:26 - All files loaded succesfully
+2023-6-16 11:15:26 - Server running
+2023-6-16 11:17:37 - Program exiting with code: SIGINT
+2023-6-16 11:17:37 - PROGRAM STARTED - Loading files
+2023-6-16 11:17:37 - All files loaded succesfully
+2023-6-16 11:17:37 - Server running
+2023-6-16 11:22:36 - Program exiting with code: SIGINT
+2023-6-16 11:22:37 - PROGRAM STARTED - Loading files
+2023-6-16 11:22:37 - All files loaded succesfully
+2023-6-16 11:22:37 - Server running
+2023-6-16 11:23:31 - Program exiting with code: TypeError: Cannot read properties of undefined (reading 'lastAcces')
+2023-6-16 11:27:23 - PROGRAM STARTED - Loading files
+2023-6-16 11:27:23 - All files loaded succesfully
+2023-6-16 11:27:23 - Server running
+2023-6-16 11:27:37 - Program exiting with code: SIGINT
+2023-6-16 11:27:38 - PROGRAM STARTED - Loading files
+2023-6-16 11:27:38 - All files loaded succesfully
+2023-6-16 11:27:38 - Server running
+2023-6-16 11:28:2 - Program exiting with code: TypeError: Cannot read properties of undefined (reading 'lastAcces')
+2023-6-16 11:29:53 - PROGRAM STARTED - Loading files
+2023-6-16 11:29:53 - All files loaded succesfully
+2023-6-16 11:29:53 - Server running
+2023-6-16 11:31:57 - PROGRAM STARTED - Loading files
+2023-6-16 11:31:57 - All files loaded succesfully
+2023-6-16 11:31:57 - Server running
+2023-6-16 11:33:40 - PROGRAM STARTED - Loading files
+2023-6-16 11:33:40 - All files loaded succesfully
+2023-6-16 11:33:40 - Server running
+2023-6-16 11:42:32 - PROGRAM STARTED - Loading files
+2023-6-16 11:42:32 - All files loaded succesfully
+2023-6-16 11:42:32 - Server running
+2023-6-16 12:11:44 - PROGRAM STARTED - Loading files
+2023-6-16 12:11:44 - All files loaded succesfully
+2023-6-16 12:11:44 - Server running
+2023-6-16 12:16:59 - Program exiting with code: SIGINT
+2023-6-16 12:17:1 - PROGRAM STARTED - Loading files
+2023-6-16 12:17:1 - All files loaded succesfully
+2023-6-16 12:17:1 - Server running
+2023-6-16 12:18:55 - Program exiting with code: SIGINT
+2023-6-16 12:20:5 - PROGRAM STARTED - Loading files
+2023-6-16 12:20:5 - All files loaded succesfully
+2023-6-16 12:20:5 - Server running
+2023-6-16 12:20:13 - Program exiting with code: SIGINT
+2023-6-16 12:21:50 - PROGRAM STARTED - Loading files
+2023-6-16 12:21:50 - All files loaded succesfully
+2023-6-16 12:21:50 - Server running
+2023-6-16 12:21:59 - Program exiting with code: SIGINT
+2023-6-16 12:22:40 - PROGRAM STARTED - Loading files
+2023-6-16 12:22:40 - All files loaded succesfully
+2023-6-16 12:22:40 - Server running
+2023-6-16 12:22:46 - Program exiting with code: SIGINT
+2023-6-16 12:25:41 - PROGRAM STARTED - Loading files
+2023-6-16 12:25:41 - All files loaded succesfully
+2023-6-16 12:25:41 - Server running
+2023-6-16 12:26:3 - Program exiting with code: SIGINT
+2023-6-16 12:26:6 - PROGRAM STARTED - Loading files
+2023-6-16 12:26:6 - All files loaded succesfully
+2023-6-16 12:26:6 - Server running
+2023-6-16 12:42:13 - Program exiting with code: SIGINT
+2023-6-16 12:42:14 - PROGRAM STARTED - Loading files
+2023-6-16 12:42:14 - All files loaded succesfully
+2023-6-16 12:42:14 - Server running
+2023-6-16 15:27:9 - Program exiting with code: SIGINT
+2023-6-16 15:27:10 - PROGRAM STARTED - Loading files
+2023-6-16 15:27:10 - All files loaded succesfully
+2023-6-16 15:27:10 - Server running
+2023-6-16 15:34:22 - Program exiting with code: SIGINT
+2023-6-16 15:34:23 - PROGRAM STARTED - Loading files
+2023-6-16 15:34:24 - All files loaded succesfully
+2023-6-16 15:34:24 - Server running
+2023-6-16 15:54:51 - Program exiting with code: SIGINT
+2023-6-16 16:18:42 - PROGRAM STARTED - Loading files
+2023-6-16 16:18:42 - All files loaded succesfully
+2023-6-16 16:18:42 - Server running
+2023-6-16 16:27:55 - Program exiting with code: SIGINT
+2023-6-16 16:27:56 - PROGRAM STARTED - Loading files
+2023-6-16 16:27:56 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:27:56 - Server running
+2023-6-16 16:28:48 - Program exiting with code: SIGINT
+2023-6-16 16:32:24 - PROGRAM STARTED - Loading files
+2023-6-16 16:32:24 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:32:24 - Server running
+2023-6-16 16:52:57 - Program exiting with code: SIGINT
+2023-6-16 16:52:58 - PROGRAM STARTED - Loading files
+2023-6-16 16:52:58 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:52:58 - Server running
+2023-6-16 16:53:26 - Program exiting with code: SIGINT
+2023-6-16 16:53:27 - PROGRAM STARTED - Loading files
+2023-6-16 16:53:27 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:53:27 - Server running
+2023-6-16 16:54:18 - Program exiting with code: SIGINT
+2023-6-16 16:54:19 - PROGRAM STARTED - Loading files
+2023-6-16 16:54:19 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:54:19 - Server running
+2023-6-16 16:54:35 - Program exiting with code: SIGINT
+2023-6-16 16:54:36 - PROGRAM STARTED - Loading files
+2023-6-16 16:54:36 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:54:36 - Server running
+2023-6-16 16:55:20 - Program exiting with code: SIGINT
+2023-6-16 16:55:21 - PROGRAM STARTED - Loading files
+2023-6-16 16:55:21 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:55:21 - Server running
+2023-6-16 16:56:42 - Program exiting with code: SIGINT
+2023-6-16 16:56:43 - PROGRAM STARTED - Loading files
+2023-6-16 16:56:43 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:56:43 - Server running
+2023-6-16 16:56:58 - Program exiting with code: SIGINT
+2023-6-16 16:56:59 - PROGRAM STARTED - Loading files
+2023-6-16 16:56:59 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:56:59 - Server running
+2023-6-16 16:57:19 - Program exiting with code: SIGINT
+2023-6-16 16:57:20 - PROGRAM STARTED - Loading files
+2023-6-16 16:57:20 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:57:20 - Server running
+2023-6-16 16:57:32 - Program exiting with code: SIGINT
+2023-6-16 16:57:33 - PROGRAM STARTED - Loading files
+2023-6-16 16:57:33 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:57:33 - Server running
+2023-6-16 16:57:59 - Program exiting with code: SIGINT
+2023-6-16 16:58:0 - PROGRAM STARTED - Loading files
+2023-6-16 16:58:0 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 16:58:0 - Server running
+2023-6-16 17:3:28 - Program exiting with code: SIGINT
+2023-6-16 17:3:29 - PROGRAM STARTED - Loading files
+2023-6-16 17:3:29 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:3:29 - Server running
+2023-6-16 17:3:54 - Program exiting with code: SIGINT
+2023-6-16 17:3:55 - PROGRAM STARTED - Loading files
+2023-6-16 17:3:55 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:3:55 - Server running
+2023-6-16 17:4:27 - Program exiting with code: SIGINT
+2023-6-16 17:4:29 - PROGRAM STARTED - Loading files
+2023-6-16 17:4:29 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:4:29 - Server running
+2023-6-16 17:4:47 - Program exiting with code: SIGINT
+2023-6-16 17:4:48 - PROGRAM STARTED - Loading files
+2023-6-16 17:4:48 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:4:48 - Server running
+2023-6-16 17:5:0 - Program exiting with code: SIGINT
+2023-6-16 17:5:0 - PROGRAM STARTED - Loading files
+2023-6-16 17:5:0 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:5:0 - Server running
+2023-6-16 17:43:59 - Program exiting with code: SIGINT
+2023-6-16 17:44:0 - PROGRAM STARTED - Loading files
+2023-6-16 17:44:0 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 17:44:0 - Server running
+2023-6-16 18:2:16 - Program exiting with code: SIGINT
+2023-6-16 18:2:16 - PROGRAM STARTED - Loading files
+2023-6-16 18:2:16 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 18:2:16 - Server running
+2023-6-16 18:51:4 - Program exiting with code: SIGINT
+2023-6-16 18:51:5 - PROGRAM STARTED - Loading files
+2023-6-16 18:51:5 - Alle filer succesfuldt loadet. Loadet 4 poster, 5 brugere og 26 patruljer
+2023-6-16 18:51:5 - Server running
+2023-6-16 19:18:40 - Program exiting with code: SIGINT
+2023-6-16 19:18:40 - PROGRAM STARTED - Loading files
+2023-6-16 19:18:40 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-16 19:18:40 - Server running
+2023-6-16 19:19:49 - Program exiting with code: SIGINT
+2023-6-16 19:19:50 - PROGRAM STARTED - Loading files
+2023-6-16 19:19:50 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-16 19:19:50 - Server running
+2023-6-16 19:20:25 - Program exiting with code: SIGINT
+2023-6-16 19:20:25 - PROGRAM STARTED - Loading files
+2023-6-16 19:20:25 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-16 19:20:25 - Server running
+2023-6-17 10:14:24 - PROGRAM STARTED - Loading files
+2023-6-17 10:14:24 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-17 10:14:24 - Server running

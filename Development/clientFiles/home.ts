@@ -5,23 +5,32 @@ namespace Client{
         export const onLoadFunction = () => {
             console.log("Page loaded")
             kode = document.getElementById("kode") as HTMLInputElement
-            if(getCookie("identifier") == null)
-                (document.getElementById("loginWithExistingUser") as HTMLButtonElement).disabled = true
+            if(getCookie("identifier") != null){
+                const master = getCookie("master");
+                if(master == "true")
+                    (document.getElementById("loginInMaster") as HTMLButtonElement).disabled = false;
+                else if(master == "false")
+                    (document.getElementById("loginInMandskab") as HTMLButtonElement).disabled = false;
+            }
         }
-        export const loginClicked = () => {
+        export const loginClicked = (existingUser?: boolean) => {
             let identifier: string
-            if(kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null){
-                identifier = generateIdentifyer(20)
+            if(kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null || existingUser){
+                identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
                 const loginHeader: Headers = new Headers({
                     "password": kode.value,
                     "id": identifier
                 })
                 const loginSucces = (status: number, headers: Headers) => {
-                    setCookie("identifier", identifier, 1/24)
-                    if(headers.get("ismaster") == "true")
+                    setCookie("identifier", identifier, 2)
+                    if(headers.get("ismaster") == "true"){
+                        setCookie("master", "true", 2)
                         location.assign("/master")
-                    else
+                    }
+                    else{
+                        setCookie("master", "false", 2)
                         location.assign("/mandskab")
+                    }
                 }
                 const wrongPassword = () => {
                     kode.style.setProperty("color", "red")
@@ -31,9 +40,6 @@ namespace Client{
         }
         export const codeChanged = () => {
             kode.style.setProperty("color", "black")
-        }
-        export function loginWithExistingUser(){
-                location.assign("postmandskab.html")
         }
         const generateIdentifyer = (length: number): string => {
             let result = '';
