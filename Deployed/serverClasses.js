@@ -89,6 +89,7 @@ var serverClasses;
             }
         }
         static startDeleteInterval() {
+            this.deleteUnusedUsers();
             this.deleteInterval = setInterval(this.deleteUnusedUsers, 5 * 60 * 1000);
         }
         static stopDeleteInterval() {

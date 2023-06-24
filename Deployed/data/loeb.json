@@ -1,7 +1,7 @@
 {
     "navn": "CCMR",
     "beskrivelse": "CCMR er et løb for 12-15 årige spejdere, der gerne vil opleve samarbejde under pres",
-    "udgåedePatruljer": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+    "udgåedePatruljer": [false, true, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false],
     "patruljer": [
         "De blå flamingoer",
         "De store tissemyrer",

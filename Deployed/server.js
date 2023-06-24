@@ -23,7 +23,7 @@ var CCMR_server;
         };
         let lastUpdates = [];
         let lastUpdatesIndex = 0;
-        const numberOfLogsToKeep = 5;
+        const numberOfLogsToKeep = 6;
         const addToLastUpdates = (update) => {
             lastUpdates.push(update);
             lastUpdatesIndex++;
@@ -190,7 +190,7 @@ var CCMR_server;
                         if (patruljer.canPatruljeBeCheckedIn(pIndex, userPostIndex)) {
                             if (commit) {
                                 patruljer.checkPatruljeInd(pIndex, userPostIndex);
-                                log.writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes IND på post ${userPostIndex + 1}`);
+                                log.writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes IND på post ${poster[userPostIndex].navn}`);
                             }
                         }
                         else
@@ -212,7 +212,6 @@ var CCMR_server;
         reqRes.masterDataReq = (req, res) => {
             const isMaster = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
             if (isMaster) {
-                console.log(log.getNewUpdates());
                 res.setHeader("data", JSON.stringify({
                     "loeb": loeb,
                     "ppMatrix": ppMatrix,

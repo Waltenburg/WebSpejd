@@ -21,7 +21,7 @@ namespace CCMR_server {
         }
         let lastUpdates: string[] = []
         let lastUpdatesIndex: number = 0
-        const numberOfLogsToKeep = 5
+        const numberOfLogsToKeep = 6
         const addToLastUpdates = (update: string): void => {
             lastUpdates.push(update)
             lastUpdatesIndex++
@@ -91,7 +91,7 @@ namespace CCMR_server {
             return postIndexAddition
         }
     }
-    namespace reqRes{ //Alle funktioner der håndterer de specifikke requests url's der kommer
+    namespace reqRes{ //Alle funktioner der håndterer de specifikke request url's der kommer
         export const loginReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const password = req.headers['password'] as string
             const identifier = req.headers['id'] as string
@@ -187,7 +187,7 @@ namespace CCMR_server {
                         if(patruljer.canPatruljeBeCheckedIn(pIndex, userPostIndex)){ //Patruljen kan tjekkes IND ifølge ppMatrix
                             if(commit){ //Klienten vil gerne comitte ændringerne
                                 patruljer.checkPatruljeInd(pIndex, userPostIndex)
-                                log.writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes IND på post ${userPostIndex + 1}`)
+                                log.writeToPatruljeLog(`Patrulje ${pIndex + 1} tjekkes IND på post ${poster[userPostIndex].navn}`)
                             }
                         }else //Patrulje kan IKKE blive tjekket IND ifølge ppMatrix
                             status = 400
@@ -207,7 +207,6 @@ namespace CCMR_server {
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const isMaster = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
             if(isMaster){
-                console.log(log.getNewUpdates())
                 res.setHeader("data", JSON.stringify({
                     "loeb": loeb,
                     "ppMatrix": ppMatrix,

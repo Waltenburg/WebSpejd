@@ -334,3 +334,71 @@
 2023-6-17 10:14:24 - PROGRAM STARTED - Loading files
 2023-6-17 10:14:24 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
 2023-6-17 10:14:24 - Server running
+2023-6-17 10:49:6 - PROGRAM STARTED - Loading files
+2023-6-17 10:49:6 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-17 10:49:6 - Server running
+2023-6-18 14:32:3 - Program exiting with code: SIGINT
+2023-6-18 14:32:4 - PROGRAM STARTED - Loading files
+2023-6-18 14:32:4 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-18 14:32:4 - Server running
+2023-6-18 15:26:35 - Program exiting with code: SIGINT
+2023-6-18 15:26:35 - PROGRAM STARTED - Loading files
+2023-6-18 15:26:35 - Alle filer succesfuldt loadet. Loadet 10 poster, 5 brugere og 26 patruljer
+2023-6-18 15:26:36 - Server running
+2023-6-18 16:9:54 - Program exiting with code: SIGINT
+2023-6-18 16:9:55 - PROGRAM STARTED - Loading files
+2023-6-18 16:9:55 - Alle filer succesfuldt loadet. Loadet 13 poster, 5 brugere og 26 patruljer
+2023-6-18 16:9:55 - Server running
+2023-6-18 16:21:26 - Program exiting with code: SIGINT
+2023-6-18 16:21:27 - PROGRAM STARTED - Loading files
+2023-6-18 16:21:27 - Alle filer succesfuldt loadet. Loadet 13 poster, 5 brugere og 26 patruljer
+2023-6-18 16:21:27 - Server running
+2023-6-18 16:22:24 - Program exiting with code: SIGINT
+2023-6-18 16:22:25 - PROGRAM STARTED - Loading files
+2023-6-18 16:22:25 - Alle filer succesfuldt loadet. Loadet 14 poster, 5 brugere og 26 patruljer
+2023-6-18 16:22:25 - Server running
+2023-6-18 16:23:22 - Program exiting with code: SIGINT
+2023-6-18 16:23:23 - PROGRAM STARTED - Loading files
+2023-6-18 16:23:23 - Alle filer succesfuldt loadet. Loadet 14 poster, 5 brugere og 26 patruljer
+2023-6-18 16:23:23 - Server running
+2023-6-18 16:23:46 - Program exiting with code: SIGINT
+2023-6-18 16:23:47 - PROGRAM STARTED - Loading files
+2023-6-18 16:23:47 - Alle filer succesfuldt loadet. Loadet 14 poster, 5 brugere og 26 patruljer
+2023-6-18 16:23:47 - Server running
+2023-6-20 16:48:19 - Program exiting with code: SIGINT
+2023-6-20 16:48:20 - PROGRAM STARTED - Loading files
+2023-6-20 16:48:20 - Alle filer succesfuldt loadet. Loadet 19 poster, 5 brugere og 26 patruljer
+2023-6-20 16:48:20 - Server running
+2023-6-20 21:26:55 - Program exiting with code: SIGINT
+2023-6-20 21:29:10 - PROGRAM STARTED - Loading files
+2023-6-20 21:29:10 - Alle filer succesfuldt loadet. Loadet 19 poster, 5 brugere og 26 patruljer
+2023-6-20 21:29:10 - Server running
+2023-6-23 14:48:2 - Program exiting with code: SIGINT
+2023-6-23 14:48:3 - PROGRAM STARTED - Loading files
+2023-6-23 14:48:3 - Alle filer succesfuldt loadet. Loadet 19 poster, 5 brugere og 26 patruljer
+2023-6-23 14:48:3 - Server running
+2023-6-23 14:49:16 - Program exiting with code: SIGINT
+2023-6-23 14:52:13 - PROGRAM STARTED - Loading files
+2023-6-23 14:52:13 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 14:52:13 - Server running
+2023-6-23 14:52:25 - Program exiting with code: SIGINT
+2023-6-23 14:52:43 - PROGRAM STARTED - Loading files
+2023-6-23 14:52:43 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 14:52:43 - Server running
+2023-6-23 14:56:53 - Program exiting with code: SIGINT
+2023-6-23 14:57:0 - PROGRAM STARTED - Loading files
+2023-6-23 14:57:0 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 14:57:0 - Server running
+2023-6-23 15:0:9 - Program exiting with code: SIGINT
+2023-6-23 15:0:10 - PROGRAM STARTED - Loading files
+2023-6-23 15:0:10 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 15:0:10 - Server running
+2023-6-23 15:3:2 - Program exiting with code: SIGINT
+2023-6-23 15:5:39 - PROGRAM STARTED - Loading files
+2023-6-23 15:5:39 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 15:5:39 - Server running
+2023-6-23 15:5:40 - Program exiting with code: SIGINT
+2023-6-23 15:14:35 - PROGRAM STARTED - Loading files
+2023-6-23 15:14:35 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-6-23 15:14:35 - Server running
+2023-6-23 15:14:36 - Program exiting with code: SIGINT
