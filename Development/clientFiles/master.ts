@@ -17,6 +17,7 @@ namespace Client{
                 meldinger.updateSidsteMeldinger(data.sidsteMeldinger)
                 patruljePlot.onLoad()
                 patruljePlot.createPatruljePlot()
+                patruljer.loadPatruljer()
             }, (status: number) => { //Fail
                 if(confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut()
@@ -223,7 +224,46 @@ namespace Client{
             }
             let lastMeldingerListArray: HTMLLIElement[] = []
         }
-        namespace updates {
+        export namespace patruljer{
+            export const loadPatruljer = () => {
+                const patruljerMed: HTMLDivElement = document.getElementById("patruljerMed") as HTMLDivElement
+                const patruljerUde: HTMLDivElement = document.getElementById("patruljerUde") as HTMLDivElement
+                
+                //Removing all children
+                patruljerMed.innerHTML = ""
+                patruljerUde.innerHTML = ""
+
+                for (let p = 0; p < loeb.patruljer.length; p++) {
+                    const button = document.createElement("button")
+                    button.innerHTML = ClientLoebMethods.patruljeNummerOgNavn(loeb, p)
+                    button.value = p.toString()
+                    button.setAttribute("onclick", "Client.Master.patruljer.buttonClicked(this.value)")
+                    if(loeb.udgåedePatruljer[p])
+                        patruljerUde.appendChild(button)
+                    else
+                        patruljerMed.appendChild(button)
+                }
+            }
+            export const buttonClicked = (value: string) => {
+                const p = parseInt(value)
+                const patruljeSkalUdgå = loeb.patruljeIkkeUdgået(p)
+                const action = patruljeSkalUdgå ? "UDGÅ": "GEN-INDGÅ"
+                const message = `Er du sikker på at patrulje ${ClientLoebMethods.patruljeNummerOgNavn(loeb, p)} skal ${action} fra løbet?`
+                if(confirm(message)){
+                    sendRequest("/patruljeMasterUpdate", new Headers({
+                        "pNum": value,
+                        "action": action
+                    }), (status: number, headers: Headers) => {
+                        
+                    }, (status: number) => {
+
+                    })
+                }
+            }
+        } 
+        //Namespace for handling sending and recieving updates from server
+        //Put functions to run at every update within callback funciton in SendRequest()
+        namespace updates { 
             let lastUpdateTimeString: string = new Date().getTime().toString()
             let secondsBetweenUpdates: number = 3
             const notificationAudio = new Audio("images/notification.mp3")
@@ -242,6 +282,8 @@ namespace Client{
                             senesteUpdates: string[]
                         }
                         const obj = JSON.parse(headers.get('data')) as IData
+
+                        //FUNCTIONS TO RUN AT EVERY UPDATE
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays)
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates)
                     }

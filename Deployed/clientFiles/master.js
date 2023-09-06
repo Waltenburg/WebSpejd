@@ -16,6 +16,7 @@ var Client;
                 meldinger.updateSidsteMeldinger(data.sidsteMeldinger);
                 patruljePlot.onLoad();
                 patruljePlot.createPatruljePlot();
+                patruljer.loadPatruljer();
             }, (status) => {
                 if (confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut();
@@ -191,6 +192,39 @@ var Client;
             };
             let lastMeldingerListArray = [];
         })(meldinger || (meldinger = {}));
+        let patruljer;
+        (function (patruljer) {
+            patruljer.loadPatruljer = () => {
+                const patruljerMed = document.getElementById("patruljerMed");
+                const patruljerUde = document.getElementById("patruljerUde");
+                patruljerMed.innerHTML = "";
+                patruljerUde.innerHTML = "";
+                for (let p = 0; p < Master.loeb.patruljer.length; p++) {
+                    const button = document.createElement("button");
+                    button.innerHTML = ClientLoebMethods.patruljeNummerOgNavn(Master.loeb, p);
+                    button.value = p.toString();
+                    button.setAttribute("onclick", "Client.Master.patruljer.buttonClicked(this.value)");
+                    if (Master.loeb.udgåedePatruljer[p])
+                        patruljerUde.appendChild(button);
+                    else
+                        patruljerMed.appendChild(button);
+                }
+            };
+            patruljer.buttonClicked = (value) => {
+                const p = parseInt(value);
+                const patruljeSkalUdgå = Master.loeb.patruljeIkkeUdgået(p);
+                const action = patruljeSkalUdgå ? "UDGÅ" : "GEN-INDGÅ";
+                const message = `Er du sikker på at patrulje ${ClientLoebMethods.patruljeNummerOgNavn(Master.loeb, p)} skal ${action} fra løbet?`;
+                if (confirm(message)) {
+                    Client.sendRequest("/patruljeMasterUpdate", new Headers({
+                        "pNum": value,
+                        "action": action
+                    }), (status, headers) => {
+                    }, (status) => {
+                    });
+                }
+            };
+        })(patruljer = Master.patruljer || (Master.patruljer = {}));
         let updates;
         (function (updates) {
             let lastUpdateTimeString = new Date().getTime().toString();

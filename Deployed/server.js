@@ -159,11 +159,11 @@ var CCMR_server;
             }
             res.end();
         };
-        reqRes.sendUpdateReq = (req, res, overrideUserPost) => {
+        reqRes.sendUpdateReq = (req, res) => {
             const headers = req.headers;
-            const userPostIndex = overrideUserPost == undefined ? serverClasses_1.serverClasses.User.recognizeUser(headers['id']) : overrideUserPost;
+            const userPostIndex = serverClasses_1.serverClasses.User.recognizeUser(headers['id']);
             let status = 200;
-            if (userPostIndex >= 0 || userPostIndex == null) {
+            if (userPostIndex >= 0 && userPostIndex != Infinity) {
                 try {
                     const update = req.headers['update'];
                     const split = update.split('%');
@@ -250,6 +250,8 @@ var CCMR_server;
                 res.writeHead(403);
             res.end();
         };
+        reqRes.patruljeMasterUpdate = (req, res) => {
+        };
     })(reqRes || (reqRes = {}));
     const cleanUpServer = (options, event) => {
         console.log("Program exiting with code: " + event);
@@ -322,6 +324,8 @@ var CCMR_server;
                         break;
                     case "/masterUpdate":
                         reqRes.masterUpdateReq(req, res);
+                        break;
+                    case "/patruljeMasterUpdate":
                         break;
                     default:
                         res.writeHead(400);

@@ -155,12 +155,11 @@ namespace CCMR_server {
             }
             res.end()
         }
-        export const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse, overrideUserPost?: number): void => {
+        export const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const headers = req.headers
-            const userPostIndex = overrideUserPost == undefined ? sc.User.recognizeUser(headers['id'] as string): overrideUserPost
+            const userPostIndex = sc.User.recognizeUser(headers['id'] as string)
             let status = 200
-            if(userPostIndex >= 0 || userPostIndex == null){ //Brugeren er genkendt og er mandskb (eller udgiver sig for at være det (master))
-                //console.log("User recognized as user " + userPostIndex)
+            if(userPostIndex >= 0 && userPostIndex != Infinity){ //Brugeren er genkendt og er mandskb (eller udgiver sig for at være det (master))
                 try{
                     const update = req.headers['update'] as string //{patruljenummer}%{melding}%{post/omvej}
                     const split = update.split('%')
@@ -168,7 +167,6 @@ namespace CCMR_server {
                     const melding = split[1]
                     const commit = req.headers['commit-type'] as string == "commit"
                     if(melding == "ud"){ //Klienten vil tjekke en patrulje UD eller undersøge om det er muligt
-                        //console.log("Patrulje skal tjekkes ud")
                         if(patruljer.canPatruljeBeCheckedUd(pIndex, userPostIndex)){ //Patrulje kan tjekkes ud ifølge ppMatrix
                             if(commit){ //Klienten vil gerne comitte ændringerne
                                 const postOrOmvej = split[2]
@@ -243,6 +241,9 @@ namespace CCMR_server {
             }else
                 res.writeHead(403)
             res.end()
+        }
+        export const patruljeMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void =>{
+            
         }
     }
 
@@ -328,6 +329,9 @@ namespace CCMR_server {
                         break
                     case "/masterUpdate":
                         reqRes.masterUpdateReq(req, res)
+                        break
+                    case "/patruljeMasterUpdate":
+                        
                         break
                     default:
                         res.writeHead(400);

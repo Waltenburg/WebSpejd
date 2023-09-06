@@ -12,6 +12,17 @@ class Loeb{
     patruljeIkkeUdgået = (pNum: number) => {
         return !this.udgåedePatruljer[pNum]
     }
+    patruljeNummerOgNavn = (pNum: number) => {
+        return (pNum+1).toString() + " - " + this.patruljer[pNum]
+    }
+}
+class ClientLoebMethods{
+    static patruljeIkkeUdgået = (loeb: Loeb, pNum: number) => {
+        return !(loeb.udgåedePatruljer[pNum])
+    }
+    static patruljeNummerOgNavn = (loeb: Loeb, pNum: number) => {
+        return (pNum+1).toString() + " - " + loeb.patruljer[pNum]
+    }
 }
 class Post{
     navn: string

@@ -6,6 +6,7 @@
     <title>CCMR Oversigt</title>
     <!-- <script>var exports = [{}];</script> -->
     <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
+    <script src="clientFiles/classes.js"></script>
     <script src="clientFiles/cookie.js"></script>
     <script src="clientFiles/sendHTTPRequest.js"></script>
     <script src="clientFiles/master.js"></script>
@@ -13,6 +14,7 @@
     <link rel="stylesheet" type="text/css" href="clientFiles/masterStyle.css">
 </head>
 <body onload="Client.Master.onLoad()">
+<div>
     <section id="top">
         <h1 style="text-align: center;">CCMR PART XXVII</h1>
     </section>
@@ -34,17 +36,29 @@
         </section>
         <section id="poster" class="outputSection">
             <div class="content">
-                <h2 class="rightText">Poster</h2>
+                <h2 class="buttomText">Poster</h2>
+                <!-- <label class="buttomText">Patruljer der stadig er med i løbet:
+                    <select id="patruljerMed">
+                    </select>
+                </label> -->
             </div>
         </section>
         <section id="patruljer" class="outputSection">
             <div class="content">
-                <h2 class="rightText">Patruljer</h2>
+                <h2 class="buttomText">Patruljer</h2>
+                <div style="display: flex; flex-direction: row;">
+                    <div id="patruljerMed" class="flexCon" style="width: 60%;">
+                        <h3 style="width: 100%;">Patruljer der stadig er med</h3>
+                    </div>
+                    <div id="patruljerUde" class="flexCon">
+                        <h3 style="width: 100%;">Patruljer der er udgåede</h3><br>
+                    </div>
+                </div>
             </div>
         </section>
         <section id="ppMatrix" class="outputSection">
             <div class="content">
-                <h2 class="rightText">Redigering af tjek ind og ud</h2>
+                <h2 class="buttomText">Redigering af tjek ind og ud</h2>
             </div>
         </section>
     </section>

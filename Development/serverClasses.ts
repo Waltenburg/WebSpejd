@@ -106,9 +106,7 @@ export namespace serverClasses{
         }
         static deleteUnusedUsers(){
             const cutOffTime = new Date().getTime() - User.maxAge
-            //console.log("Printing (" + users.length + ") users identifiers")
             for (let u = 0; u < User.users.length; u++) {
-                User.users[u].printIdentifiers()
                 const userLastAccesArr = User.users[u].lastAcces;
                 for (let i = 0; i < userLastAccesArr.length; i++) {
                     const userLastAcces = userLastAccesArr[i];

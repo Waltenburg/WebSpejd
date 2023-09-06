@@ -1021,3 +1021,19 @@
 2023-6-23 15:1:39 - Patrulje 19 tjekkes UD fra Post 2 og går mod Omvej 2->3 
 2023-6-23 15:1:42 - Patrulje 25 tjekkes UD fra Post 2 og går mod Omvej 2->3 
 2023-6-23 15:1:42 - Patrulje 26 tjekkes UD fra Post 2 og går mod Omvej 2->3 
+2023-8-3 9:45:11 - Patrulje 18 tjekkes IND på post Post 1
+2023-8-3 9:45:11 - Patrulje 17 tjekkes IND på post Post 1
+2023-8-3 9:45:11 - Patrulje 14 tjekkes IND på post Post 1
+2023-8-3 9:45:29 - Patrulje 18 tjekkes UD fra Post 1 og går mod Post 2
+2023-8-3 9:46:14 - Patrulje 11 tjekkes IND på post Post 1
+2023-8-3 9:46:15 - Patrulje 14 tjekkes UD fra Post 1 og går mod Post 2
+2023-8-3 9:46:16 - Patrulje 17 tjekkes UD fra Post 1 og går mod Post 2
+2023-8-3 9:46:18 - Patrulje 18 tjekkes IND på post Post 2
+2023-8-3 9:46:27 - Patrulje 8 tjekkes IND på post Post 1
+2023-8-3 9:46:28 - Patrulje 23 tjekkes IND på post Post 1
+2023-8-3 9:49:31 - Patrulje 10 tjekkes IND på post Post 1
+2023-8-3 9:49:33 - Patrulje 11 tjekkes UD fra Post 1 og går mod Post 2
+2023-8-3 9:49:37 - Patrulje 8 tjekkes UD fra Post 1 og går mod Omvej 1->2
+2023-8-31 14:52:43 - Patrulje 21 tjekkes IND på post Post 1
+2023-8-31 14:52:44 - Patrulje 10 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-6 19:37:8 - Patrulje 21 tjekkes UD fra Post 1 og går mod Post 2
