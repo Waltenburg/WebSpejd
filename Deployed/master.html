@@ -1,0 +1,76 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCMR Oversigt</title>
+    <!-- <script>var exports = [{}];</script> -->
+    <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
+    <script src="clientFiles/classes.js"></script>
+    <script src="clientFiles/cookie.js"></script>
+    <script src="clientFiles/sendHTTPRequest.js"></script>
+    <script src="clientFiles/master.js"></script>
+    <link rel="stylesheet" type="text/css" href="clientFiles/masterSections.css">
+    <link rel="stylesheet" type="text/css" href="clientFiles/masterStyle.css">
+</head>
+<body onload="Client.Master.onLoad()">
+<div>
+    <section id="top">
+        <h1 style="text-align: center;">CCMR PART XXVII</h1>
+    </section>
+    <section style="position: absolute; top: 5%; height: 100%; width: 100%; padding: 0;">
+        <section id="patruljeOversigt" class="inputSection">
+            <h2 style="display: inline;">Oversigt over patruljer</h2>
+            <div id="patruljeOversigtPlot"></div>
+            <label style="display: inline; margin-left: 20px;">Vis udgåede:</label>
+            <input type="checkbox" id="visUdgåede" checked onchange="Client.Master.patruljePlot.visUdgåedeChanged()">
+            <label for="patruljePlotRangeMin">Vis fra</label>
+            <select name="minPost" id="patruljePlotRangeMin" onchange="Client.Master.patruljePlot.rangeSelectorChanged()"></select>
+            <label for="patruljePlotRangeMax">Til </label>
+            <select name="minPost" id="patruljePlotRangeMax" onchange="Client.Master.patruljePlot.rangeSelectorChanged()"></select>
+        </section>
+        <section id="meldinger" class="inputSection">
+            <h2>Seneste meldinger</h2>
+            <ul id="senesteUpdates">
+            </ul>
+        </section>
+        <section id="poster" class="outputSection">
+            <div class="content">
+                <h2 class="buttomText">Poster</h2>
+                <!-- <label class="buttomText">Patruljer der stadig er med i løbet:
+                    <select id="patruljerMed">
+                    </select>
+                </label> -->
+            </div>
+        </section>
+        <section id="patruljer" class="outputSection">
+            <div class="content">
+                <h2 style="display: inline;" class="buttomText">Patruljer</h2>
+                <p style="display: inline; color: whitesmoke; margin-left: 5px;">- Til venstre er patuljer der stadig er med i løbet. Til højre er udgåede patruljer.</p>
+                <!-- <h3 style="text-align: left; margin-bottom: 0;">Patruljer der stadig er med</h3> -->
+                <!-- <h3 style="text-align: right; margin-bottom: 0; margin-right: 10%;">Patruljer der er udgåede</h3> -->
+                <div style="display: flex; flex-direction: row;">
+                    <div id="patruljerMed" class="flexCon" style="width: 60%;">
+                    </div>
+                    <div id="patruljerUde" class="flexCon">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="ppMatrix" class="outputSection">
+            <div class="content">
+                <h2 class="buttomText">Redigering af tjek ind og ud</h2>
+            </div>
+        </section>
+    </section>
+    
+    
+    <!-- <section>
+        <h2>Seneste meldinger</h2>
+        <ul id="senesteUpdates">
+        </ul>
+    </section>
+    <section id="patruljeOversigt" style="width: 50%; height: 800px;"></section>
+    <section id=""></section> -->
+</body>
+</html>

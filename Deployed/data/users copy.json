@@ -1,0 +1,32 @@
+[
+    {
+        "kode": "post1",
+        "postIndex": 0,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "omvej1",
+        "postIndex": 1,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "post2",
+        "postIndex": 2,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "post3",
+        "postIndex": 3,
+        "identifier": [],
+        "master": false
+    },
+    {
+        "kode": "HokusPokus",
+        "postIndex": -1,
+        "identifier": [],
+        "master": true
+    }
+]

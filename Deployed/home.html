@@ -6,95 +6,29 @@
     <meta charset="utf-8" />
     <title></title>
     <title>WebSpejd - Login</title>
-    <link rel="stylesheet" type="text/css" href="loginStyle.css" /> 
-    <script src="cookie.js"></script>
+    <link rel="stylesheet" type="text/css" href="clientFiles/loginStyle.css" /> 
+    <script src="clientFiles/cookie.js"></script>
+    <script src="clientFiles/sendHTTPRequest.js"></script>
+    <script src="clientFiles/home.js"></script>
 </head>
 
-<body>
+<body onload="Client.Home.onLoadFunction()">
     <div class="bg">
         <img width="240" height="240" src="images/logo.png" decoding="async" sizes="(max-width: 240px) 85vw, 240px">
         <h1 class="header" style="margin-top: -20%;">CCMR </h1>
         <h1 class="header">WebSpejd </h1>
         <div
             style="width: 700px; height: 1200px; opacity: 80%; background-color: #000000; margin: auto; margin-top: auto;">
-            <h2 style="color: white; opacity: 100%;">Log ind med det udleverede login</h2>
-            <p>Løbs-ID</p>
-            <input value="#0000" id="ID" oninput="IDChanged()" maxlength="5"><br>
+            <h2 style="color: white; opacity: 100%;">Log ind med dit udleverede login</h2>
             <p>Kode</p>
-            <input value="LukMigInd" type="text" id="kode">
+            <input value="post1" type="text" id="kode" onfocus="Client.Home.codeChanged()">
 
-            <button id="button" onclick="loginClicked()">Log ind med ny bruger</button>
-            <button id="loginWithExistingUser" onclick="loginWithExistingUser()">Log ind med eksisterende bruger</button>
+            <button id="button" onclick="Client.Home.loginClicked(false)">Log ind med kode</button>
+            <button id="loginInMandskab" onclick="location.assign('/mandskab')" disabled>Log ind med gemt mandskabsbruger</button>
+            <button id="loginInMaster" onclick="location.assign('/master')" disabled>Log ind med gemt masterbruger</button>
+            <!-- <button id="loginWithExistingUser" onclick="Client.Home.loginClicked(true)" disabled>Log ind med eksisterende bruger</button> -->
         </div>
     </div>
-    <script>
-        const ID = document.getElementById("ID")
-        const kode = document.getElementById("kode")
-        let identifier
-        // // let encrypt = CryptoJS.AES.encrypt("ThisShallBe", "password")
-        // // let decrypt = CryptoJS.AES.decrypt(encrypt, "password")
-        // console.log(encrypt)
-        // console.log(decrypt.toString(CryptoJS.enc.Utf8))
-        console.log(ID.value)
-        const IDChanged = () => {
-            const text = ID.value
-            if (text[0] != "#") {
-                ID.value = '#' + text
-
-            }
-            if(!isNumber(text[text.length - 1]))
-                ID.value = text.substring(0, text.length -3)
-            const isNumber = (char) =>{
-                const numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-                return numbers.includes(char)
-            } 
-        }
-        function loginClicked() {
-            let HTTPResponse
-            if (ID.value.match("^#[0-9]{4}\$") && kode.value.match("^[a-zA-Z0-9]{6,15}\$")) {
-                const loginData = {
-                    id: ID.value.substring(1),
-                    kode: kode.value,
-                    identifier: generateIdentifyer(20)
-                }
-                identifier = loginData.identifier
-                fetch('/login', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(loginData)
-                }).then(response => {
-                    HTTPResponse = response
-                    return response.text()
-                }).then(userType => {
-                    if(HTTPResponse.status == 200){
-                        setCookie("identifier", loginData.identifier, 10/24/60)
-                        if(userType == "master: true")
-                            location.assign("master.html") 
-                        else
-                            location.assign("postmandskab.html")
-                    }
-                })
-            }
-        }
-        if(getCookie("identifier") == null)
-            document.getElementById("loginWithExistingUser").disabled = true
-        function loginWithExistingUser(){
-            location.assign("postmandskab.html")                
-        }
-        const generateIdentifyer = (length) => {
-            let result = '';
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            const charactersLength = characters.length;
-            let counter = 0;
-            while (counter < length) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
-                counter += 1;
-            }
-            return result;
-        }
-    </script>
 </body>
 
 </html>

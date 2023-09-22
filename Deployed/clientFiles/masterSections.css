@@ -1,0 +1,47 @@
+
+body{
+    overflow-y: scroll;
+    overflow-x: clip;
+}
+section{
+    margin: 0 0 0 0;
+    padding-left: 5px;
+    z-index: 0;
+}
+#top{
+    position: fixed;
+    top: 0;
+    height: 5%;
+    width: 100%;
+    background-color: #F3F4F7;
+    border-bottom: 2px solid #202332;
+    z-index: 10;
+}
+.inputSection{
+    background-color: #DADDE7;
+    border-top: 2px solid #202332;
+}
+.outputSection{
+    background-color: #383E57; /*485170*/
+    border-top: 2px solid #202332;
+}
+#patruljeOversigt{
+    height: 73%;
+    border-bottom: 2px solid #848EAE;
+}
+#meldinger{
+    height: 22%;
+}
+#poster{
+    height: 30%;
+    border-bottom: 2px solid #848EAE;
+}
+#patruljer{
+    height: 30%;
+    top: 33%;
+    border-bottom: 2px solid #848EAE;
+}
+#ppMatrix{
+    height: 34%;
+    bottom: 0;
+}
