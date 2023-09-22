@@ -243,7 +243,17 @@ namespace CCMR_server {
             res.end()
         }
         export const patruljeMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void =>{
-            
+            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
+                const action = req.headers['action'] as string
+                
+                switch (action) {
+                    case "UDGÅ":
+
+                        break
+                    case "GEN-INDGÅ":
+                        break
+                }
+            }
         }
     }
 
@@ -331,7 +341,7 @@ namespace CCMR_server {
                         reqRes.masterUpdateReq(req, res)
                         break
                     case "/patruljeMasterUpdate":
-                        
+                        reqRes.patruljeMasterUpdate(req, res)
                         break
                     default:
                         res.writeHead(400);

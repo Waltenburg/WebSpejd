@@ -326,6 +326,7 @@ var CCMR_server;
                         reqRes.masterUpdateReq(req, res);
                         break;
                     case "/patruljeMasterUpdate":
+                        reqRes.patruljeMasterUpdate(req, res);
                         break;
                     default:
                         res.writeHead(400);

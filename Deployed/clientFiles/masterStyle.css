@@ -16,9 +16,9 @@ ul {
   width: 40%;   
   flex-wrap: wrap;
 }
-  li {
+  /* li {
      flex: 1 0 33.33%;
-  }
+  } */
 /* ul{
     margin-top: 0;
     columns: 3 6em;

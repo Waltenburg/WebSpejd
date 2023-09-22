@@ -246,7 +246,7 @@ namespace Client{
             }
             export const buttonClicked = (value: string) => {
                 const p = parseInt(value)
-                const patruljeSkalUdgå = loeb.patruljeIkkeUdgået(p)
+                const patruljeSkalUdgå = ClientLoebMethods.patruljeIkkeUdgået(loeb, p)
                 const action = patruljeSkalUdgå ? "UDGÅ": "GEN-INDGÅ"
                 const message = `Er du sikker på at patrulje ${ClientLoebMethods.patruljeNummerOgNavn(loeb, p)} skal ${action} fra løbet?`
                 if(confirm(message)){

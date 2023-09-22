@@ -434,3 +434,10 @@
 2023-9-6 19:36:56 - PROGRAM STARTED - Loading files
 2023-9-6 19:36:56 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
 2023-9-6 19:36:56 - Server running
+2023-9-7 13:16:49 - PROGRAM STARTED - Loading files
+2023-9-7 13:16:49 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-7 13:16:49 - Server running
+2023-9-7 13:36:13 - Program exiting with code: SIGINT
+2023-9-7 13:36:14 - PROGRAM STARTED - Loading files
+2023-9-7 13:36:14 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-7 13:36:14 - Server running

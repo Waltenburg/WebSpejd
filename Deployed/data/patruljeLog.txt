@@ -1037,3 +1037,14 @@
 2023-8-31 14:52:43 - Patrulje 21 tjekkes IND på post Post 1
 2023-8-31 14:52:44 - Patrulje 10 tjekkes UD fra Post 1 og går mod Post 2
 2023-9-6 19:37:8 - Patrulje 21 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:17:14 - Patrulje 15 tjekkes IND på post Post 1
+2023-9-7 13:17:15 - Patrulje 23 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:17:15 - Patrulje 22 tjekkes IND på post Post 1
+2023-9-7 13:17:16 - Patrulje 24 tjekkes IND på post Post 1
+2023-9-7 13:22:58 - Patrulje 15 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:23:9 - Patrulje 22 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:23:10 - Patrulje 24 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:37:57 - Patrulje 13 tjekkes IND på post Post 1
+2023-9-7 13:38:1 - Patrulje 2 tjekkes IND på post Post 1
+2023-9-7 13:40:1 - Patrulje 2 tjekkes UD fra Post 1 og går mod Post 2
+2023-9-7 13:40:2 - Patrulje 13 tjekkes UD fra Post 1 og går mod Post 2

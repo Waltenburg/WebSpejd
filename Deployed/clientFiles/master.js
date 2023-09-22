@@ -212,7 +212,7 @@ var Client;
             };
             patruljer.buttonClicked = (value) => {
                 const p = parseInt(value);
-                const patruljeSkalUdgå = Master.loeb.patruljeIkkeUdgået(p);
+                const patruljeSkalUdgå = ClientLoebMethods.patruljeIkkeUdgået(Master.loeb, p);
                 const action = patruljeSkalUdgå ? "UDGÅ" : "GEN-INDGÅ";
                 const message = `Er du sikker på at patrulje ${ClientLoebMethods.patruljeNummerOgNavn(Master.loeb, p)} skal ${action} fra løbet?`;
                 if (confirm(message)) {
