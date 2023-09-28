@@ -1,6 +1,11 @@
 var Client;
 (function (Client) {
-    Client.sendRequest = (url, dataHeaders, succesReciever, onFail) => {
+    Client.identifier = Client.getCookie("identifier");
+    Client.sendRequest = (url, dataHeaders, succesReciever, onFail, dontSendID) => {
+        if (dataHeaders == null)
+            dataHeaders = new Headers();
+        if (!dontSendID)
+            dataHeaders.append("id", Client.identifier);
         fetch(url, {
             method: "GET",
             headers: dataHeaders

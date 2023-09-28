@@ -2,8 +2,6 @@ var Client;
 (function (Client) {
     let Mandskab;
     (function (Mandskab) {
-        const identifier = Client.getCookie("identifier");
-        const patruljeUpdateURL = "update";
         let postOrOmvej = "post";
         let listPåPost;
         let listPåVej;
@@ -39,7 +37,6 @@ var Client;
             const pNum = parseInt(val.id.substring(1));
             const postOrOmvejAtCLickedTime = postOrOmvej;
             Client.sendRequest("/sendUpdate", new Headers({
-                "id": identifier,
                 "update": pNum.toString() + "%ud" + "%" + postOrOmvejAtCLickedTime,
                 "commit-type": "test"
             }), (status, headers) => {
@@ -53,7 +50,6 @@ var Client;
                 commitTimeoutArr.push(setTimeout(() => {
                     if (undoDepth > 0) {
                         Client.sendRequest("/sendUpdate", new Headers({
-                            "id": identifier,
                             "update": pNum.toString() + "%ud" + "%" + postOrOmvejAtCLickedTime,
                             "commit-type": "commit"
                         }), (status, headers) => {
@@ -74,7 +70,6 @@ var Client;
         Mandskab.clickedPatruljePåVej = (val, commit) => {
             const pNum = parseInt(val.id.substring(1));
             Client.sendRequest("/sendUpdate", new Headers({
-                "id": identifier,
                 "update": pNum.toString() + "%ind",
                 "commit-type": "test"
             }), (status, headers) => {
@@ -89,7 +84,6 @@ var Client;
                 commitTimeoutArr.push(setTimeout(() => {
                     if (undoDepth > 0) {
                         Client.sendRequest("/sendUpdate", new Headers({
-                            "id": identifier,
                             "update": pNum.toString() + "%ind",
                             "commit-type": "commit"
                         }), (status, headers) => {
@@ -216,9 +210,7 @@ var Client;
             undoButton = document.getElementById("undo");
             noPatruljerPåPostText = document.getElementById("ingenPåPost");
             noPatruljerPåVejText = document.getElementById("ingenPåVej");
-            Client.sendRequest("/getData", new Headers({
-                "id": identifier
-            }), (status, headers) => {
+            Client.sendRequest("/getData", null, (status, headers) => {
                 const data = JSON.parse(headers.get("data"));
                 data.påPost.forEach(pNum => {
                     addPatruljePåPost(pNum);
@@ -227,20 +219,28 @@ var Client;
                     addPatruljeToPåVej(pNum);
                 });
                 document.getElementById("postNum").innerHTML = data.post.toString();
-                if (!data.omvejÅben) {
-                    document.getElementById("postOmvejSelector").disabled = true;
-                    document.getElementById("OmvejSelectorText").innerHTML += " (Lukket)";
-                }
-                Mandskab.postOmvejChanged();
+                setOmvejSelector(data.omvejÅben);
+                console.log(data.omvejÅben);
             }, () => {
-                location.replace(window.location.origin);
+                if (confirm("Fejl. Du bliver viderestillet til login"))
+                    location.replace(window.location.origin);
             });
             console.log("Entire page loaded");
+        };
+        const setOmvejSelector = (omvejÅben) => {
+            if (omvejÅben) {
+                document.getElementById("postOmvejSelector").disabled = false;
+                document.getElementById("OmvejSelectorText").innerHTML = "Omvej";
+            }
+            else {
+                document.getElementById("postOmvejSelector").disabled = true;
+                document.getElementById("OmvejSelectorText").innerHTML = "Omvej (Lukket)";
+            }
+            Mandskab.postOmvejChanged();
         };
         const getUpdateFunc = () => {
             if (undoDepth == 0) {
                 const headers = new Headers({
-                    "id": identifier,
                     'last-update': lastUpdateTimeString
                 });
                 lastUpdateTimeString = new Date().getTime().toString();
@@ -261,6 +261,7 @@ var Client;
                         updatePåVej[1].forEach(patrulje => {
                             addPatruljeToPåVej(patrulje);
                         });
+                        setOmvejSelector(data.omvejÅben);
                     }
                 }, status => {
                     clearInterval(updateInterval);
@@ -274,7 +275,7 @@ var Client;
             }
         };
         let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates);
-        if (identifier == null)
+        if (Client.identifier == null)
             location.href = "/home";
     })(Mandskab = Client.Mandskab || (Client.Mandskab = {}));
 })(Client || (Client = {}));

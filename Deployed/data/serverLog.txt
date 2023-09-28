@@ -441,3 +441,82 @@
 2023-9-7 13:36:14 - PROGRAM STARTED - Loading files
 2023-9-7 13:36:14 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
 2023-9-7 13:36:14 - Server running
+2023-9-22 17:54:20 - PROGRAM STARTED - Loading files
+2023-9-22 17:54:20 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 17:54:20 - Server running
+2023-9-22 18:13:18 - Program exiting with code: SIGINT
+2023-9-22 18:13:19 - PROGRAM STARTED - Loading files
+2023-9-22 18:13:19 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:13:19 - Server running
+2023-9-22 18:13:19 - Program exiting with code: TypeError [ERR_INVALID_ARG_TYPE]: The "chunk" argument must be of type string or an instance of Buffer or Uint8Array. Received type number (200)
+2023-9-22 18:15:59 - PROGRAM STARTED - Loading files
+2023-9-22 18:15:59 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:15:59 - Server running
+2023-9-22 18:16:13 - Program exiting with code: TypeError [ERR_INVALID_ARG_TYPE]: The "chunk" argument must be of type string or an instance of Buffer or Uint8Array. Received type number (200)
+2023-9-22 18:18:36 - PROGRAM STARTED - Loading files
+2023-9-22 18:18:36 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:18:36 - Server running
+2023-9-22 18:20:46 - Program exiting with code: SIGINT
+2023-9-22 18:20:47 - PROGRAM STARTED - Loading files
+2023-9-22 18:20:47 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:20:47 - Server running
+2023-9-22 18:52:27 - Program exiting with code: SIGINT
+2023-9-22 18:52:28 - PROGRAM STARTED - Loading files
+2023-9-22 18:52:28 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:52:28 - Server running
+2023-9-22 18:56:8 - Program exiting with code: SIGINT
+2023-9-22 18:56:9 - PROGRAM STARTED - Loading files
+2023-9-22 18:56:9 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:56:9 - Server running
+2023-9-22 18:57:0 - Program exiting with code: SIGINT
+2023-9-22 18:57:1 - PROGRAM STARTED - Loading files
+2023-9-22 18:57:1 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:57:1 - Server running
+2023-9-22 18:57:26 - Program exiting with code: SIGINT
+2023-9-22 18:57:26 - PROGRAM STARTED - Loading files
+2023-9-22 18:57:26 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:57:26 - Server running
+2023-9-22 18:58:19 - Program exiting with code: SIGINT
+2023-9-22 18:58:20 - PROGRAM STARTED - Loading files
+2023-9-22 18:58:20 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:58:20 - Server running
+2023-9-22 18:58:33 - Program exiting with code: SIGINT
+2023-9-22 18:58:34 - PROGRAM STARTED - Loading files
+2023-9-22 18:58:34 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 18:58:34 - Server running
+2023-9-22 21:7:18 - Program exiting with code: SIGINT
+2023-9-22 21:7:19 - PROGRAM STARTED - Loading files
+2023-9-22 21:7:19 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 21:7:19 - Server running
+2023-9-22 21:24:56 - Program exiting with code: SIGINT
+2023-9-22 21:25:0 - PROGRAM STARTED - Loading files
+2023-9-22 21:25:0 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 21:25:0 - Server running
+2023-9-22 22:7:24 - Program exiting with code: SIGINT
+2023-9-22 22:7:25 - PROGRAM STARTED - Loading files
+2023-9-22 22:7:25 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:7:25 - Server running
+2023-9-22 22:7:29 - Program exiting with code: TypeError: Cannot read properties of undefined (reading 'erOmvej')
+2023-9-22 22:9:55 - PROGRAM STARTED - Loading files
+2023-9-22 22:9:55 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:9:55 - Server running
+2023-9-22 22:10:1 - Program exiting with code: SIGINT
+2023-9-22 22:10:11 - PROGRAM STARTED - Loading files
+2023-9-22 22:10:11 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:10:11 - Server running
+2023-9-22 22:10:37 - Program exiting with code: SIGINT
+2023-9-22 22:10:38 - PROGRAM STARTED - Loading files
+2023-9-22 22:10:38 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:10:38 - Server running
+2023-9-22 22:11:4 - Program exiting with code: SIGINT
+2023-9-22 22:11:5 - PROGRAM STARTED - Loading files
+2023-9-22 22:11:5 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:11:5 - Server running
+2023-9-22 22:11:11 - Program exiting with code: TypeError: Cannot read properties of undefined (reading 'erOmvej')
+2023-9-22 22:12:17 - PROGRAM STARTED - Loading files
+2023-9-22 22:12:17 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:12:17 - Server running
+2023-9-22 22:26:32 - Program exiting with code: SIGINT
+2023-9-22 22:26:33 - PROGRAM STARTED - Loading files
+2023-9-22 22:26:33 - Alle filer succesfuldt loadet. Loadet 19 poster, 8 brugere og 26 patruljer
+2023-9-22 22:26:33 - Server running

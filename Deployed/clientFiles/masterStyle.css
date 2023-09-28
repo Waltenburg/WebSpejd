@@ -11,11 +11,11 @@ button{
   flex-wrap: wrap;
   margin-right: 15px;
 }
-ul {
+/* ul {
   display: flex;  
   width: 40%;   
   flex-wrap: wrap;
-}
+} */
   /* li {
      flex: 1 0 33.33%;
   } */

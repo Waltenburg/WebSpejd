@@ -2,13 +2,10 @@ var Client;
 (function (Client) {
     let Master;
     (function (Master) {
-        const identifier = Client.getCookie("identifier");
         let ppMatrix;
         let poster;
         Master.onLoad = () => {
-            Client.sendRequest("/masterData", new Headers({
-                "id": identifier
-            }), (status, headers) => {
+            Client.sendRequest("/masterData", null, (status, headers) => {
                 const data = JSON.parse(headers.get("data"));
                 ppMatrix = data.ppMatrix;
                 Master.loeb = data.loeb;
@@ -17,6 +14,7 @@ var Client;
                 patruljePlot.onLoad();
                 patruljePlot.createPatruljePlot();
                 patruljer.loadPatruljer();
+                post.loadPoster();
             }, (status) => {
                 if (confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut();
@@ -117,7 +115,7 @@ var Client;
                 return {
                     autosize: true,
                     margin: {
-                        t: 0,
+                        t: 5,
                         l: 45,
                         r: 10,
                         b: 20
@@ -192,6 +190,36 @@ var Client;
             };
             let lastMeldingerListArray = [];
         })(meldinger || (meldinger = {}));
+        let post;
+        (function (post_1) {
+            post_1.loadPoster = () => {
+                const container = document.getElementById("postContainer");
+                container.innerHTML = "";
+                for (let i = 0; i < poster.length; i++) {
+                    const button = document.createElement("button");
+                    button.innerHTML = poster[i].navn;
+                    button.value = i.toString();
+                    button.setAttribute("onclick", "Client.Master.post.postClicked(this.value)");
+                    if (!poster[i].erOmvej)
+                        button.disabled = true;
+                    container.appendChild(button);
+                }
+            };
+            post_1.postClicked = (post) => {
+                const p = parseInt(post);
+                const omvejLukker = poster[p].omvejÅben;
+                const action = omvejLukker ? "LUKKE" : "ÅBNE";
+                if (confirm(`Er du sikker på at ${poster[p].navn} skal ${action}?`)) {
+                    Client.sendRequest("/postMasterUpdate", new Headers({
+                        "post": post,
+                        "action": action
+                    }), (status, headers) => {
+                    }, (status) => {
+                        alert("Der er sket en fejl. Posten kan ikke " + action);
+                    });
+                }
+            };
+        })(post = Master.post || (Master.post = {}));
         let patruljer;
         (function (patruljer) {
             patruljer.loadPatruljer = () => {
@@ -220,7 +248,11 @@ var Client;
                         "pNum": value,
                         "action": action
                     }), (status, headers) => {
+                        Master.loeb.udgåedePatruljer[p] = patruljeSkalUdgå;
+                        patruljer.loadPatruljer();
+                        updates.forceUpdateNextTime();
                     }, (status) => {
+                        alert("Der er sket en fejl. Patruljen kan ikke " + action);
                     });
                 }
             };
@@ -229,10 +261,11 @@ var Client;
         (function (updates) {
             let lastUpdateTimeString = new Date().getTime().toString();
             let secondsBetweenUpdates = 3;
+            let connectionTries = 0;
+            const maxConnectionTries = 10;
             const notificationAudio = new Audio("images/notification.mp3");
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
-                    "id": identifier,
                     'last-update': lastUpdateTimeString
                 });
                 lastUpdateTimeString = new Date().getTime().toString();
@@ -243,17 +276,23 @@ var Client;
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays);
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates);
                     }
+                    connectionTries = 0;
                 }, status => {
-                    clearInterval(updateInterval);
-                    if (confirm("Fejl ved opdatering. Log ind igen")) {
-                        logOut();
-                    }
-                    else {
-                        updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000);
+                    connectionTries++;
+                    if (connectionTries > maxConnectionTries) {
+                        clearInterval(updateInterval);
+                        if (confirm("Fejl ved opdatering. Log ind igen")) {
+                            logOut();
+                        }
+                        else {
+                            connectionTries = 0;
+                            updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000);
+                        }
                     }
                 });
             };
             let updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000);
+            updates.forceUpdateNextTime = () => { lastUpdateTimeString = "0"; };
         })(updates || (updates = {}));
     })(Master = Client.Master || (Client.Master = {}));
 })(Client || (Client = {}));

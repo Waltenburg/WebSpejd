@@ -1,15 +1,12 @@
 /// <reference path="sendHTTPRequest.ts"/>
 namespace Client{
     export namespace Master{
-        const identifier = getCookie("identifier")
         let ppMatrix: string[][]
         export let loeb: Loeb
         let poster: Post[]
 
         export const onLoad = () => {
-            sendRequest("/masterData", new Headers({
-                "id": identifier
-            }), (status: number, headers: Headers) =>{ //Succes
+            sendRequest("/masterData", null, (status: number, headers: Headers) =>{ //Succes
                 const data = JSON.parse(headers.get("data"))
                 ppMatrix = data.ppMatrix
                 loeb = data.loeb
@@ -18,6 +15,7 @@ namespace Client{
                 patruljePlot.onLoad()
                 patruljePlot.createPatruljePlot()
                 patruljer.loadPatruljer()
+                post.loadPoster()
             }, (status: number) => { //Fail
                 if(confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut()
@@ -147,7 +145,7 @@ namespace Client{
                     // title:'Oversigt over patruljerne',
                     autosize: true,
                     margin: {
-                        t: 0, //top margin
+                        t: 5, //top margin
                         l: 45, //left margin
                         r: 10, //right margin
                         b: 20 //bottom margin
@@ -224,6 +222,39 @@ namespace Client{
             }
             let lastMeldingerListArray: HTMLLIElement[] = []
         }
+        export namespace post{
+            export const loadPoster = () => {
+                const container: HTMLDivElement = document.getElementById("postContainer") as HTMLDivElement
+                
+                //Removing all children
+                container.innerHTML = ""
+
+                for (let i = 0; i < poster.length; i++) {
+                    const button = document.createElement("button")
+                    button.innerHTML = poster[i].navn
+                    button.value = i.toString()
+                    button.setAttribute("onclick", "Client.Master.post.postClicked(this.value)")
+                    if(!poster[i].erOmvej)
+                        button.disabled = true
+                    container.appendChild(button)
+                }
+            }
+            export const postClicked = (post: string) => {
+                const p = parseInt(post)
+                const omvejLukker = poster[p].omvejÅben
+                const action = omvejLukker ? "LUKKE": "ÅBNE"
+                if(confirm(`Er du sikker på at ${poster[p].navn} skal ${action}?`)){
+                    sendRequest("/postMasterUpdate", new Headers({
+                        "post": post,
+                        "action": action
+                    }), (status: number, headers: Headers) => {
+
+                    }, (status: number) => {
+                        alert("Der er sket en fejl. Posten kan ikke " + action)
+                    })
+                }
+            }
+        }
         export namespace patruljer{
             export const loadPatruljer = () => {
                 const patruljerMed: HTMLDivElement = document.getElementById("patruljerMed") as HTMLDivElement
@@ -254,22 +285,25 @@ namespace Client{
                         "pNum": value,
                         "action": action
                     }), (status: number, headers: Headers) => {
-                        
+                        loeb.udgåedePatruljer[p] = patruljeSkalUdgå
+                        loadPatruljer()
+                        updates.forceUpdateNextTime()
                     }, (status: number) => {
-
+                        alert("Der er sket en fejl. Patruljen kan ikke " + action)
                     })
                 }
             }
         } 
         //Namespace for handling sending and recieving updates from server
         //Put functions to run at every update within callback funciton in SendRequest()
-        namespace updates { 
+        namespace updates {
             let lastUpdateTimeString: string = new Date().getTime().toString()
             let secondsBetweenUpdates: number = 3
+            let connectionTries = 0
+            const maxConnectionTries = 10
             const notificationAudio = new Audio("images/notification.mp3")
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
-                    "id": identifier,
                     'last-update': lastUpdateTimeString
                 })
                 lastUpdateTimeString = new Date().getTime().toString()
@@ -287,17 +321,24 @@ namespace Client{
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays)
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates)
                     }
+                    connectionTries = 0
                 }, status => {
-                    clearInterval(updateInterval)
-                    if(confirm("Fejl ved opdatering. Log ind igen")){
-                        logOut()
-                    }
-                    else{
-                        updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
+                    connectionTries++
+                    if(connectionTries > maxConnectionTries){
+                        clearInterval(updateInterval)
+                        if(confirm("Fejl ved opdatering. Log ind igen")){
+                            logOut()
+                        }
+                        else{
+                            connectionTries = 0
+                            updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
+                        }
                     }
                 })
             }
             let updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
+
+            export const forceUpdateNextTime = () => {lastUpdateTimeString = "0"}
         }
     }
 }

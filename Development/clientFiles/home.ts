@@ -14,12 +14,11 @@ namespace Client{
             }
         }
         export const loginClicked = (existingUser?: boolean) => {
-            let identifier: string
             if(kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null || existingUser){
-                identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
+                const identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
                 const loginHeader: Headers = new Headers({
+                    "id": identifier,
                     "password": kode.value,
-                    "id": identifier
                 })
                 const loginSucces = (status: number, headers: Headers) => {
                     setCookie("identifier", identifier, 2)
@@ -35,7 +34,7 @@ namespace Client{
                 const wrongPassword = () => {
                     kode.style.setProperty("color", "red")
                 }
-                sendRequest("/login", loginHeader, loginSucces, wrongPassword)
+                sendRequest("/login", loginHeader, loginSucces, wrongPassword, true)
             }              
         }
         export const codeChanged = () => {

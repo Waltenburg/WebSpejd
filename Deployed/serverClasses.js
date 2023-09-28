@@ -19,6 +19,12 @@ var serverClasses;
             this.patruljeIkkeUdgået = (pNum) => {
                 return !this.udgåedePatruljer[pNum];
             };
+            this.patruljeUdgår = (pNum) => {
+                this.udgåedePatruljer[pNum] = true;
+            };
+            this.patruljeGeninddgår = (pNum) => {
+                this.udgåedePatruljer[pNum] = false;
+            };
             this.navn = obj.navn;
             this.beskrivelse = obj.beskrivelse;
             this.patruljer = obj.patruljer;
@@ -108,6 +114,7 @@ var serverClasses;
                 }
             }
         }
+        console.log(userPostIndex);
         return userPostIndex;
     };
     serverClasses.User = User;

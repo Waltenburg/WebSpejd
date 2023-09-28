@@ -124,10 +124,7 @@ var CCMR_server;
                 res.writeHead(403);
                 res.end();
             }
-            else if (userPost == Infinity) {
-                res.writeHead(403);
-            }
-            else {
+            else if (userPost != Infinity) {
                 const userLastUpdate = parseInt(req.headers['last-update']);
                 if (userLastUpdate < lastUpdateTimesPost[userPost]) {
                     res.setHeader("update", "true");
@@ -149,7 +146,7 @@ var CCMR_server;
                     omvejÅben = false;
                 }
                 else
-                    omvejÅben = poster[userPost + 1].erOmvej;
+                    omvejÅben = poster[userPost + 1].erOmvej ? poster[userPost + 1].omvejÅben : false;
                 res.setHeader("data", JSON.stringify({
                     "påPost": patruljer.patruljerPåPost(userPost),
                     "påVej": patruljer.patruljerPåVej(userPost),
@@ -251,13 +248,83 @@ var CCMR_server;
             res.end();
         };
         reqRes.patruljeMasterUpdate = (req, res) => {
+            if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
+            }
+            const patruljeUdgår = () => {
+                if (loeb.patruljeIkkeUdgået(pNum)) {
+                    succes = true;
+                    loeb.patruljeUdgår(pNum);
+                }
+            };
+            const patruljeGeninddgår = () => {
+                if (!loeb.patruljeIkkeUdgået(pNum)) {
+                    succes = true;
+                    loeb.patruljeGeninddgår(pNum);
+                }
+            };
+            const action = req.headers['action'];
+            let succes = false;
+            let pNum = Number(req.headers['pnum']);
+            switch (action) {
+                case "UDGÅ":
+                    patruljeUdgår();
+                    break;
+                case "GEN-INDGÅ":
+                    patruljeGeninddgår();
+                    break;
+            }
+            if (succes) {
+                res.writeHead(200);
+                log.writeToPatruljeLog(`Patrulje ${pNum + 1} ${action}R ${action == "UDGÅ" ? "fra" : "i"} løbet`);
+            }
+            else
+                res.writeHead(400);
+            res.end();
+        };
+        reqRes.postMasterUpdate = (req, res) => {
+            if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
+                const omvejLukker = () => {
+                    console.log("LUKKER");
+                    if (post.erOmvej && post.omvejÅben) {
+                        post.omvejÅben = false;
+                        succes = true;
+                    }
+                };
+                const omvejÅbner = () => {
+                    if (post.erOmvej && !post.omvejÅben) {
+                        post.omvejÅben = true;
+                        succes = true;
+                    }
+                };
+                let succes = false;
+                let pNum = Number(req.headers['post']);
+                console.log(pNum);
+                const post = poster[pNum];
+                switch (req.headers['action']) {
+                    case "LUKKE":
+                        omvejLukker();
+                        break;
+                    case "ÅBNE":
+                        omvejÅbner();
+                        break;
+                }
+                if (succes) {
+                    res.writeHead(200);
+                    lastUpdateTimesPost[pNum - 1] = new Date().getTime();
+                }
+                else
+                    res.writeHead(400);
+            }
+            res.end();
         };
     })(reqRes || (reqRes = {}));
     const cleanUpServer = (options, event) => {
         console.log("Program exiting with code: " + event);
+        console.log(event);
         try {
             log.writeToServerLog("Program exiting with code: " + event);
             fs.writeFileSync("data/users.json", JSON.stringify(serverClasses_1.serverClasses.User.users));
+            fs.writeFileSync("data/loeb.json", JSON.stringify(loeb));
         }
         catch {
             console.log("Problem with writing to server log");
@@ -276,6 +343,7 @@ var CCMR_server;
     log.writeToServerLog("PROGRAM STARTED - Loading files");
     const loeb = new serverClasses_1.serverClasses.Loeb(files_1.files.readJSONFileSync("data/loeb.json", true));
     const poster = serverClasses_1.serverClasses.Post.createArray(files_1.files.readJSONFileSync("data/poster.json", true));
+    console.log(poster[3].erOmvej);
     let ppMatrix = files_1.files.readJSONFileSync("data/ppMatrix.json");
     if (ppMatrix == null) {
         ppMatrix = Array.apply(null, Array(loeb.patruljer.length)).map(() => []);
@@ -327,6 +395,9 @@ var CCMR_server;
                         break;
                     case "/patruljeMasterUpdate":
                         reqRes.patruljeMasterUpdate(req, res);
+                        break;
+                    case "/postMasterUpdate":
+                        reqRes.postMasterUpdate(req, res);
                         break;
                     default:
                         res.writeHead(400);

@@ -119,10 +119,7 @@ namespace CCMR_server {
             if(userPost == -1){ //Bruger ikke recognized
                 res.writeHead(403)
                 res.end()
-            }
-            else if(userPost == Infinity){ //Bruger er master
-                res.writeHead(403) //Skal fjernes ved implementering af master
-            }else{ //Bruger er mandskab
+            }else if (userPost != Infinity){ //Bruger er mandskab
                 const userLastUpdate = parseInt(req.headers['last-update'] as string)
                 if(userLastUpdate < lastUpdateTimesPost[userPost]){ //Der er kommet ny update siden sidst klienten spurgte
                     res.setHeader("update", "true")
@@ -144,7 +141,7 @@ namespace CCMR_server {
                 if(userPost >= poster.length - 1 || poster[userPost].erOmvej){ //Sidste post eller posten er en omvej
                     omvejÅben = false
                 }else
-                    omvejÅben = poster[userPost + 1].erOmvej
+                    omvejÅben = poster[userPost + 1].erOmvej ? poster[userPost + 1].omvejÅben: false
     
                 res.setHeader("data", JSON.stringify({
                     "påPost": patruljer.patruljerPåPost(userPost),
@@ -242,26 +239,88 @@ namespace CCMR_server {
                 res.writeHead(403)
             res.end()
         }
-        export const patruljeMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void =>{
+        export const patruljeMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
+                }
+                const patruljeUdgår = () => {
+                    if(loeb.patruljeIkkeUdgået(pNum)){
+                        succes = true
+                        loeb.patruljeUdgår(pNum)
+                    }
+                }
+                const patruljeGeninddgår = () => {
+                    if(!loeb.patruljeIkkeUdgået(pNum)){
+                        succes = true
+                        loeb.patruljeGeninddgår(pNum)
+                    }
+                }
+
                 const action = req.headers['action'] as string
-                
+                let succes: boolean = false
+                let pNum = Number(req.headers['pnum'] as string)
+
                 switch (action) {
                     case "UDGÅ":
-
+                        patruljeUdgår()
                         break
                     case "GEN-INDGÅ":
+                        patruljeGeninddgår()
                         break
                 }
+                if(succes){
+                    res.writeHead(200)
+                    log.writeToPatruljeLog(`Patrulje ${pNum + 1} ${action}R ${action == "UDGÅ" ? "fra": "i"} løbet`)
+                }
+                else
+                    res.writeHead(400)
+                res.end()
+        }
+        export const postMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
+                const omvejLukker = () => {
+                    console.log("LUKKER")
+                    if(post.erOmvej && post.omvejÅben){
+                        post.omvejÅben = false
+                        succes = true
+                    }
+                }
+                const omvejÅbner = () => {
+                    if(post.erOmvej && !post.omvejÅben){
+                        post.omvejÅben = true
+                        succes = true
+                    }
+                }
+                
+                let succes: boolean = false
+                let pNum = Number(req.headers['post'] as string)
+                console.log(pNum)
+                const post = poster[pNum]
+                switch (req.headers['action'] as string) {
+                    case "LUKKE":
+                        omvejLukker()
+                        break
+                    case "ÅBNE":
+                        omvejÅbner()
+                        break
+                }
+                if(succes){
+                    res.writeHead(200)
+                    lastUpdateTimesPost[pNum - 1] = new Date().getTime()
+                }
+                else
+                    res.writeHead(400)
             }
+                res.end()
         }
     }
 
     const cleanUpServer = (options:any, event:string) => {
         console.log("Program exiting with code: " + event)
+        console.log(event)
         try{
             log.writeToServerLog("Program exiting with code: " + event)
             fs.writeFileSync("data/users.json", JSON.stringify(sc.User.users))
+            fs.writeFileSync("data/loeb.json", JSON.stringify(loeb))
         }catch{
             console.log("Problem with writing to server log")
             process.exit()
@@ -284,6 +343,7 @@ namespace CCMR_server {
     const loeb: sc.Loeb = new sc.Loeb(files.readJSONFileSync("data/loeb.json", true))
 
     const poster: sc.Post[] = sc.Post.createArray(files.readJSONFileSync("data/poster.json", true))
+    console.log(poster[3].erOmvej)
 
     let ppMatrix: string[][] = files.readJSONFileSync("data/ppMatrix.json") as string[][]
     if(ppMatrix == null){
@@ -343,7 +403,10 @@ namespace CCMR_server {
                     case "/patruljeMasterUpdate":
                         reqRes.patruljeMasterUpdate(req, res)
                         break
-                    default:
+                    case "/postMasterUpdate":
+                        reqRes.postMasterUpdate(req, res)    
+                    break
+                        default:
                         res.writeHead(400);
                         res.end()
                         break

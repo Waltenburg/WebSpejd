@@ -15,12 +15,11 @@ var Client;
             }
         };
         Home.loginClicked = (existingUser) => {
-            let identifier;
             if (kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null || existingUser) {
-                identifier = existingUser ? Client.getCookie("identifier") : generateIdentifyer(20);
+                const identifier = existingUser ? Client.getCookie("identifier") : generateIdentifyer(20);
                 const loginHeader = new Headers({
+                    "id": identifier,
                     "password": kode.value,
-                    "id": identifier
                 });
                 const loginSucces = (status, headers) => {
                     Client.setCookie("identifier", identifier, 2);
@@ -36,7 +35,7 @@ var Client;
                 const wrongPassword = () => {
                     kode.style.setProperty("color", "red");
                 };
-                Client.sendRequest("/login", loginHeader, loginSucces, wrongPassword);
+                Client.sendRequest("/login", loginHeader, loginSucces, wrongPassword, true);
             }
         };
         Home.codeChanged = () => {

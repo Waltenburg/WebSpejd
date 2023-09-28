@@ -2,8 +2,6 @@
 /// <reference path="sendHTTPRequest.ts"/>
 namespace Client{
     export namespace Mandskab {
-        const identifier = getCookie("identifier")
-        const patruljeUpdateURL = "update"
         let postOrOmvej = "post"
         let listPåPost: HTMLElement
         let listPåVej: HTMLElement
@@ -45,7 +43,6 @@ namespace Client{
             const postOrOmvejAtCLickedTime = postOrOmvej
             //lastUpdateTimeString = new Date().getTime().toString()
             sendRequest("/sendUpdate", new Headers({
-                "id": identifier,
                 "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
                 "commit-type": "test"
             }), (status, headers) => { //Test succesfull
@@ -60,7 +57,6 @@ namespace Client{
                     if(undoDepth > 0){
                         //lastUpdateTimeString = new Date().getTime().toString()
                         sendRequest("/sendUpdate", new Headers({
-                            "id": identifier,
                             "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
                             "commit-type": "commit"
                         }
@@ -84,7 +80,6 @@ namespace Client{
             const pNum = parseInt(val.id.substring(1))
             //lastUpdateTimeString = new Date().getTime().toString()
             sendRequest("/sendUpdate", new Headers({
-                "id": identifier,
                 "update": pNum.toString() + "%ind",
                 "commit-type": "test"
             }), (status, headers) => { //Test succesfull
@@ -99,7 +94,6 @@ namespace Client{
                 commitTimeoutArr.push(setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
                     if(undoDepth > 0){
                         sendRequest("/sendUpdate", new Headers({
-                            "id": identifier,
                             "update": pNum.toString() + "%ind",
                             "commit-type": "commit"
                         }), (status, headers) => { //Check in succesfull
@@ -236,9 +230,7 @@ namespace Client{
             noPatruljerPåPostText = document.getElementById("ingenPåPost") as HTMLParagraphElement
             noPatruljerPåVejText = document.getElementById("ingenPåVej") as HTMLParagraphElement
             //Get data from server
-            sendRequest("/getData", new Headers({
-                "id": identifier
-            }), (status, headers) => {
+            sendRequest("/getData", null, (status, headers) => {
                 const data = JSON.parse(headers.get("data")) as PatruljePostData
                 data.påPost.forEach(pNum => {
                     addPatruljePåPost(pNum)
@@ -247,22 +239,30 @@ namespace Client{
                     addPatruljeToPåVej(pNum)
                 })
                 document.getElementById("postNum").innerHTML = data.post.toString();
-                if(!data.omvejÅben){
-                    (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = true
-                    document.getElementById("OmvejSelectorText").innerHTML += " (Lukket)"
-                }
-                postOmvejChanged()
+                setOmvejSelector(data.omvejÅben)
+                console.log(data.omvejÅben)
             }, () => {
-                //if(confirm("Fejl. Du bliver viderestillet til login"))
+                if(confirm("Fejl. Du bliver viderestillet til login"))
                     location.replace(window.location.origin)
             })
 
             console.log("Entire page loaded")
         }
+        const setOmvejSelector = (omvejÅben: boolean) => {
+            if(omvejÅben){
+                (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = false
+                document.getElementById("OmvejSelectorText").innerHTML = "Omvej"
+            }
+            else{
+                (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = true
+                document.getElementById("OmvejSelectorText").innerHTML = "Omvej (Lukket)"
+            }
+
+            postOmvejChanged()
+        }
         const getUpdateFunc = () => {
             if(undoDepth == 0){
                 const headers = new Headers({
-                    "id": identifier,
                     'last-update': lastUpdateTimeString
                 })
                 lastUpdateTimeString = new Date().getTime().toString()
@@ -285,7 +285,7 @@ namespace Client{
                         updatePåVej[1].forEach(patrulje => {
                             addPatruljeToPåVej(patrulje)
                         })
-    
+                        setOmvejSelector(data.omvejÅben)
                     }
                 }, status => {
                     clearInterval(updateInterval)

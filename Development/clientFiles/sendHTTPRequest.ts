@@ -1,6 +1,11 @@
 namespace Client{
-    export const sendRequest = (url: string, dataHeaders: Headers, succesReciever: doubleParamCallback<number, Headers>, onFail?: singleParamCallback<number>): void =>
+    export const identifier = getCookie("identifier")
+    export const sendRequest = (url: string, dataHeaders: Headers, succesReciever: doubleParamCallback<number, Headers>, onFail?: singleParamCallback<number>, dontSendID?: boolean): void =>
     {
+        if(dataHeaders == null)
+            dataHeaders = new Headers()
+        if(!dontSendID)
+            dataHeaders.append("id", identifier)
         fetch(url, {
             method: "GET",
             headers: dataHeaders

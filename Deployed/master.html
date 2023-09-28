@@ -29,26 +29,23 @@
             <label for="patruljePlotRangeMax">Til </label>
             <select name="minPost" id="patruljePlotRangeMax" onchange="Client.Master.patruljePlot.rangeSelectorChanged()"></select>
         </section>
+
         <section id="meldinger" class="inputSection">
             <h2>Seneste meldinger</h2>
             <ul id="senesteUpdates">
             </ul>
         </section>
+
         <section id="poster" class="outputSection">
-            <div class="content">
-                <h2 class="buttomText">Poster</h2>
-                <!-- <label class="buttomText">Patruljer der stadig er med i løbet:
-                    <select id="patruljerMed">
-                    </select>
-                </label> -->
+            <h2 class="buttomText">Poster</h2>
+            <div id="postContainer" class="content">
             </div>
         </section>
+
         <section id="patruljer" class="outputSection">
             <div class="content">
                 <h2 style="display: inline;" class="buttomText">Patruljer</h2>
                 <p style="display: inline; color: whitesmoke; margin-left: 5px;">- Til venstre er patuljer der stadig er med i løbet. Til højre er udgåede patruljer.</p>
-                <!-- <h3 style="text-align: left; margin-bottom: 0;">Patruljer der stadig er med</h3> -->
-                <!-- <h3 style="text-align: right; margin-bottom: 0; margin-right: 10%;">Patruljer der er udgåede</h3> -->
                 <div style="display: flex; flex-direction: row;">
                     <div id="patruljerMed" class="flexCon" style="width: 60%;">
                     </div>
@@ -57,6 +54,7 @@
                 </div>
             </div>
         </section>
+
         <section id="ppMatrix" class="outputSection">
             <div class="content">
                 <h2 class="buttomText">Redigering af tjek ind og ud</h2>

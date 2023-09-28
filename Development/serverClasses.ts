@@ -26,6 +26,12 @@ export namespace serverClasses{
         patruljeIkkeUdgået = (pNum: number) => {
             return !this.udgåedePatruljer[pNum]
         }
+        patruljeUdgår = (pNum: number) => {
+            this.udgåedePatruljer[pNum] = true
+        }
+        patruljeGeninddgår = (pNum: number) => {
+            this.udgåedePatruljer[pNum] = false
+        }
     }
     export class Post{
         navn: string
@@ -92,6 +98,7 @@ export namespace serverClasses{
                     }
                 }
             }
+            console.log(userPostIndex)
             return userPostIndex
         }
         printIdentifiers(): void{
