@@ -108,7 +108,7 @@ namespace CCMR_server {
                     break
                 }
             }
-            console.log("User logging in: " + password + " - " + identifier)
+            // console.log("User logging in: " + password + " - " + identifier)
             if(!succes){
                 res.writeHead(403)
                 res.end();
@@ -198,6 +198,8 @@ namespace CCMR_server {
             fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
             res.writeHead(status)
             res.end()
+
+            console.log(sc.Post.getPostStatus(poster, ppMatrix, loeb))
         }
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const isMaster = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
@@ -278,7 +280,6 @@ namespace CCMR_server {
         export const postMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
                 const omvejLukker = () => {
-                    console.log("LUKKER")
                     if(post.erOmvej && post.omvejÅben){
                         post.omvejÅben = false
                         succes = true
@@ -293,7 +294,6 @@ namespace CCMR_server {
                 
                 let succes: boolean = false
                 let pNum = Number(req.headers['post'] as string)
-                console.log(pNum)
                 const post = poster[pNum]
                 switch (req.headers['action'] as string) {
                     case "LUKKE":
@@ -343,7 +343,6 @@ namespace CCMR_server {
     const loeb: sc.Loeb = new sc.Loeb(files.readJSONFileSync("data/loeb.json", true))
 
     const poster: sc.Post[] = sc.Post.createArray(files.readJSONFileSync("data/poster.json", true))
-    console.log(poster[3].erOmvej)
 
     let ppMatrix: string[][] = files.readJSONFileSync("data/ppMatrix.json") as string[][]
     if(ppMatrix == null){

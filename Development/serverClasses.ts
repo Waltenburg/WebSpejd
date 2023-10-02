@@ -57,6 +57,54 @@ export namespace serverClasses{
         toString(){
             return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString()
         }
+        static getPostStatus(poster: Post[], ppMatrix: string[][], loeb: Loeb): number[] {
+            let status: number[] = []
+            for (let i = 0; i < poster.length; i++) {
+                let exclusiveBefore = true
+                let on = false
+                let towards = false
+                let exclusiveAfter = true
+
+                for (let j = 0; j < ppMatrix.length; j++) {
+                    if(loeb.udgåedePatruljer[j])
+                        continue
+
+                    const p = ppMatrix[j]
+                    let len = p.length
+                    if(len >= i * 3 + 1)
+                        exclusiveBefore = false
+                    if(len == i * 3 + 1)
+                    towards = true
+                    else if(len == i * 3 + 2)
+                    on = true
+
+                    if(len < i * 3 + 3)
+                        exclusiveAfter = false
+                }
+                console.log(`Exclusive before: ${exclusiveBefore}, ON: ${on}, TOWARDS: ${towards}, Exclusive after: ${exclusiveAfter}`)
+                let stat: number
+                if(exclusiveBefore)
+                    stat = 0 //Posten skal åbne senere, da alle patruljer er før posten
+                else if(towards){
+                    stat = 1 //Der spejdere 
+                    if(on)
+                        stat = 2
+                }
+                else if(on)
+                    stat = 4 //Der er ikke nogle patruljer på vej
+                else if(exclusiveAfter)
+                    stat = 5
+                else if(!exclusiveAfter && !exclusiveBefore)
+                    stat = 4 //Eksempelvis hvis ingen er på vej mod eller på omvej
+                else
+                    stat = -1
+
+                if(poster[i].erOmvej && !poster[i].omvejÅben && !exclusiveBefore)
+                    stat = 5 //Omvej er lukket
+            status.push(stat)
+            }
+        return status
+        }
     }
     export class User {
         kode: string
@@ -98,7 +146,6 @@ export namespace serverClasses{
                     }
                 }
             }
-            console.log(userPostIndex)
             return userPostIndex
         }
         printIdentifiers(): void{

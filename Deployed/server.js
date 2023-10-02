@@ -112,7 +112,6 @@ var CCMR_server;
                     break;
                 }
             }
-            console.log("User logging in: " + password + " - " + identifier);
             if (!succes) {
                 res.writeHead(403);
                 res.end();
@@ -205,6 +204,7 @@ var CCMR_server;
             fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
             res.writeHead(status);
             res.end();
+            console.log(serverClasses_1.serverClasses.Post.getPostStatus(poster, ppMatrix, loeb));
         };
         reqRes.masterDataReq = (req, res) => {
             const isMaster = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
@@ -284,7 +284,6 @@ var CCMR_server;
         reqRes.postMasterUpdate = (req, res) => {
             if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
                 const omvejLukker = () => {
-                    console.log("LUKKER");
                     if (post.erOmvej && post.omvejÅben) {
                         post.omvejÅben = false;
                         succes = true;
@@ -298,7 +297,6 @@ var CCMR_server;
                 };
                 let succes = false;
                 let pNum = Number(req.headers['post']);
-                console.log(pNum);
                 const post = poster[pNum];
                 switch (req.headers['action']) {
                     case "LUKKE":
@@ -343,7 +341,6 @@ var CCMR_server;
     log.writeToServerLog("PROGRAM STARTED - Loading files");
     const loeb = new serverClasses_1.serverClasses.Loeb(files_1.files.readJSONFileSync("data/loeb.json", true));
     const poster = serverClasses_1.serverClasses.Post.createArray(files_1.files.readJSONFileSync("data/poster.json", true));
-    console.log(poster[3].erOmvej);
     let ppMatrix = files_1.files.readJSONFileSync("data/ppMatrix.json");
     if (ppMatrix == null) {
         ppMatrix = Array.apply(null, Array(loeb.patruljer.length)).map(() => []);

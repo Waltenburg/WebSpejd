@@ -223,6 +223,12 @@ namespace Client{
             let lastMeldingerListArray: HTMLLIElement[] = []
         }
         export namespace post{
+            /*
+            Grå: Alle er færdige på posten
+            De sidste er på vej mod posten (alle er færdige på posten før)
+            De sidste er på posten (Posten kan lukke når dem på posten er sendt videre)
+
+            */
             export const loadPoster = () => {
                 const container: HTMLDivElement = document.getElementById("postContainer") as HTMLDivElement
                 
@@ -239,7 +245,7 @@ namespace Client{
                     container.appendChild(button)
                 }
             }
-            export const postClicked = (post: string) => {
+            export const postClicked = (post: string): void => {
                 const p = parseInt(post)
                 const omvejLukker = poster[p].omvejÅben
                 const action = omvejLukker ? "LUKKE": "ÅBNE"

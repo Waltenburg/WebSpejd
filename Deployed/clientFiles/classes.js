@@ -38,3 +38,4 @@ class Post {
         return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString();
     }
 }
+Post.postStatus = [];
