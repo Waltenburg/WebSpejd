@@ -70,8 +70,7 @@ var serverClasses;
                     if (len < i * 3 + 3)
                         exclusiveAfter = false;
                 }
-                console.log(`Exclusive before: ${exclusiveBefore}, ON: ${on}, TOWARDS: ${towards}, Exclusive after: ${exclusiveAfter}`);
-                let stat;
+                let stat = -1;
                 if (exclusiveBefore)
                     stat = 0;
                 else if (towards) {
@@ -80,15 +79,13 @@ var serverClasses;
                         stat = 2;
                 }
                 else if (on)
-                    stat = 4;
+                    stat = 3;
                 else if (exclusiveAfter)
-                    stat = 5;
-                else if (!exclusiveAfter && !exclusiveBefore)
                     stat = 4;
-                else
-                    stat = -1;
+                else if (!exclusiveAfter && !exclusiveBefore)
+                    stat = 0;
                 if (poster[i].erOmvej && !poster[i].omvejÅben && !exclusiveBefore)
-                    stat = 5;
+                    stat = 0;
                 status.push(stat);
             }
             return status;

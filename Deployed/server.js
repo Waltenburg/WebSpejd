@@ -20,6 +20,7 @@ var CCMR_server;
             const skriv = getTimeString() + " - " + melding;
             patruljeLogWriteStream.write(skriv + "\n");
             addToLastUpdates(skriv);
+            patruljer.updatePostStatus();
         };
         let lastUpdates = [];
         let lastUpdatesIndex = 0;
@@ -92,6 +93,9 @@ var CCMR_server;
             if (postOrOmvej == "post" && poster[userPostIndex + 1].erOmvej)
                 postIndexAddition = 2;
             return postIndexAddition;
+        };
+        patruljer_1.updatePostStatus = () => {
+            postStatus = serverClasses_1.serverClasses.Post.getPostStatus(poster, ppMatrix, loeb);
         };
     })(patruljer || (patruljer = {}));
     let reqRes;
@@ -204,7 +208,6 @@ var CCMR_server;
             fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
             res.writeHead(status);
             res.end();
-            console.log(serverClasses_1.serverClasses.Post.getPostStatus(poster, ppMatrix, loeb));
         };
         reqRes.masterDataReq = (req, res) => {
             const isMaster = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
@@ -213,7 +216,8 @@ var CCMR_server;
                     "loeb": loeb,
                     "ppMatrix": ppMatrix,
                     "poster": poster,
-                    "sidsteMeldinger": log.getNewUpdates()
+                    "sidsteMeldinger": log.getNewUpdates(),
+                    "postStatus": postStatus
                 }));
             }
             else
@@ -236,7 +240,8 @@ var CCMR_server;
                     res.setHeader("data", JSON.stringify({
                         "patruljer": patruljerDerSkalOpdateres,
                         "ppArrays": ppArrays,
-                        "senesteUpdates": log.getNewUpdates()
+                        "senesteUpdates": log.getNewUpdates(),
+                        "postStatus": postStatus
                     }));
                 }
                 else
@@ -276,6 +281,7 @@ var CCMR_server;
             if (succes) {
                 res.writeHead(200);
                 log.writeToPatruljeLog(`Patrulje ${pNum + 1} ${action}R ${action == "UDGÅ" ? "fra" : "i"} løbet`);
+                patruljer.updatePostStatus();
             }
             else
                 res.writeHead(400);
@@ -349,6 +355,8 @@ var CCMR_server;
         patruljer.sendAllPatruljerTowardsFirstPost();
         fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
     }
+    let postStatus;
+    patruljer.updatePostStatus();
     serverClasses_1.serverClasses.User.users = serverClasses_1.serverClasses.User.createUserArray(files_1.files.readJSONFileSync("data/users.json", true));
     serverClasses_1.serverClasses.User.startDeleteInterval();
     console.log(`Alle filer succesfuldt loadet. Loadet ${poster.length} poster, ${serverClasses_1.serverClasses.User.users.length} brugere og ${ppMatrix.length} patruljer`);

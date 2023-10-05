@@ -81,26 +81,43 @@ export namespace serverClasses{
                     if(len < i * 3 + 3)
                         exclusiveAfter = false
                 }
-                console.log(`Exclusive before: ${exclusiveBefore}, ON: ${on}, TOWARDS: ${towards}, Exclusive after: ${exclusiveAfter}`)
-                let stat: number
+                // console.log(`Exclusive before: ${exclusiveBefore}, ON: ${on}, TOWARDS: ${towards}, Exclusive after: ${exclusiveAfter}`)
+                let stat: number = -1
+
                 if(exclusiveBefore)
-                    stat = 0 //Posten skal åbne senere, da alle patruljer er før posten
+                    stat = 0
                 else if(towards){
-                    stat = 1 //Der spejdere 
+                    stat = 1
                     if(on)
                         stat = 2
-                }
-                else if(on)
-                    stat = 4 //Der er ikke nogle patruljer på vej
+                }else if(on)
+                    stat = 3
                 else if(exclusiveAfter)
-                    stat = 5
+                    stat = 4
                 else if(!exclusiveAfter && !exclusiveBefore)
-                    stat = 4 //Eksempelvis hvis ingen er på vej mod eller på omvej
-                else
-                    stat = -1
+                    stat = 0
 
                 if(poster[i].erOmvej && !poster[i].omvejÅben && !exclusiveBefore)
-                    stat = 5 //Omvej er lukket
+                    stat = 0
+
+                // if(exclusiveAfter)
+                //     stat = 0
+                // else{
+                //     if(towards){
+                //         stat = 1
+                //         if(on)
+                //             stat = 2
+                //     }
+                //     else if(on)
+                //         stat = 3
+                //     else if(exclusiveBefore)
+                //         stat = 4
+                //     else if(!exclusiveAfter && !exclusiveBefore)
+                //         stat = 4
+                // }
+
+                // if(poster[i].erOmvej && !poster[i].omvejÅben && !exclusiveBefore)
+                //     stat = 0
             status.push(stat)
             }
         return status

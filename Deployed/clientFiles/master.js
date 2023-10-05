@@ -15,6 +15,7 @@ var Client;
                 patruljePlot.createPatruljePlot();
                 patruljer.loadPatruljer();
                 post.loadPoster();
+                post.colorPoster(data.postStatus);
             }, (status) => {
                 if (confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut();
@@ -197,16 +198,32 @@ var Client;
                 container.innerHTML = "";
                 for (let i = 0; i < poster.length; i++) {
                     const button = document.createElement("button");
-                    button.innerHTML = poster[i].navn;
+                    let text = poster[i].navn;
+                    if (poster[i].erOmvej)
+                        text += " - " + (poster[i].omvejÅben ? "(Å)" : "(L)");
+                    button.innerHTML = text;
                     button.value = i.toString();
                     button.setAttribute("onclick", "Client.Master.post.postClicked(this.value)");
-                    if (!poster[i].erOmvej)
-                        button.disabled = true;
                     container.appendChild(button);
+                }
+            };
+            post_1.colorPoster = (postStatus) => {
+                console.log(postStatus);
+                const colors = ["rgb(207, 204, 153)", "rgb(255, 200, 0)", "rgb(0, 255, 0)", "rgb(0, 200, 255)", "rgb(135, 155, 161)"];
+                const postButtons = (document.getElementById("postContainer").children);
+                for (let i = 0; i < postButtons.length; i++) {
+                    const button = postButtons[i];
+                    const status = postStatus[i];
+                    button.style.backgroundColor = colors[status];
+                    console.log(button.innerHTML + " " + status);
                 }
             };
             post_1.postClicked = (post) => {
                 const p = parseInt(post);
+                if (!poster[p].erOmvej) {
+                    alert("Posten er ikke en omvej. Den kan ikke åbnes eller lukkes");
+                    return;
+                }
                 const omvejLukker = poster[p].omvejÅben;
                 const action = omvejLukker ? "LUKKE" : "ÅBNE";
                 if (confirm(`Er du sikker på at ${poster[p].navn} skal ${action}?`)) {
@@ -214,8 +231,10 @@ var Client;
                         "post": post,
                         "action": action
                     }), (status, headers) => {
+                        const postContainer = document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)" : "(Å)");
+                        updates.forceUpdateNextTime();
                     }, (status) => {
-                        alert("Der er sket en fejl. Posten kan ikke " + action);
+                        alert("Der er sket en fejl. Omvejen kan ikke " + action);
                     });
                 }
             };
@@ -264,6 +283,8 @@ var Client;
             let connectionTries = 0;
             const maxConnectionTries = 10;
             const notificationAudio = new Audio("images/notification.mp3");
+            notificationAudio.textTracks;
+            HTMLAudioElement;
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
                     'last-update': lastUpdateTimeString
@@ -275,6 +296,7 @@ var Client;
                         const obj = JSON.parse(headers.get('data'));
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays);
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates);
+                        post.colorPoster(obj.postStatus);
                     }
                     connectionTries = 0;
                 }, status => {

@@ -18,6 +18,7 @@ namespace CCMR_server {
             const skriv = getTimeString() + " - " + melding
             patruljeLogWriteStream.write(skriv + "\n")
             addToLastUpdates(skriv)
+            patruljer.updatePostStatus()
         }
         let lastUpdates: string[] = []
         let lastUpdatesIndex: number = 0
@@ -89,6 +90,9 @@ namespace CCMR_server {
             if(postOrOmvej == "post" && poster[userPostIndex + 1].erOmvej)
                 postIndexAddition = 2
             return postIndexAddition
+        }
+        export const updatePostStatus = (): void => {
+            postStatus = sc.Post.getPostStatus(poster, ppMatrix, loeb)
         }
     }
     namespace reqRes{ //Alle funktioner der håndterer de specifikke request url's der kommer
@@ -198,8 +202,6 @@ namespace CCMR_server {
             fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
             res.writeHead(status)
             res.end()
-
-            console.log(sc.Post.getPostStatus(poster, ppMatrix, loeb))
         }
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const isMaster = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
@@ -208,7 +210,8 @@ namespace CCMR_server {
                     "loeb": loeb,
                     "ppMatrix": ppMatrix,
                     "poster": poster,
-                    "sidsteMeldinger": log.getNewUpdates()
+                    "sidsteMeldinger": log.getNewUpdates(),
+                    "postStatus": postStatus
                 }))
             }
             else
@@ -231,7 +234,8 @@ namespace CCMR_server {
                     res.setHeader("data", JSON.stringify({
                         "patruljer": patruljerDerSkalOpdateres,
                         "ppArrays": ppArrays,
-                        "senesteUpdates": log.getNewUpdates()
+                        "senesteUpdates": log.getNewUpdates(),
+                        "postStatus": postStatus
                     }))
                 }
                 else
@@ -272,6 +276,7 @@ namespace CCMR_server {
                 if(succes){
                     res.writeHead(200)
                     log.writeToPatruljeLog(`Patrulje ${pNum + 1} ${action}R ${action == "UDGÅ" ? "fra": "i"} løbet`)
+                    patruljer.updatePostStatus()
                 }
                 else
                     res.writeHead(400)
@@ -341,7 +346,6 @@ namespace CCMR_server {
     log.writeToServerLog("PROGRAM STARTED - Loading files")
 
     const loeb: sc.Loeb = new sc.Loeb(files.readJSONFileSync("data/loeb.json", true))
-
     const poster: sc.Post[] = sc.Post.createArray(files.readJSONFileSync("data/poster.json", true))
 
     let ppMatrix: string[][] = files.readJSONFileSync("data/ppMatrix.json") as string[][]
@@ -353,6 +357,9 @@ namespace CCMR_server {
         patruljer.sendAllPatruljerTowardsFirstPost()
         fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
     }
+
+    let postStatus: number[]
+    patruljer.updatePostStatus()
 
     sc.User.users = sc.User.createUserArray(files.readJSONFileSync("data/users.json", true))
     sc.User.startDeleteInterval()
