@@ -16,6 +16,7 @@ namespace Client{
                 patruljePlot.createPatruljePlot()
                 patruljer.loadPatruljer()
                 post.loadPoster()
+                post.colorPoster(data.postStatus)
             }, (status: number) => { //Fail
                 if(confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut()
@@ -123,12 +124,6 @@ namespace Client{
             }
             export const visUdgåedeChanged = (): void => {
                 visUdgåede = (document.getElementById("visUdgåede") as HTMLInputElement).checked
-                // if(visUdgåede){
-                //     for (let p = 0; p < loeb.udgåedePatruljer.length; p++) {
-                        
-                //         patruljeCollection.splice
-                //     }
-                // }
                 createPatruljePlot()
             }
             export const rangeSelectorChanged = (): void => {
@@ -223,6 +218,12 @@ namespace Client{
             let lastMeldingerListArray: HTMLLIElement[] = []
         }
         export namespace post{
+            /*
+            Grå: Alle er færdige på posten
+            De sidste er på vej mod posten (alle er færdige på posten før)
+            De sidste er på posten (Posten kan lukke når dem på posten er sendt videre)
+
+            */
             export const loadPoster = () => {
                 const container: HTMLDivElement = document.getElementById("postContainer") as HTMLDivElement
                 
@@ -231,16 +232,34 @@ namespace Client{
 
                 for (let i = 0; i < poster.length; i++) {
                     const button = document.createElement("button")
-                    button.innerHTML = poster[i].navn
+                    let text = poster[i].navn
+                    if(poster[i].erOmvej)
+                        text += " - " + (poster[i].omvejÅben ? "(Å)": "(L)")
+                    button.innerHTML = text
                     button.value = i.toString()
                     button.setAttribute("onclick", "Client.Master.post.postClicked(this.value)")
-                    if(!poster[i].erOmvej)
-                        button.disabled = true
                     container.appendChild(button)
                 }
             }
-            export const postClicked = (post: string) => {
+            export const colorPoster = (postStatus: number[]) => {
+                console.log(postStatus)
+                //make array of colors with low saturation with yellow, orange, geen, blue and grey
+                const colors: string[] = ["rgb(207, 204, 153)", "rgb(255, 200, 0)", "rgb(0, 255, 0)", "rgb(0, 200, 255)", "rgb(135, 155, 161)"]
+
+                const postButtons:  HTMLCollectionOf<HTMLButtonElement> = (document.getElementById("postContainer").children) as HTMLCollectionOf<HTMLButtonElement>
+                for (let i = 0; i < postButtons.length; i++) {
+                    const button = postButtons[i]
+                    const status = postStatus[i]
+                    button.style.backgroundColor = colors[status]
+                    console.log(button.innerHTML + " " + status)
+                }
+            }
+            export const postClicked = (post: string): void => {
                 const p = parseInt(post)
+                if(!poster[p].erOmvej){
+                    alert("Posten er ikke en omvej. Den kan ikke åbnes eller lukkes")
+                    return
+                }
                 const omvejLukker = poster[p].omvejÅben
                 const action = omvejLukker ? "LUKKE": "ÅBNE"
                 if(confirm(`Er du sikker på at ${poster[p].navn} skal ${action}?`)){
@@ -248,9 +267,12 @@ namespace Client{
                         "post": post,
                         "action": action
                     }), (status: number, headers: Headers) => {
+                        //Get post container, select the p'th child and set the innerhtml according to whether the omvej is open or not
+                        const postContainer = document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)": "(Å)")
 
+                        updates.forceUpdateNextTime()
                     }, (status: number) => {
-                        alert("Der er sket en fejl. Posten kan ikke " + action)
+                        alert("Der er sket en fejl. Omvejen kan ikke " + action)
                     })
                 }
             }
@@ -302,6 +324,8 @@ namespace Client{
             let connectionTries = 0
             const maxConnectionTries = 10
             const notificationAudio = new Audio("images/notification.mp3")
+            notificationAudio.textTracks
+            HTMLAudioElement
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
                     'last-update': lastUpdateTimeString
@@ -314,12 +338,14 @@ namespace Client{
                             patruljer: number[]
                             ppArrays: string[][]
                             senesteUpdates: string[]
+                            postStatus: number[]
                         }
                         const obj = JSON.parse(headers.get('data')) as IData
 
                         //FUNCTIONS TO RUN AT EVERY UPDATE
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays)
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates)
+                        post.colorPoster(obj.postStatus)
                     }
                     connectionTries = 0
                 }, status => {

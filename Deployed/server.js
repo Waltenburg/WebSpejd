@@ -20,6 +20,7 @@ var CCMR_server;
             const skriv = getTimeString() + " - " + melding;
             patruljeLogWriteStream.write(skriv + "\n");
             addToLastUpdates(skriv);
+            patruljer.updatePostStatus();
         };
         let lastUpdates = [];
         let lastUpdatesIndex = 0;
@@ -93,6 +94,9 @@ var CCMR_server;
                 postIndexAddition = 2;
             return postIndexAddition;
         };
+        patruljer_1.updatePostStatus = () => {
+            postStatus = serverClasses_1.serverClasses.Post.getPostStatus(poster, ppMatrix, loeb);
+        };
     })(patruljer || (patruljer = {}));
     let reqRes;
     (function (reqRes) {
@@ -112,7 +116,6 @@ var CCMR_server;
                     break;
                 }
             }
-            console.log("User logging in: " + password + " - " + identifier);
             if (!succes) {
                 res.writeHead(403);
                 res.end();
@@ -213,7 +216,8 @@ var CCMR_server;
                     "loeb": loeb,
                     "ppMatrix": ppMatrix,
                     "poster": poster,
-                    "sidsteMeldinger": log.getNewUpdates()
+                    "sidsteMeldinger": log.getNewUpdates(),
+                    "postStatus": postStatus
                 }));
             }
             else
@@ -236,7 +240,8 @@ var CCMR_server;
                     res.setHeader("data", JSON.stringify({
                         "patruljer": patruljerDerSkalOpdateres,
                         "ppArrays": ppArrays,
-                        "senesteUpdates": log.getNewUpdates()
+                        "senesteUpdates": log.getNewUpdates(),
+                        "postStatus": postStatus
                     }));
                 }
                 else
@@ -276,6 +281,7 @@ var CCMR_server;
             if (succes) {
                 res.writeHead(200);
                 log.writeToPatruljeLog(`Patrulje ${pNum + 1} ${action}R ${action == "UDGÅ" ? "fra" : "i"} løbet`);
+                patruljer.updatePostStatus();
             }
             else
                 res.writeHead(400);
@@ -284,7 +290,6 @@ var CCMR_server;
         reqRes.postMasterUpdate = (req, res) => {
             if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
                 const omvejLukker = () => {
-                    console.log("LUKKER");
                     if (post.erOmvej && post.omvejÅben) {
                         post.omvejÅben = false;
                         succes = true;
@@ -298,7 +303,6 @@ var CCMR_server;
                 };
                 let succes = false;
                 let pNum = Number(req.headers['post']);
-                console.log(pNum);
                 const post = poster[pNum];
                 switch (req.headers['action']) {
                     case "LUKKE":
@@ -343,7 +347,6 @@ var CCMR_server;
     log.writeToServerLog("PROGRAM STARTED - Loading files");
     const loeb = new serverClasses_1.serverClasses.Loeb(files_1.files.readJSONFileSync("data/loeb.json", true));
     const poster = serverClasses_1.serverClasses.Post.createArray(files_1.files.readJSONFileSync("data/poster.json", true));
-    console.log(poster[3].erOmvej);
     let ppMatrix = files_1.files.readJSONFileSync("data/ppMatrix.json");
     if (ppMatrix == null) {
         ppMatrix = Array.apply(null, Array(loeb.patruljer.length)).map(() => []);
@@ -352,6 +355,8 @@ var CCMR_server;
         patruljer.sendAllPatruljerTowardsFirstPost();
         fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
     }
+    let postStatus;
+    patruljer.updatePostStatus();
     serverClasses_1.serverClasses.User.users = serverClasses_1.serverClasses.User.createUserArray(files_1.files.readJSONFileSync("data/users.json", true));
     serverClasses_1.serverClasses.User.startDeleteInterval();
     console.log(`Alle filer succesfuldt loadet. Loadet ${poster.length} poster, ${serverClasses_1.serverClasses.User.users.length} brugere og ${ppMatrix.length} patruljer`);

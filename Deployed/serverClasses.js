@@ -49,6 +49,47 @@ var serverClasses;
         toString() {
             return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString();
         }
+        static getPostStatus(poster, ppMatrix, loeb) {
+            let status = [];
+            for (let i = 0; i < poster.length; i++) {
+                let exclusiveBefore = true;
+                let on = false;
+                let towards = false;
+                let exclusiveAfter = true;
+                for (let j = 0; j < ppMatrix.length; j++) {
+                    if (loeb.udgåedePatruljer[j])
+                        continue;
+                    const p = ppMatrix[j];
+                    let len = p.length;
+                    if (len >= i * 3 + 1)
+                        exclusiveBefore = false;
+                    if (len == i * 3 + 1)
+                        towards = true;
+                    else if (len == i * 3 + 2)
+                        on = true;
+                    if (len < i * 3 + 3)
+                        exclusiveAfter = false;
+                }
+                let stat = -1;
+                if (exclusiveBefore)
+                    stat = 0;
+                else if (towards) {
+                    stat = 1;
+                    if (on)
+                        stat = 2;
+                }
+                else if (on)
+                    stat = 3;
+                else if (exclusiveAfter)
+                    stat = 4;
+                else if (!exclusiveAfter && !exclusiveBefore)
+                    stat = 0;
+                if (poster[i].erOmvej && !poster[i].omvejÅben && !exclusiveBefore)
+                    stat = 0;
+                status.push(stat);
+            }
+            return status;
+        }
     }
     serverClasses.Post = Post;
     class User {
@@ -114,7 +155,6 @@ var serverClasses;
                 }
             }
         }
-        console.log(userPostIndex);
         return userPostIndex;
     };
     serverClasses.User = User;

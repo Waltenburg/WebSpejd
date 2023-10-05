@@ -37,6 +37,7 @@ class Post{
         this.omvejÅben = obj.omvejÅben
     }
 
+    static postStatus: number[] = []
     static createArray(obj: any): Post[]{
         let arr: Post[] = []
         obj.forEach((element: any) => {
