@@ -2,7 +2,7 @@ import * as http from 'http'
 import * as fs from 'fs'
 import { serverClasses as sc } from './serverClasses'
 import { files } from './files'
-import { update } from 'plotly.js';
+
 namespace CCMR_server {
     process.chdir(__dirname);
     const hostname = '127.0.0.1';
@@ -20,7 +20,7 @@ namespace CCMR_server {
             addToLastUpdates(skriv)
             patruljer.updatePostStatus()
         }
-        let lastUpdates: string[] = []
+        let lastUpdates: string[] = ["", "", "", "", "", ""]
         let lastUpdatesIndex: number = 0
         const numberOfLogsToKeep = 6
         const addToLastUpdates = (update: string): void => {
@@ -204,7 +204,7 @@ namespace CCMR_server {
             res.end()
         }
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-            const isMaster = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
+            const isMaster = true//sc.User.recognizeUser(req.headers['id'] as string) == Infinity
             if(isMaster){
                 res.setHeader("data", JSON.stringify({
                     "loeb": loeb,
@@ -317,6 +317,63 @@ namespace CCMR_server {
             }
                 res.end()
         }
+        export const redigerPPM = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
+                const pNum = Number(req.headers['pnum'] as string)
+                const post = Number(req.headers['post'] as string)
+                const mod = (req.headers['mod'] as string).trim()
+                const ind = (req.headers['ind'] as string).trim()
+                const ud =  (req.headers['ud'] as string).trim()
+
+                let toLog = `MASTER OVERRIDE: Patrulje ${pNum + 1} `
+                let change = false
+                try{
+                    const serverMod = ppMatrix[pNum][post * 3]
+                    const serverInd = ppMatrix[pNum][post * 3 + 1]
+                    const serverUd = ppMatrix[pNum][post * 3 + 2]
+                    const postNavn = poster[post].navn
+                    if(mod != serverMod){
+                        if(mod == "" || mod === null)
+                            toLog += `gå mod ${postNavn} SLETTES; `
+                        else
+                            toLog += `går mod ${postNavn} ${mod}; `
+                        ppMatrix[pNum][post * 3] = mod
+                        change = true
+                    }
+                    if(ind != serverInd){
+                        if(ind == "" || ind === null)
+                            toLog += `tjek ind på ${postNavn} SLETTES; `
+                        else
+                            toLog += `tjekkes ind på ${postNavn} ${ind}; `
+                        ppMatrix[pNum][post * 3 + 1] = ind
+                        change = true
+                    }
+                    if(ud != serverUd){
+                        if(ud == "" || ud === null)
+                            toLog += `tjek ud fra ${postNavn} SLETTES; `
+                        else
+                            toLog += `tjekkes ud fra ${postNavn} ${ud}; `
+                        ppMatrix[pNum][post * 3 + 2] = ud
+                        change = true
+                    }
+                    if(change){
+                        log.writeToPatruljeLog(toLog)
+                        fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
+                    }
+                    //Remove empty fields from end of array
+                    for (let i = ppMatrix[pNum].length - 1; i >= 0; i--) {
+                        if(ppMatrix[pNum][i] != "")
+                            break
+                        ppMatrix[pNum].pop()
+                    }
+                    res.writeHead(200)
+                }catch{
+                    res.writeHead(400)
+                }
+            }else
+                res.writeHead(403)
+            res.end()
+        }
     }
 
     const cleanUpServer = (options:any, event:string) => {
@@ -410,8 +467,11 @@ namespace CCMR_server {
                         reqRes.patruljeMasterUpdate(req, res)
                         break
                     case "/postMasterUpdate":
-                        reqRes.postMasterUpdate(req, res)    
-                    break
+                        reqRes.postMasterUpdate(req, res)
+                        break
+                    case "/redigerPPM":
+                        reqRes.redigerPPM(req, res)
+                        break
                         default:
                         res.writeHead(400);
                         res.end()

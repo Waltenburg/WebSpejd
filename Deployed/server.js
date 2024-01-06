@@ -22,7 +22,7 @@ var CCMR_server;
             addToLastUpdates(skriv);
             patruljer.updatePostStatus();
         };
-        let lastUpdates = [];
+        let lastUpdates = ["", "", "", "", "", ""];
         let lastUpdatesIndex = 0;
         const numberOfLogsToKeep = 6;
         const addToLastUpdates = (update) => {
@@ -210,7 +210,7 @@ var CCMR_server;
             res.end();
         };
         reqRes.masterDataReq = (req, res) => {
-            const isMaster = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
+            const isMaster = true;
             if (isMaster) {
                 res.setHeader("data", JSON.stringify({
                     "loeb": loeb,
@@ -321,6 +321,63 @@ var CCMR_server;
             }
             res.end();
         };
+        reqRes.redigerPPM = (req, res) => {
+            if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
+                const pNum = Number(req.headers['pnum']);
+                const post = Number(req.headers['post']);
+                const mod = req.headers['mod'].trim();
+                const ind = req.headers['ind'].trim();
+                const ud = req.headers['ud'].trim();
+                let toLog = `MASTER OVERRIDE: Patrulje ${pNum + 1} `;
+                let change = false;
+                try {
+                    const serverMod = ppMatrix[pNum][post * 3];
+                    const serverInd = ppMatrix[pNum][post * 3 + 1];
+                    const serverUd = ppMatrix[pNum][post * 3 + 2];
+                    const postNavn = poster[post].navn;
+                    if (mod != serverMod) {
+                        if (mod == "" || mod === null)
+                            toLog += `gå mod ${postNavn} SLETTES; `;
+                        else
+                            toLog += `går mod ${postNavn} ${mod}; `;
+                        ppMatrix[pNum][post * 3] = mod;
+                        change = true;
+                    }
+                    if (ind != serverInd) {
+                        if (ind == "" || ind === null)
+                            toLog += `tjek ind på ${postNavn} SLETTES; `;
+                        else
+                            toLog += `tjekkes ind på ${postNavn} ${ind}; `;
+                        ppMatrix[pNum][post * 3 + 1] = ind;
+                        change = true;
+                    }
+                    if (ud != serverUd) {
+                        if (ud == "" || ud === null)
+                            toLog += `tjek ud fra ${postNavn} SLETTES; `;
+                        else
+                            toLog += `tjekkes ud fra ${postNavn} ${ud}; `;
+                        ppMatrix[pNum][post * 3 + 2] = ud;
+                        change = true;
+                    }
+                    if (change) {
+                        log.writeToPatruljeLog(toLog);
+                        fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => { });
+                    }
+                    for (let i = ppMatrix[pNum].length - 1; i >= 0; i--) {
+                        if (ppMatrix[pNum][i] != "")
+                            break;
+                        ppMatrix[pNum].pop();
+                    }
+                    res.writeHead(200);
+                }
+                catch {
+                    res.writeHead(400);
+                }
+            }
+            else
+                res.writeHead(403);
+            res.end();
+        };
     })(reqRes || (reqRes = {}));
     const cleanUpServer = (options, event) => {
         console.log("Program exiting with code: " + event);
@@ -403,6 +460,9 @@ var CCMR_server;
                         break;
                     case "/postMasterUpdate":
                         reqRes.postMasterUpdate(req, res);
+                        break;
+                    case "/redigerPPM":
+                        reqRes.redigerPPM(req, res);
                         break;
                     default:
                         res.writeHead(400);

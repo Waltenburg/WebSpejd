@@ -2,12 +2,11 @@ var Client;
 (function (Client) {
     let Master;
     (function (Master) {
-        let ppMatrix;
         let poster;
         Master.onLoad = () => {
             Client.sendRequest("/masterData", null, (status, headers) => {
                 const data = JSON.parse(headers.get("data"));
-                ppMatrix = data.ppMatrix;
+                Master.ppMatrix = data.ppMatrix;
                 Master.loeb = data.loeb;
                 poster = data.poster;
                 meldinger.updateSidsteMeldinger(data.sidsteMeldinger);
@@ -16,6 +15,7 @@ var Client;
                 patruljer.loadPatruljer();
                 post.loadPoster();
                 post.colorPoster(data.postStatus);
+                redigerPPM.onLoad();
             }, (status) => {
                 if (confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut();
@@ -57,9 +57,9 @@ var Client;
                     this.y = [];
                     this.text = [];
                     this.name = Master.loeb.patruljer[patruljeIndex];
-                    for (let t = 0; t < ppMatrix[patruljeIndex].length; t++) {
-                        const pTimeStamp = ppMatrix[patruljeIndex][t];
-                        if (pTimeStamp != "") {
+                    for (let t = 0; t < Master.ppMatrix[patruljeIndex].length; t++) {
+                        const pTimeStamp = Master.ppMatrix[patruljeIndex][t];
+                        if (pTimeStamp != "" && pTimeStamp !== null) {
                             this.x.push(t);
                             this.y.push(-(patruljeIndex + 1));
                             this.text.push("Patrulje " + (patruljeIndex + 1).toString() + " - " + this.name + "<br>" + meldinger[t % 3] + poster[Math.floor(t / 3)].navn + "<br>" + pTimeStamp);
@@ -86,7 +86,7 @@ var Client;
             patruljePlot.Data = Data;
             patruljePlot.createPatruljePlot = () => {
                 patruljePlot.patruljeCollection = [];
-                for (let patruljeIndex = 0; patruljeIndex < ppMatrix.length; patruljeIndex++) {
+                for (let patruljeIndex = 0; patruljeIndex < Master.ppMatrix.length; patruljeIndex++) {
                     if (visUdgåede || !Master.loeb.udgåedePatruljer[patruljeIndex])
                         patruljePlot.patruljeCollection.push(new Data(patruljeIndex));
                 }
@@ -96,7 +96,7 @@ var Client;
             patruljePlot.updatePatruljeOversigt = (patruljer, ppArrays) => {
                 for (let i = 0; i < ppArrays.length; i++) {
                     const patrulje = patruljer[i];
-                    ppMatrix[patrulje] = ppArrays[i];
+                    Master.ppMatrix[patrulje] = ppArrays[i];
                     patruljePlot.patruljeCollection[patrulje] = new Data(patrulje);
                 }
                 Plotly.newPlot('patruljeOversigtPlot', patruljePlot.patruljeCollection, plotLayout);
@@ -132,11 +132,12 @@ var Client;
                         tickvals: getXTickVals(),
                         showgrid: false,
                         range: plotRange,
+                        tickangle: 0
                     },
                     yaxis: {
                         ticktext: getYTickText(),
                         tickvals: getYTickVals(),
-                        range: [-(ppMatrix.length + 0.5), -0.5,],
+                        range: [-(Master.ppMatrix.length + 0.5), -0.5,],
                         showgrid: false,
                         title: "Patruljer",
                     }
@@ -208,14 +209,12 @@ var Client;
                 }
             };
             post_1.colorPoster = (postStatus) => {
-                console.log(postStatus);
                 const colors = ["rgb(207, 204, 153)", "rgb(255, 200, 0)", "rgb(0, 255, 0)", "rgb(0, 200, 255)", "rgb(135, 155, 161)"];
                 const postButtons = (document.getElementById("postContainer").children);
                 for (let i = 0; i < postButtons.length; i++) {
                     const button = postButtons[i];
                     const status = postStatus[i];
                     button.style.backgroundColor = colors[status];
-                    console.log(button.innerHTML + " " + status);
                 }
             };
             post_1.postClicked = (post) => {
@@ -276,6 +275,101 @@ var Client;
                 }
             };
         })(patruljer = Master.patruljer || (Master.patruljer = {}));
+        let redigerPPM;
+        (function (redigerPPM) {
+            let patruljeSelect;
+            let postSelect;
+            let modIn;
+            let påIn;
+            let udIn;
+            let redigerer = false;
+            redigerPPM.redigerButtonClicked = () => {
+                redigerer = !redigerer;
+                patruljeSelect.disabled = redigerer;
+                postSelect.disabled = redigerer;
+                modIn.disabled = !redigerer;
+                påIn.disabled = !redigerer;
+                udIn.disabled = !redigerer;
+                const checkNull = (str) => {
+                    return str ? str : "";
+                };
+                if (redigerer) {
+                    const patruljeIndex = parseInt(patruljeSelect.value) - 1;
+                    const postIndex = parseInt(postSelect.value);
+                    console.log(patruljeIndex, postIndex);
+                    modIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3]);
+                    påIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3 + 1]);
+                    udIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3 + 2]);
+                }
+                else {
+                    modIn.value = "";
+                    påIn.value = "";
+                    udIn.value = "";
+                }
+            };
+            redigerPPM.indsendButtonClicked = () => {
+                const patruljeIndex = parseInt(patruljeSelect.value) - 1;
+                const postIndex = parseInt(postSelect.value);
+                const mod = modIn.value;
+                const ind = påIn.value;
+                const ud = udIn.value;
+                Client.sendRequest("/redigerPPM", new Headers({
+                    "pNum": patruljeIndex.toString(),
+                    "post": postIndex.toString(),
+                    "mod": mod,
+                    "ind": ind,
+                    "ud": ud
+                }), (status, headers) => {
+                    Master.ppMatrix[patruljeIndex][postIndex * 3] = mod;
+                    Master.ppMatrix[patruljeIndex][postIndex * 3 + 1] = ind;
+                    Master.ppMatrix[patruljeIndex][postIndex * 3 + 2] = ud;
+                    redigerPPM.redigerButtonClicked();
+                    updates.forceUpdateNextTime();
+                }, (status) => {
+                    alert("Der er sket en fejl. Ændringerne er ikke blevet gemt");
+                });
+                console.log(patruljeIndex, postIndex, mod, ind, ud);
+            };
+            redigerPPM.onLoad = () => {
+                patruljeSelect = document.getElementById("patruljeSelect");
+                postSelect = document.getElementById("postSelect");
+                modIn = document.getElementById("modIn");
+                påIn = document.getElementById("påIn");
+                udIn = document.getElementById("udIn");
+                modIn.disabled = true;
+                påIn.disabled = true;
+                udIn.disabled = true;
+                for (let p = 0; p < Master.loeb.patruljer.length; p++) {
+                    const patruljeOption = document.createElement("option");
+                    patruljeOption.value = (p + 1).toString();
+                    patruljeOption.innerHTML = (p + 1).toString() + " " + Master.loeb.patruljer[p];
+                    patruljeSelect.appendChild(patruljeOption);
+                }
+                for (let p = 0; p < poster.length; p++) {
+                    const postOption = document.createElement("option");
+                    postOption.value = p.toString();
+                    postOption.innerHTML = poster[p].navn;
+                    postSelect.appendChild(postOption);
+                }
+            };
+        })(redigerPPM = Master.redigerPPM || (Master.redigerPPM = {}));
+        Master.savePPM = () => {
+            let ppMatrixCopy = structuredClone(Master.ppMatrix);
+            const topRow = poster.map(p => p.navn);
+            topRow.unshift("Patrulje");
+            ppMatrixCopy.unshift(topRow);
+            for (let p = 1; p < ppMatrixCopy.length; p++) {
+                ppMatrixCopy[p].unshift(Master.loeb.patruljer[p - 1]);
+            }
+            let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", Master.loeb.navn + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        };
         let updates;
         (function (updates) {
             let lastUpdateTimeString = new Date().getTime().toString();
@@ -297,6 +391,7 @@ var Client;
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays);
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates);
                         post.colorPoster(obj.postStatus);
+                        Master.savePPM();
                     }
                     connectionTries = 0;
                 }, status => {

@@ -1,7 +1,13 @@
 [
     {
-        "navn": "Post 1",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "Check-in",
+        "beskrivelse": "Kernen",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "1 Gammelhavn",
+        "beskrivelse": "Ryds",
         "erOmvej": false,
         "omvejÅben": null
     },
@@ -12,32 +18,38 @@
         "omvejÅben": true
     },
     {
-        "navn": "Post 2",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "2 Strib legepl.",
+        "beskrivelse": "Fiasko",
         "erOmvej": false,
         "omvejÅben": null
     },
     {
-        "navn": "Omvej 2->3 ",
+        "navn": "Omvej 2->Sov ",
         "beskrivelse": "Omvej",
         "erOmvej": true,
         "omvejÅben": true
     },
     {
-        "navn": "Post 3",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "Sov",
+        "beskrivelse": "Billeshave efterskole",
+        "erOmvej": false,
+        "omvejÅben": null
+    },
+    {
+        "navn": "3 Staurby skov",
+        "beskrivelse": "Cicero",
         "erOmvej": false,
         "omvejÅben": null
     },
     {
         "navn": "Omvej 3->4",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "beskrivelse": "Omvej",
         "erOmvej": true,
         "omvejÅben": true
     },
     {
-        "navn": "Post 4",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "4 Røjle Klint",
+        "beskrivelse": "Tøzerne",
         "erOmvej": false,
         "omvejÅben": null
     },
@@ -48,8 +60,8 @@
         "omvejÅben": true
     },
     {
-        "navn": "Post 5",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "5 Å Vejlby",
+        "beskrivelse": "IPA",
         "erOmvej": false,
         "omvejÅben": null
     },
@@ -60,57 +72,22 @@
         "omvejÅben": true
     },
     {
-        "navn": "Post 6",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "6 Tusindsårs..",
+        "beskrivelse": "Arcus",
         "erOmvej": false,
         "omvejÅben": null
     },
     {
-        "navn": "Omvej 6->7",
+        "navn": "Omvej 6->HQ",
         "beskrivelse": "Omvej",
         "erOmvej": true,
-        "omvejÅben": true
-    },
-    {
-        "navn": "Post 7",
-        "beskrivelse": "En flot post i Fuglezoo",
-        "erOmvej": false,
         "omvejÅben": null
     },
     {
-        "navn": "Post 8",
-        "beskrivelse": "En flot post i Fuglezoo",
-        "erOmvej": false,
-        "omvejÅben": null
-    },
-    {
-        "navn": "Omvej 8->9",
-        "beskrivelse": "Omvej",
-        "erOmvej": true,
-        "omvejÅben": true
-    },
-    {
-        "navn": "Post 9",
-        "beskrivelse": "En flot post i Fuglezoo",
-        "erOmvej": false,
-        "omvejÅben": null
-    },
-    {
-        "navn": "Omvej 9->10",
-        "beskrivelse": "En flot post i Fuglezoo",
-        "erOmvej": true,
-        "omvejÅben": null
-    },
-    {
-        "navn": "Post 10",
-        "beskrivelse": "En flot post i Fuglezoo",
-        "erOmvej": false,
-        "omvejÅben": null
-    },
-    {
-        "navn": "Mål",
-        "beskrivelse": "En flot post i Fuglezoo",
+        "navn": "HQ",
+        "beskrivelse": "THE END",
         "erOmvej": false,
         "omvejÅben": null
     }
 ]
+

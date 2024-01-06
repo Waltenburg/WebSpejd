@@ -1,7 +1,8 @@
 /// <reference path="sendHTTPRequest.ts"/>
+/// <reference path="patruljePlot.ts"/>
 namespace Client{
     export namespace Master{
-        let ppMatrix: string[][]
+        export let ppMatrix: string[][]
         export let loeb: Loeb
         let poster: Post[]
 
@@ -17,6 +18,7 @@ namespace Client{
                 patruljer.loadPatruljer()
                 post.loadPoster()
                 post.colorPoster(data.postStatus)
+                redigerPPM.onLoad();
             }, (status: number) => { //Fail
                 if(confirm("Fejl ved hentning af data " + status + ". Vil du logge ud?"))
                     logOut()
@@ -76,7 +78,7 @@ namespace Client{
                     this.name = loeb.patruljer[patruljeIndex]
                     for (let t = 0; t < ppMatrix[patruljeIndex].length; t++) {
                         const pTimeStamp = ppMatrix[patruljeIndex][t];
-                        if(pTimeStamp != ""){
+                        if(pTimeStamp != "" && pTimeStamp !== null){
                             this.x.push(t)
                             this.y.push(-(patruljeIndex + 1))
                             this.text.push("Patrulje " + (patruljeIndex + 1).toString() + " - " + this.name + "<br>" + meldinger[t % 3] + poster[Math.floor(t/3)].navn  + "<br>" + pTimeStamp)
@@ -156,6 +158,7 @@ namespace Client{
                         tickvals: getXTickVals(),
                         showgrid: false,
                         range: plotRange,
+                        tickangle: 0
                         // title: "Poster og omveje"
                     },
                     yaxis:{
@@ -242,7 +245,6 @@ namespace Client{
                 }
             }
             export const colorPoster = (postStatus: number[]) => {
-                console.log(postStatus)
                 //make array of colors with low saturation with yellow, orange, geen, blue and grey
                 const colors: string[] = ["rgb(207, 204, 153)", "rgb(255, 200, 0)", "rgb(0, 255, 0)", "rgb(0, 200, 255)", "rgb(135, 155, 161)"]
 
@@ -251,7 +253,6 @@ namespace Client{
                     const button = postButtons[i]
                     const status = postStatus[i]
                     button.style.backgroundColor = colors[status]
-                    console.log(button.innerHTML + " " + status)
                 }
             }
             export const postClicked = (post: string): void => {
@@ -316,6 +317,114 @@ namespace Client{
                 }
             }
         } 
+        export namespace redigerPPM{
+            let patruljeSelect: HTMLSelectElement;
+            let postSelect: HTMLSelectElement;
+
+            let modIn: HTMLInputElement;
+            let påIn: HTMLInputElement;
+            let udIn: HTMLInputElement;
+
+            let redigerer = false
+            export const redigerButtonClicked = (): void => {
+                redigerer = !redigerer
+                patruljeSelect.disabled = redigerer
+                postSelect.disabled = redigerer
+
+                modIn.disabled = !redigerer
+                påIn.disabled = !redigerer
+                udIn.disabled = !redigerer
+
+                const checkNull = (str: string): string => {
+                    return str ? str: ""
+                }
+
+                if(redigerer){
+                    const patruljeIndex = parseInt(patruljeSelect.value) - 1
+                    const postIndex = parseInt(postSelect.value)
+                    console.log(patruljeIndex, postIndex)
+                    modIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3])
+                    påIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3 + 1])
+                    udIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3 + 2])
+                }else{
+                    modIn.value = ""
+                    påIn.value = ""
+                    udIn.value = ""
+                }
+            }
+            export const indsendButtonClicked = (): void => {
+                const patruljeIndex = parseInt(patruljeSelect.value) - 1
+                const postIndex = parseInt(postSelect.value)
+                const mod = modIn.value
+                const ind = påIn.value
+                const ud = udIn.value
+
+                sendRequest("/redigerPPM", new Headers({
+                    "pNum": patruljeIndex.toString(),
+                    "post": postIndex.toString(),
+                    "mod": mod,
+                    "ind": ind,
+                    "ud": ud
+                }), (status: number, headers: Headers) => {
+                    ppMatrix[patruljeIndex][postIndex * 3] = mod
+                    ppMatrix[patruljeIndex][postIndex * 3 + 1] = ind
+                    ppMatrix[patruljeIndex][postIndex * 3 + 2] = ud
+                    redigerButtonClicked()
+                    updates.forceUpdateNextTime()
+                }, (status: number) => {
+                    alert("Der er sket en fejl. Ændringerne er ikke blevet gemt")
+                })
+                console.log(patruljeIndex, postIndex, mod, ind, ud)
+
+            }
+            export const onLoad = (): void => {
+                patruljeSelect = document.getElementById("patruljeSelect") as HTMLSelectElement;
+                postSelect = document.getElementById("postSelect") as HTMLSelectElement;
+                modIn = document.getElementById("modIn") as HTMLInputElement;
+                påIn = document.getElementById("påIn") as HTMLInputElement;
+                udIn = document.getElementById("udIn") as HTMLInputElement;
+
+                modIn.disabled = true
+                påIn.disabled = true
+                udIn.disabled = true
+
+                for (let p = 0; p < loeb.patruljer.length; p++) {
+                    const patruljeOption = document.createElement("option")
+                    patruljeOption.value = (p+1).toString();
+                    patruljeOption.innerHTML = (p+1).toString() + " " + loeb.patruljer[p];
+                    patruljeSelect.appendChild(patruljeOption)
+                }
+                for (let p = 0; p < poster.length; p++) {
+                    const postOption = document.createElement("option")
+                    postOption.value = p.toString();
+                    postOption.innerHTML = poster[p].navn;
+                    postSelect.appendChild(postOption)
+                }
+            }
+        }
+        //Write function that saves ppMatrix to local storage in a csv format
+        export const savePPM = () => {
+            let ppMatrixCopy = structuredClone(ppMatrix)
+            //Add the names of each post to the first row
+            const topRow = poster.map(p => p.navn)
+            topRow.unshift("Patrulje")
+            ppMatrixCopy.unshift(topRow)
+
+            //Add the names of each patrulje to the first column
+            for (let p = 1; p < ppMatrixCopy.length; p++){
+                ppMatrixCopy[p].unshift(loeb.patruljer[p - 1])
+            }
+
+            //Convert to csv format magic
+            let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", loeb.navn + ".csv");
+            document.body.appendChild(link); // Required for FF
+            link.click();
+            link.remove()
+        }
         //Namespace for handling sending and recieving updates from server
         //Put functions to run at every update within callback funciton in SendRequest()
         namespace updates {
@@ -346,6 +455,7 @@ namespace Client{
                         patruljePlot.updatePatruljeOversigt(obj.patruljer, obj.ppArrays)
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates)
                         post.colorPoster(obj.postStatus)
+                        savePPM()
                     }
                     connectionTries = 0
                 }, status => {
