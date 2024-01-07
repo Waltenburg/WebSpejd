@@ -279,6 +279,7 @@ var Client;
         (function (redigerPPM) {
             let patruljeSelect;
             let postSelect;
+            let indsendButton;
             let modIn;
             let påIn;
             let udIn;
@@ -290,13 +291,13 @@ var Client;
                 modIn.disabled = !redigerer;
                 påIn.disabled = !redigerer;
                 udIn.disabled = !redigerer;
+                indsendButton.disabled = !redigerer;
                 const checkNull = (str) => {
                     return str ? str : "";
                 };
                 if (redigerer) {
                     const patruljeIndex = parseInt(patruljeSelect.value) - 1;
                     const postIndex = parseInt(postSelect.value);
-                    console.log(patruljeIndex, postIndex);
                     modIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3]);
                     påIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3 + 1]);
                     udIn.value = checkNull(Master.ppMatrix[patruljeIndex][postIndex * 3 + 2]);
@@ -328,7 +329,7 @@ var Client;
                 }, (status) => {
                     alert("Der er sket en fejl. Ændringerne er ikke blevet gemt");
                 });
-                console.log(patruljeIndex, postIndex, mod, ind, ud);
+                console.log("Indsend");
             };
             redigerPPM.onLoad = () => {
                 patruljeSelect = document.getElementById("patruljeSelect");
@@ -336,9 +337,11 @@ var Client;
                 modIn = document.getElementById("modIn");
                 påIn = document.getElementById("påIn");
                 udIn = document.getElementById("udIn");
+                indsendButton = document.getElementById("indsendButton");
                 modIn.disabled = true;
                 påIn.disabled = true;
                 udIn.disabled = true;
+                indsendButton.disabled = true;
                 for (let p = 0; p < Master.loeb.patruljer.length; p++) {
                     const patruljeOption = document.createElement("option");
                     patruljeOption.value = (p + 1).toString();
@@ -350,6 +353,19 @@ var Client;
                     postOption.value = p.toString();
                     postOption.innerHTML = poster[p].navn;
                     postSelect.appendChild(postOption);
+                }
+            };
+            redigerPPM.resetLøb = () => {
+                const password = prompt("Indtast kodeord for at nulstille løbet");
+                if (password != "") {
+                    Client.sendRequest("/reset", new Headers({
+                        "password": password
+                    }), (status, headers) => {
+                        alert("Løbet er blevet nulstillet");
+                        location.reload();
+                    }, (status) => {
+                        alert("Forkert kodeord. Løbet er ikke blevet nulstillet");
+                    });
                 }
             };
         })(redigerPPM = Master.redigerPPM || (Master.redigerPPM = {}));
@@ -377,8 +393,7 @@ var Client;
             let connectionTries = 0;
             const maxConnectionTries = 10;
             const notificationAudio = new Audio("images/notification.mp3");
-            notificationAudio.textTracks;
-            HTMLAudioElement;
+            const errorAudio = new Audio("images/error.mp3");
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
                     'last-update': lastUpdateTimeString
@@ -392,24 +407,36 @@ var Client;
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates);
                         post.colorPoster(obj.postStatus);
                         Master.savePPM();
+                        connectionWarning.hideWarning();
                     }
                     connectionTries = 0;
                 }, status => {
-                    connectionTries++;
-                    if (connectionTries > maxConnectionTries) {
-                        clearInterval(updateInterval);
-                        if (confirm("Fejl ved opdatering. Log ind igen")) {
-                            logOut();
-                        }
-                        else {
-                            connectionTries = 0;
-                            updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000);
-                        }
-                    }
+                    errorAudio.play();
+                    connectionWarning.showWarning();
                 });
             };
             let updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000);
             updates.forceUpdateNextTime = () => { lastUpdateTimeString = "0"; };
         })(updates || (updates = {}));
     })(Master = Client.Master || (Client.Master = {}));
+    let connectionWarning;
+    (function (connectionWarning) {
+        let warningBox = null;
+        function showWarning() {
+            if (!warningBox) {
+                warningBox = document.createElement('div');
+                warningBox.className = 'connection-warning';
+                warningBox.textContent = 'Forbindelsen til serveren er afbrudt';
+                document.body.appendChild(warningBox);
+            }
+        }
+        connectionWarning.showWarning = showWarning;
+        function hideWarning() {
+            if (warningBox) {
+                warningBox.parentNode?.removeChild(warningBox);
+                warningBox = null;
+            }
+        }
+        connectionWarning.hideWarning = hideWarning;
+    })(connectionWarning = Client.connectionWarning || (Client.connectionWarning = {}));
 })(Client || (Client = {}));

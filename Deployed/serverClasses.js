@@ -142,7 +142,7 @@ var serverClasses;
             clearInterval(this.deleteInterval);
         }
     }
-    User.maxAge = 30 * 60 * 1000;
+    User.maxAge = 120 * 60 * 1000;
     User.recognizeUser = (id) => {
         let userPostIndex = -1;
         for (let u = 0; u < User.users.length; u++) {

@@ -319,21 +319,25 @@ namespace CCMR_server {
         }
         export const redigerPPM = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
+                const collapseStrAndNull = (str: string): string => {
+                    return str == "" ? null : str 
+                }
+                
                 const pNum = Number(req.headers['pnum'] as string)
                 const post = Number(req.headers['post'] as string)
-                const mod = (req.headers['mod'] as string).trim()
-                const ind = (req.headers['ind'] as string).trim()
-                const ud =  (req.headers['ud'] as string).trim()
+                const mod = collapseStrAndNull((req.headers['mod'] as string).trim())
+                const ind = collapseStrAndNull((req.headers['ind'] as string).trim())
+                const ud =  collapseStrAndNull((req.headers['ud'] as string).trim())
 
                 let toLog = `MASTER OVERRIDE: Patrulje ${pNum + 1} `
                 let change = false
                 try{
-                    const serverMod = ppMatrix[pNum][post * 3]
-                    const serverInd = ppMatrix[pNum][post * 3 + 1]
-                    const serverUd = ppMatrix[pNum][post * 3 + 2]
+                    const serverMod = collapseStrAndNull(ppMatrix[pNum][post * 3])
+                    const serverInd = collapseStrAndNull(ppMatrix[pNum][post * 3 + 1])
+                    const serverUd = collapseStrAndNull(ppMatrix[pNum][post * 3 + 2])
                     const postNavn = poster[post].navn
                     if(mod != serverMod){
-                        if(mod == "" || mod === null)
+                        if(mod == null)
                             toLog += `gå mod ${postNavn} SLETTES; `
                         else
                             toLog += `går mod ${postNavn} ${mod}; `
@@ -341,7 +345,7 @@ namespace CCMR_server {
                         change = true
                     }
                     if(ind != serverInd){
-                        if(ind == "" || ind === null)
+                        if(ind == null)
                             toLog += `tjek ind på ${postNavn} SLETTES; `
                         else
                             toLog += `tjekkes ind på ${postNavn} ${ind}; `
@@ -349,7 +353,7 @@ namespace CCMR_server {
                         change = true
                     }
                     if(ud != serverUd){
-                        if(ud == "" || ud === null)
+                        if(ud == null)
                             toLog += `tjek ud fra ${postNavn} SLETTES; `
                         else
                             toLog += `tjekkes ud fra ${postNavn} ${ud}; `
@@ -370,6 +374,29 @@ namespace CCMR_server {
                 }catch{
                     res.writeHead(400)
                 }
+            }else
+                res.writeHead(403)
+            res.end()
+        }
+        export const reset = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+            // Check if user is master and the password (SletAltOgSmidLortetUdMedOverhåndskast) given in the header is correct
+            // If so, reset all data: create new ppMatrix, open all omveje, set all patruljer to not udgået
+
+            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity && req.headers['password'] == "SletAltOgSmidLortetUdMedOverhåndskast"){ //User is master
+                ppMatrix = Array.apply(null, Array(loeb.patruljer.length)).map((): string[] => [])
+                patruljer.sendAllPatruljerTowardsFirstPost()
+                fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
+                for (let i = 0; i < poster.length; i++) {
+                    const post = poster[i];
+                    if(post.erOmvej)
+                        post.omvejÅben = true
+                }
+                loeb.udgåedePatruljer = loeb.patruljer.map(() => false)
+                fs.writeFile("data/loeb.json", JSON.stringify(loeb), () => {})
+                res.writeHead(200)
+                log.writeToServerLog("LØB NULSTILLET AF KLIENT")
+                log.writeToPatruljeLog("LØB NULSTILLET AF KLIENT")
+
             }else
                 res.writeHead(403)
             res.end()
@@ -439,6 +466,9 @@ namespace CCMR_server {
                     case "/home":
                         files.sendFileToClient(res, "home.html")
                         break
+                    case "/plot":
+                        files.sendFileToClient(res, "patruljePlot.html")
+                        break
                     case "/login":
                         reqRes.loginReq(req, res)
                         break
@@ -471,6 +501,9 @@ namespace CCMR_server {
                         break
                     case "/redigerPPM":
                         reqRes.redigerPPM(req, res)
+                        break
+                    case "/reset":
+                        reqRes.reset(req, res)
                         break
                         default:
                         res.writeHead(400);

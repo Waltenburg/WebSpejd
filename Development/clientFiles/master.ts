@@ -320,6 +320,7 @@ namespace Client{
         export namespace redigerPPM{
             let patruljeSelect: HTMLSelectElement;
             let postSelect: HTMLSelectElement;
+            let indsendButton: HTMLButtonElement;
 
             let modIn: HTMLInputElement;
             let påIn: HTMLInputElement;
@@ -330,10 +331,11 @@ namespace Client{
                 redigerer = !redigerer
                 patruljeSelect.disabled = redigerer
                 postSelect.disabled = redigerer
-
+                
                 modIn.disabled = !redigerer
                 påIn.disabled = !redigerer
                 udIn.disabled = !redigerer
+                indsendButton.disabled = !redigerer
 
                 const checkNull = (str: string): string => {
                     return str ? str: ""
@@ -342,7 +344,6 @@ namespace Client{
                 if(redigerer){
                     const patruljeIndex = parseInt(patruljeSelect.value) - 1
                     const postIndex = parseInt(postSelect.value)
-                    console.log(patruljeIndex, postIndex)
                     modIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3])
                     påIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3 + 1])
                     udIn.value = checkNull(ppMatrix[patruljeIndex][postIndex * 3 + 2])
@@ -374,7 +375,7 @@ namespace Client{
                 }, (status: number) => {
                     alert("Der er sket en fejl. Ændringerne er ikke blevet gemt")
                 })
-                console.log(patruljeIndex, postIndex, mod, ind, ud)
+                console.log("Indsend")
 
             }
             export const onLoad = (): void => {
@@ -383,10 +384,12 @@ namespace Client{
                 modIn = document.getElementById("modIn") as HTMLInputElement;
                 påIn = document.getElementById("påIn") as HTMLInputElement;
                 udIn = document.getElementById("udIn") as HTMLInputElement;
+                indsendButton = document.getElementById("indsendButton") as HTMLButtonElement;
 
                 modIn.disabled = true
                 påIn.disabled = true
                 udIn.disabled = true
+                indsendButton.disabled = true
 
                 for (let p = 0; p < loeb.patruljer.length; p++) {
                     const patruljeOption = document.createElement("option")
@@ -399,6 +402,19 @@ namespace Client{
                     postOption.value = p.toString();
                     postOption.innerHTML = poster[p].navn;
                     postSelect.appendChild(postOption)
+                }
+            }
+            export const resetLøb = (): void => {
+                const password = prompt("Indtast kodeord for at nulstille løbet")
+                if(password != ""){
+                    sendRequest("/reset", new Headers({
+                        "password": password
+                    }), (status: number, headers: Headers) => {
+                        alert("Løbet er blevet nulstillet")
+                        location.reload()
+                    }, (status: number) => {
+                        alert("Forkert kodeord. Løbet er ikke blevet nulstillet")
+                    })
                 }
             }
         }
@@ -433,8 +449,8 @@ namespace Client{
             let connectionTries = 0
             const maxConnectionTries = 10
             const notificationAudio = new Audio("images/notification.mp3")
-            notificationAudio.textTracks
-            HTMLAudioElement
+            const errorAudio = new Audio("images/error.mp3")
+
             const getMasterUpdateFunc = () => {
                 const headers = new Headers({
                     'last-update': lastUpdateTimeString
@@ -456,25 +472,54 @@ namespace Client{
                         meldinger.updateSidsteMeldinger(obj.senesteUpdates)
                         post.colorPoster(obj.postStatus)
                         savePPM()
+                        connectionWarning.hideWarning()
                     }
                     connectionTries = 0
                 }, status => {
-                    connectionTries++
-                    if(connectionTries > maxConnectionTries){
-                        clearInterval(updateInterval)
-                        if(confirm("Fejl ved opdatering. Log ind igen")){
-                            logOut()
-                        }
-                        else{
-                            connectionTries = 0
-                            updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
-                        }
-                    }
+                    errorAudio.play()
+                    connectionWarning.showWarning()
+                    // connectionTries++
+                    // if(connectionTries > maxConnectionTries){
+                    //     clearInterval(updateInterval)
+                    //     if(confirm("Fejl ved opdatering. Log ind igen")){
+                    //         logOut()
+                    //     }
+                    //     else{
+                    //         connectionTries = 0
+                    //         updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
+                    //     }
+                    // }
                 })
             }
             let updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
 
             export const forceUpdateNextTime = () => {lastUpdateTimeString = "0"}
+        }
+    }
+
+    export namespace connectionWarning {
+        let warningBox: HTMLDivElement | null = null;
+    
+        export function showWarning(): void {
+        // Check if the warning box already exists
+        if (!warningBox) {
+            // Create the warning box
+            warningBox = document.createElement('div');
+            warningBox.className = 'connection-warning';
+            warningBox.textContent = 'Forbindelsen til serveren er afbrudt';
+    
+            // Append the warning box to the body
+            document.body.appendChild(warningBox);
+        }
+        }
+    
+        export function hideWarning(): void {
+        // Check if the warning box exists before removing it
+        if (warningBox) {
+            // Remove the warning box
+            warningBox.parentNode?.removeChild(warningBox);
+            warningBox = null;
+        }
         }
     }
 }

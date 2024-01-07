@@ -59,15 +59,16 @@
         <section id="ppMatrix" class="outputSection">
             <div class="content">
                 <h2 class="buttomText">Redigering af tjek ind og ud</h2>
-                <select name="patrulje" id="patruljeSelect"></select>
-                <select name="post" id="postSelect"></select>
+                <select onclick="Client.Master.redigerPPM.redigerButtonClicked()" name="patrulje" id="patruljeSelect"></select>
+                <select onclick="Client.Master.redigerPPM.redigerButtonClicked()" name="post" id="postSelect"></select>
                 <button onclick="Client.Master.redigerPPM.redigerButtonClicked()">Redigér</button><br>
 
                 <p style="color: whitesmoke; margin-left: 5px;">1. felt er tjekket på ved mod; 2. er tjekket ind på; 3. er tjekket ud fra. Skriv klokken. Format ikke meget vigtigt.</p>
                 <input type="text" placeholder="Ikke sat" id="modIn">
                 <input type="text" placeholder="Ikke sat" id="påIn">
                 <input type="text" placeholder="Ikke sat" id="udIn">
-                <button onclick="Client.Master.redigerPPM.indsendButtonClicked()">Indsend</button>
+                <button onclick="Client.Master.redigerPPM.indsendButtonClicked()" id="indsendButton">Indsend</button>
+                <button onclick="Client.Master.redigerPPM.resetLøb()" style="position: absolute; right: 5px; top: 5px;">Reset løb</button>
             </div>
         </section>
     </section>
