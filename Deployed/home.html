@@ -21,7 +21,7 @@
             style="width: 700px; height: 1200px; opacity: 80%; background-color: #000000; margin: auto; margin-top: auto;">
             <h2 style="color: white; opacity: 100%;">Log ind med dit udleverede login</h2>
             <p>Kode</p>
-            <input value="post1" type="text" id="kode" onfocus="Client.Home.codeChanged()">
+            <input type="text" id="kode" onchange="Client.Home.codeChanged()">
 
             <button id="button" onclick="Client.Home.loginClicked(false)">Log ind med kode</button>
             <button id="loginInMandskab" onclick="location.assign('/mandskab')" disabled>Log ind med gemt mandskabsbruger</button>

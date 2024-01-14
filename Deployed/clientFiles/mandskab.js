@@ -235,6 +235,7 @@ var Client;
             else {
                 document.getElementById("postOmvejSelector").disabled = true;
                 document.getElementById("OmvejSelectorText").innerHTML = "Omvej (Lukket)";
+                postOmvejSelector.value = "0";
             }
             Mandskab.postOmvejChanged();
         };

@@ -43,8 +43,8 @@ var CCMR_server;
                 patrulje.push(time);
             });
         };
-        patruljer_1.canPatruljeBeCheckedUd = (pNum, post) => {
-            return (ppMatrix[pNum].length == 3 * post + 2 && loeb.patruljeIkkeUdgået(pNum));
+        patruljer_1.canPatruljeBeCheckedUd = (pNum, post, postOrOmvej) => {
+            return (ppMatrix[pNum].length == 3 * post + 2 && loeb.patruljeIkkeUdgået(pNum) && (postOrOmvej == "post" || (postOrOmvej == "omvej" && poster[post + 1].omvejÅben)));
         };
         patruljer_1.canPatruljeBeCheckedIn = (pNum, post) => {
             return (ppMatrix[pNum].length == 3 * post + 1 && loeb.patruljeIkkeUdgået(pNum));
@@ -73,7 +73,7 @@ var CCMR_server;
             if (currentPostIndex < poster.length - 1) {
                 const nextPostIsOmvej = poster[currentPostIndex + 1].erOmvej;
                 const patruljeSkalPåOmvej = omvejOrPost == "omvej";
-                if (nextPostIsOmvej && !patruljeSkalPåOmvej) {
+                if (nextPostIsOmvej && !patruljeSkalPåOmvej && poster[currentPostIndex + 1].omvejÅben) {
                     for (let i = 0; i < 3; i++) {
                         ppMatrix[pIndex].push("");
                     }
@@ -171,9 +171,9 @@ var CCMR_server;
                     const melding = split[1];
                     const commit = req.headers['commit-type'] == "commit";
                     if (melding == "ud") {
-                        if (patruljer.canPatruljeBeCheckedUd(pIndex, userPostIndex)) {
+                        const postOrOmvej = split[2];
+                        if (patruljer.canPatruljeBeCheckedUd(pIndex, userPostIndex, postOrOmvej)) {
                             if (commit) {
-                                const postOrOmvej = split[2];
                                 patruljer.checkPatruljeUdAndTowardsNext(pIndex, userPostIndex, postOrOmvej);
                                 if (userPostIndex < poster.length - 1) {
                                     let postAddition = patruljer.postIndexAddition(postOrOmvej, userPostIndex);
@@ -210,46 +210,41 @@ var CCMR_server;
             res.end();
         };
         reqRes.masterDataReq = (req, res) => {
-            const isMaster = true;
-            if (isMaster) {
+            const isMaster = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
+            res.setHeader("recognized", isMaster ? "true" : "false");
+            res.setHeader("data", JSON.stringify({
+                "loeb": loeb,
+                "ppMatrix": ppMatrix,
+                "poster": poster,
+                "sidsteMeldinger": log.getNewUpdates(),
+                "postStatus": postStatus
+            }));
+            res.end();
+        };
+        reqRes.masterUpdateReq = (req, res) => {
+            const isRecognzed = serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity;
+            res.setHeader("recognized", isRecognzed ? "true" : "false");
+            const mastersLastUpdate = parseInt(req.headers['last-update']);
+            let patruljerDerSkalOpdateres = [];
+            let ppArrays = [];
+            for (let p = 0; p < lastUpdateTimesPatrulje.length; p++) {
+                if (mastersLastUpdate < lastUpdateTimesPatrulje[p]) {
+                    patruljerDerSkalOpdateres.push(p);
+                    ppArrays.push(ppMatrix[p]);
+                }
+            }
+            if (patruljerDerSkalOpdateres.length > 0) {
+                res.setHeader("update", "true");
                 res.setHeader("data", JSON.stringify({
-                    "loeb": loeb,
-                    "ppMatrix": ppMatrix,
-                    "poster": poster,
-                    "sidsteMeldinger": log.getNewUpdates(),
+                    "patruljer": patruljerDerSkalOpdateres,
+                    "ppArrays": ppArrays,
+                    "senesteUpdates": log.getNewUpdates(),
                     "postStatus": postStatus
                 }));
             }
             else
-                res.writeHead(403);
-            res.end();
-        };
-        reqRes.masterUpdateReq = (req, res) => {
-            if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
-                const mastersLastUpdate = parseInt(req.headers['last-update']);
-                let patruljerDerSkalOpdateres = [];
-                let ppArrays = [];
-                for (let p = 0; p < lastUpdateTimesPatrulje.length; p++) {
-                    if (mastersLastUpdate < lastUpdateTimesPatrulje[p]) {
-                        patruljerDerSkalOpdateres.push(p);
-                        ppArrays.push(ppMatrix[p]);
-                    }
-                }
-                if (patruljerDerSkalOpdateres.length > 0) {
-                    res.setHeader("update", "true");
-                    res.setHeader("data", JSON.stringify({
-                        "patruljer": patruljerDerSkalOpdateres,
-                        "ppArrays": ppArrays,
-                        "senesteUpdates": log.getNewUpdates(),
-                        "postStatus": postStatus
-                    }));
-                }
-                else
-                    res.setHeader("update", "false");
-                res.writeHead(200);
-            }
-            else
-                res.writeHead(403);
+                res.setHeader("update", "false");
+            res.writeHead(200);
             res.end();
         };
         reqRes.patruljeMasterUpdate = (req, res) => {
@@ -289,27 +284,21 @@ var CCMR_server;
         };
         reqRes.postMasterUpdate = (req, res) => {
             if (serverClasses_1.serverClasses.User.recognizeUser(req.headers['id']) == Infinity) {
-                const omvejLukker = () => {
-                    if (post.erOmvej && post.omvejÅben) {
-                        post.omvejÅben = false;
-                        succes = true;
-                    }
-                };
-                const omvejÅbner = () => {
-                    if (post.erOmvej && !post.omvejÅben) {
-                        post.omvejÅben = true;
-                        succes = true;
-                    }
-                };
                 let succes = false;
                 let pNum = Number(req.headers['post']);
                 const post = poster[pNum];
                 switch (req.headers['action']) {
                     case "LUKKE":
-                        omvejLukker();
+                        if (post.erOmvej && post.omvejÅben) {
+                            post.omvejÅben = false;
+                            succes = true;
+                        }
                         break;
                     case "ÅBNE":
-                        omvejÅbner();
+                        if (post.erOmvej && !post.omvejÅben) {
+                            post.omvejÅben = true;
+                            succes = true;
+                        }
                         break;
                 }
                 if (succes) {

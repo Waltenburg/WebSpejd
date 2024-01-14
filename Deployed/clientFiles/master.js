@@ -6,6 +6,10 @@ var Client;
         Master.onLoad = () => {
             Client.sendRequest("/masterData", null, (status, headers) => {
                 const data = JSON.parse(headers.get("data"));
+                if (headers.get("recognized") != "true") {
+                    alert("Fejl ved login. Du bliver nu sendt til log ind siden");
+                    logOut();
+                }
                 Master.ppMatrix = data.ppMatrix;
                 Master.loeb = data.loeb;
                 poster = data.poster;
@@ -230,7 +234,8 @@ var Client;
                         "post": post,
                         "action": action
                     }), (status, headers) => {
-                        const postContainer = document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)" : "(Å)");
+                        document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)" : "(Å)");
+                        poster[p].omvejÅben = !omvejLukker;
                         updates.forceUpdateNextTime();
                     }, (status) => {
                         alert("Der er sket en fejl. Omvejen kan ikke " + action);
@@ -370,21 +375,23 @@ var Client;
             };
         })(redigerPPM = Master.redigerPPM || (Master.redigerPPM = {}));
         Master.savePPM = () => {
-            let ppMatrixCopy = structuredClone(Master.ppMatrix);
-            const topRow = poster.map(p => p.navn);
-            topRow.unshift("Patrulje");
-            ppMatrixCopy.unshift(topRow);
-            for (let p = 1; p < ppMatrixCopy.length; p++) {
-                ppMatrixCopy[p].unshift(Master.loeb.patruljer[p - 1]);
+            if (document.getElementById("download").checked) {
+                let ppMatrixCopy = structuredClone(Master.ppMatrix);
+                const topRow = poster.map(p => p.navn);
+                topRow.unshift("Patrulje");
+                ppMatrixCopy.unshift(topRow);
+                for (let p = 1; p < ppMatrixCopy.length; p++) {
+                    ppMatrixCopy[p].unshift(Master.loeb.patruljer[p - 1]);
+                }
+                let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", Master.loeb.navn + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
             }
-            let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", Master.loeb.navn + ".csv");
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
         };
         let updates;
         (function (updates) {
@@ -400,6 +407,10 @@ var Client;
                 });
                 lastUpdateTimeString = new Date().getTime().toString();
                 Client.sendRequest("/masterUpdate", headers, (status, headers) => {
+                    if (headers.get("recognized") != "true") {
+                        errorAudio.play();
+                        connectionWarning.showWarning();
+                    }
                     if (headers.get('update') == "true") {
                         notificationAudio.play();
                         const obj = JSON.parse(headers.get('data'));
@@ -408,6 +419,10 @@ var Client;
                         post.colorPoster(obj.postStatus);
                         Master.savePPM();
                         connectionWarning.hideWarning();
+                    }
+                    else if (headers.get('update') == null) {
+                        errorAudio.play();
+                        connectionWarning.showWarning();
                     }
                     connectionTries = 0;
                 }, status => {

@@ -4,8 +4,13 @@ var Client;
     (function (Home) {
         let kode;
         Home.onLoadFunction = () => {
-            console.log("Page loaded");
             kode = document.getElementById("kode");
+            kode.addEventListener("keypress", (e) => {
+                if (e.key == "Enter")
+                    Home.loginClicked();
+                else
+                    Home.codeChanged();
+            });
             if (Client.getCookie("identifier") != null) {
                 const master = Client.getCookie("master");
                 if (master == "true")
@@ -15,7 +20,7 @@ var Client;
             }
         };
         Home.loginClicked = (existingUser) => {
-            if (kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null || existingUser) {
+            if (kode.value.match("^[a-zA-Z0-9]{3,15}\$") != null || existingUser) {
                 const identifier = existingUser ? Client.getCookie("identifier") : generateIdentifyer(20);
                 const loginHeader = new Headers({
                     "id": identifier,

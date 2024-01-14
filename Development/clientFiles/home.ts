@@ -3,8 +3,13 @@ namespace Client{
     export namespace Home{
         let kode: HTMLInputElement
         export const onLoadFunction = () => {
-            console.log("Page loaded")
             kode = document.getElementById("kode") as HTMLInputElement
+            kode.addEventListener("keypress", (e) => {
+                if(e.key == "Enter")
+                    loginClicked()
+                else
+                    codeChanged()
+            })
             if(getCookie("identifier") != null){
                 const master = getCookie("master");
                 if(master == "true")
@@ -14,7 +19,7 @@ namespace Client{
             }
         }
         export const loginClicked = (existingUser?: boolean) => {
-            if(kode.value.match("^[a-zA-Z0-9]{4,15}\$") != null || existingUser){
+            if(kode.value.match("^[a-zA-Z0-9]{3,15}\$") != null || existingUser){
                 const identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
                 const loginHeader: Headers = new Headers({
                     "id": identifier,

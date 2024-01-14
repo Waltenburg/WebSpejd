@@ -9,14 +9,18 @@
     <script src="clientFiles/cookie.js"></script>
     <script src="clientFiles/sendHTTPRequest.js"></script>
     <script src="clientFiles/master.js"></script>
-    <script src="clientFiles/patruljePlot.js"></script>
     <link rel="stylesheet" type="text/css" href="clientFiles/masterSections.css">
     <link rel="stylesheet" type="text/css" href="clientFiles/masterStyle.css">
 </head>
 <body onload="Client.Master.onLoad()">
 <div>
+    <section style="position: absolute; left: 5px; top: 5px; z-index: 9999;">
+        <span style="display: inline; margin-top: 0;">Download .csv filer</span>
+        <input style="display: inline; margin-top: 0;" type="checkbox" id="download" checked>
+    </section>
     <section id="top">
         <h1 style="text-align: center;">CCMR PART XXVII</h1>
+        <button onclick="Client.Master.redigerPPM.resetLøb()" style="position: absolute; right: 5px; bottom: 5px;">Reset løb</button>
     </section>
     <section style="position: absolute; top: 5%; height: 100%; width: 100%; padding: 0;">
         <section id="patruljeOversigt" class="inputSection">
@@ -68,7 +72,6 @@
                 <input type="text" placeholder="Ikke sat" id="påIn">
                 <input type="text" placeholder="Ikke sat" id="udIn">
                 <button onclick="Client.Master.redigerPPM.indsendButtonClicked()" id="indsendButton">Indsend</button>
-                <button onclick="Client.Master.redigerPPM.resetLøb()" style="position: absolute; right: 5px; top: 5px;">Reset løb</button>
             </div>
         </section>
     </section>

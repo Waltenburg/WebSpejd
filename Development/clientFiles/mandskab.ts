@@ -256,6 +256,7 @@ namespace Client{
             else{
                 (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = true
                 document.getElementById("OmvejSelectorText").innerHTML = "Omvej (Lukket)"
+                postOmvejSelector.value = "0"
             }
 
             postOmvejChanged()

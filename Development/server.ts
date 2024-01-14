@@ -40,8 +40,8 @@ namespace CCMR_server {
                 patrulje.push(time)
             })
         }
-        export const canPatruljeBeCheckedUd = (pNum: number, post: number): boolean => {
-            return (ppMatrix[pNum].length == 3 * post + 2  && loeb.patruljeIkkeUdgået(pNum))
+        export const canPatruljeBeCheckedUd = (pNum: number, post: number, postOrOmvej: string): boolean => {
+            return (ppMatrix[pNum].length == 3 * post + 2  && loeb.patruljeIkkeUdgået(pNum) && (postOrOmvej == "post" || (postOrOmvej == "omvej" && poster[post + 1].omvejÅben)))
         }
         export const canPatruljeBeCheckedIn = (pNum: number, post: number): boolean => {
             return (ppMatrix[pNum].length == 3 * post + 1 && loeb.patruljeIkkeUdgået(pNum))
@@ -70,7 +70,7 @@ namespace CCMR_server {
             if(currentPostIndex < poster.length - 1){//Hvis det ikke er sidste post, skal der gøres noget mere
                 const nextPostIsOmvej = poster[currentPostIndex + 1].erOmvej
                 const patruljeSkalPåOmvej = omvejOrPost == "omvej"
-                if(nextPostIsOmvej && !patruljeSkalPåOmvej){ //Tilføjer tomme felter hvis næste post er en omvej og patruljen IKKE skal på omvej
+                if(nextPostIsOmvej && !patruljeSkalPåOmvej && poster[currentPostIndex + 1].omvejÅben){ //Tilføjer tomme felter hvis næste post er en omvej og patruljen IKKE skal på omvej
                     for (let i = 0; i < 3; i++) {
                         ppMatrix[pIndex].push("") 
                     }
@@ -168,9 +168,9 @@ namespace CCMR_server {
                     const melding = split[1]
                     const commit = req.headers['commit-type'] as string == "commit"
                     if(melding == "ud"){ //Klienten vil tjekke en patrulje UD eller undersøge om det er muligt
-                        if(patruljer.canPatruljeBeCheckedUd(pIndex, userPostIndex)){ //Patrulje kan tjekkes ud ifølge ppMatrix
+                        const postOrOmvej = split[2]
+                        if(patruljer.canPatruljeBeCheckedUd(pIndex, userPostIndex, postOrOmvej)){ //Patrulje kan tjekkes ud ifølge ppMatrix
                             if(commit){ //Klienten vil gerne comitte ændringerne
-                                const postOrOmvej = split[2]
                                 patruljer.checkPatruljeUdAndTowardsNext(pIndex, userPostIndex, postOrOmvej)//Check patrulje ud og sæt som gå mod enten post eller omvej
                                 if(userPostIndex < poster.length - 1){ //Den nuværende post er IKKE den sidste post
                                     let postAddition = patruljer.postIndexAddition(postOrOmvej, userPostIndex)
@@ -204,45 +204,43 @@ namespace CCMR_server {
             res.end()
         }
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-            const isMaster = true//sc.User.recognizeUser(req.headers['id'] as string) == Infinity
-            if(isMaster){
+            const isMaster = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
+            res.setHeader("recognized", isMaster ? "true": "false")
+
+            res.setHeader("data", JSON.stringify({
+                "loeb": loeb,
+                "ppMatrix": ppMatrix,
+                "poster": poster,
+                "sidsteMeldinger": log.getNewUpdates(),
+                "postStatus": postStatus
+            }))
+            res.end()
+        }
+        export const masterUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+            const isRecognzed = sc.User.recognizeUser(req.headers['id'] as string) == Infinity
+            res.setHeader("recognized", isRecognzed ? "true": "false")
+
+            const mastersLastUpdate = parseInt(req.headers['last-update'] as string)
+            let patruljerDerSkalOpdateres: number[] = []
+            let ppArrays: string[][] = []
+            for (let p = 0; p < lastUpdateTimesPatrulje.length; p++) {
+                if(mastersLastUpdate < lastUpdateTimesPatrulje[p]){ //patrulje skal opdateres
+                    patruljerDerSkalOpdateres.push(p)
+                    ppArrays.push(ppMatrix[p])
+                }
+            }
+            if(patruljerDerSkalOpdateres.length > 0){
+                res.setHeader("update", "true")
                 res.setHeader("data", JSON.stringify({
-                    "loeb": loeb,
-                    "ppMatrix": ppMatrix,
-                    "poster": poster,
-                    "sidsteMeldinger": log.getNewUpdates(),
+                    "patruljer": patruljerDerSkalOpdateres,
+                    "ppArrays": ppArrays,
+                    "senesteUpdates": log.getNewUpdates(),
                     "postStatus": postStatus
                 }))
             }
             else
-                res.writeHead(403)
-            res.end()
-        }
-        export const masterUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
-                const mastersLastUpdate = parseInt(req.headers['last-update'] as string)
-                let patruljerDerSkalOpdateres: number[] = []
-                let ppArrays: string[][] = []
-                for (let p = 0; p < lastUpdateTimesPatrulje.length; p++) {
-                    if(mastersLastUpdate < lastUpdateTimesPatrulje[p]){ //patrulje skal opdateres
-                        patruljerDerSkalOpdateres.push(p)
-                        ppArrays.push(ppMatrix[p])
-                    }
-                }
-                if(patruljerDerSkalOpdateres.length > 0){
-                    res.setHeader("update", "true")
-                    res.setHeader("data", JSON.stringify({
-                        "patruljer": patruljerDerSkalOpdateres,
-                        "ppArrays": ppArrays,
-                        "senesteUpdates": log.getNewUpdates(),
-                        "postStatus": postStatus
-                    }))
-                }
-                else
-                    res.setHeader("update", "false")
-                res.writeHead(200)
-            }else
-                res.writeHead(403)
+                res.setHeader("update", "false")
+            res.writeHead(200)
             res.end()
         }
         export const patruljeMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
@@ -283,29 +281,22 @@ namespace CCMR_server {
                 res.end()
         }
         export const postMasterUpdate = (req: http.IncomingMessage, res: http.ServerResponse): void => {
-            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master
-                const omvejLukker = () => {
-                    if(post.erOmvej && post.omvejÅben){
-                        post.omvejÅben = false
-                        succes = true
-                    }
-                }
-                const omvejÅbner = () => {
-                    if(post.erOmvej && !post.omvejÅben){
-                        post.omvejÅben = true
-                        succes = true
-                    }
-                }
-                
+            if(sc.User.recognizeUser(req.headers['id'] as string) == Infinity){ //User is master                
                 let succes: boolean = false
                 let pNum = Number(req.headers['post'] as string)
                 const post = poster[pNum]
                 switch (req.headers['action'] as string) {
                     case "LUKKE":
-                        omvejLukker()
+                        if(post.erOmvej && post.omvejÅben){
+                            post.omvejÅben = false
+                            succes = true
+                        }
                         break
                     case "ÅBNE":
-                        omvejÅbner()
+                        if(post.erOmvej && !post.omvejÅben){
+                            post.omvejÅben = true
+                            succes = true
+                        }
                         break
                 }
                 if(succes){

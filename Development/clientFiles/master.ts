@@ -9,6 +9,10 @@ namespace Client{
         export const onLoad = () => {
             sendRequest("/masterData", null, (status: number, headers: Headers) =>{ //Succes
                 const data = JSON.parse(headers.get("data"))
+                if(headers.get("recognized") != "true"){
+                    alert("Fejl ved login. Du bliver nu sendt til log ind siden")
+                    logOut()
+                }
                 ppMatrix = data.ppMatrix
                 loeb = data.loeb
                 poster = data.poster
@@ -268,9 +272,8 @@ namespace Client{
                         "post": post,
                         "action": action
                     }), (status: number, headers: Headers) => {
-                        //Get post container, select the p'th child and set the innerhtml according to whether the omvej is open or not
-                        const postContainer = document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)": "(Å)")
-
+                        document.getElementById("postContainer").children[p].innerHTML = poster[p].navn + " - " + (omvejLukker ? "(L)": "(Å)")
+                        poster[p].omvejÅben = !omvejLukker
                         updates.forceUpdateNextTime()
                     }, (status: number) => {
                         alert("Der er sket en fejl. Omvejen kan ikke " + action)
@@ -420,26 +423,28 @@ namespace Client{
         }
         //Write function that saves ppMatrix to local storage in a csv format
         export const savePPM = () => {
-            let ppMatrixCopy = structuredClone(ppMatrix)
-            //Add the names of each post to the first row
-            const topRow = poster.map(p => p.navn)
-            topRow.unshift("Patrulje")
-            ppMatrixCopy.unshift(topRow)
+            if((document.getElementById("download") as HTMLInputElement).checked){
+                let ppMatrixCopy = structuredClone(ppMatrix)
+                //Add the names of each post to the first row
+                const topRow = poster.map(p => p.navn)
+                topRow.unshift("Patrulje")
+                ppMatrixCopy.unshift(topRow)
 
-            //Add the names of each patrulje to the first column
-            for (let p = 1; p < ppMatrixCopy.length; p++){
-                ppMatrixCopy[p].unshift(loeb.patruljer[p - 1])
+                //Add the names of each patrulje to the first column
+                for (let p = 1; p < ppMatrixCopy.length; p++){
+                    ppMatrixCopy[p].unshift(loeb.patruljer[p - 1])
+                }
+
+                //Convert to csv format magic
+                let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", loeb.navn + ".csv");
+                document.body.appendChild(link); // Required for FF
+                link.click();
+                link.remove()
             }
-
-            //Convert to csv format magic
-            let csvContent = "data:text/csv;charset=utf-8," + ppMatrixCopy.map(e => e.join(",")).join("\n");
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", loeb.navn + ".csv");
-            document.body.appendChild(link); // Required for FF
-            link.click();
-            link.remove()
         }
         //Namespace for handling sending and recieving updates from server
         //Put functions to run at every update within callback funciton in SendRequest()
@@ -457,6 +462,10 @@ namespace Client{
                 })
                 lastUpdateTimeString = new Date().getTime().toString()
                 sendRequest("/masterUpdate", headers, (status, headers) => {
+                    if(headers.get("recognized") != "true"){
+                        errorAudio.play()
+                        connectionWarning.showWarning()
+                    }
                     if(headers.get('update') == "true"){ //Update has arrived since last time client checked
                         notificationAudio.play()
                         interface IData{
@@ -473,22 +482,14 @@ namespace Client{
                         post.colorPoster(obj.postStatus)
                         savePPM()
                         connectionWarning.hideWarning()
+                    }else if(headers.get('update') == null){
+                        errorAudio.play()
+                        connectionWarning.showWarning()
                     }
                     connectionTries = 0
                 }, status => {
                     errorAudio.play()
                     connectionWarning.showWarning()
-                    // connectionTries++
-                    // if(connectionTries > maxConnectionTries){
-                    //     clearInterval(updateInterval)
-                    //     if(confirm("Fejl ved opdatering. Log ind igen")){
-                    //         logOut()
-                    //     }
-                    //     else{
-                    //         connectionTries = 0
-                    //         updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
-                    //     }
-                    // }
                 })
             }
             let updateInterval = setInterval(getMasterUpdateFunc, secondsBetweenUpdates * 1000)
