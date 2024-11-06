@@ -2,15 +2,12 @@
     "compilerOptions": {
       "module": "commonjs",
       "target": "es2020",
-      "outDir": "../Deployed",
+      "outDir": "target",
       "noImplicitAny": true,
       "removeComments": true,
       "preserveConstEnums": true,
       "sourceMap": false,
     },
-    "files": [
-        "server.ts",
-        "serverClasses.ts",
-        "files.ts"
-    ]
+    "include": [ "src" ],
+    "exclude": [ "node_modules" ]
 }

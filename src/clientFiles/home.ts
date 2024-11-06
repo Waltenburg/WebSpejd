@@ -19,28 +19,26 @@ namespace Client{
             }
         }
         export const loginClicked = (existingUser?: boolean) => {
-            if(kode.value.match("^[a-zA-Z0-9]{3,15}\$") != null || existingUser){
-                const identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
-                const loginHeader: Headers = new Headers({
-                    "id": identifier,
-                    "password": kode.value,
-                })
-                const loginSucces = (status: number, headers: Headers) => {
-                    setCookie("identifier", identifier, 2)
-                    if(headers.get("ismaster") == "true"){
-                        setCookie("master", "true", 2)
-                        location.assign("/master")
-                    }
-                    else{
-                        setCookie("master", "false", 2)
-                        location.assign("/mandskab")
-                    }
+            const identifier = existingUser ? getCookie("identifier"): generateIdentifyer(20)
+            const loginHeader: Headers = new Headers({
+                "id": identifier,
+                "password": kode.value,
+            })
+            const loginSucces = (status: number, headers: Headers) => {
+                setCookie("identifier", identifier, 2)
+                if(headers.get("ismaster") == "true"){
+                    setCookie("master", "true", 1)
+                    location.assign("/master")
                 }
-                const wrongPassword = () => {
-                    kode.style.setProperty("color", "red")
+                else{
+                    setCookie("master", "false", 2)
+                    location.assign("/mandskab")
                 }
-                sendRequest("/login", loginHeader, loginSucces, wrongPassword, true)
-            }              
+            }
+            const wrongPassword = () => {
+                kode.style.setProperty("color", "red")
+            }
+            sendRequest("/login", loginHeader, loginSucces, wrongPassword, true)
         }
         export const codeChanged = () => {
             kode.style.setProperty("color", "black")

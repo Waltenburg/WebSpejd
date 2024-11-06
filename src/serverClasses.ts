@@ -10,6 +10,7 @@ export namespace serverClasses{
         png = "image/png",
         ico = "image/x-icon",
         mp3 = "audio/mpeg",
+        javascript = "application/javascript",
         any = "*/*",
     }
     export class Loeb{
