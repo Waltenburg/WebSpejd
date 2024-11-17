@@ -1,0 +1,72 @@
+{
+    "patrols": [
+        {
+            "id": 1,
+            "name": "Vuggestuen",
+            "udgået": false
+        },
+        {
+            "id": 2,
+            "name": "Den Knaldrøde Gummibåd",
+            "udgået": false
+        },
+        {
+            "id": 3,
+            "name": "Kælemongolerne",
+            "udgået": false
+        },
+        {
+            "id": 4,
+            "name": "Prinsesserne",
+            "udgået": false
+        },
+        {
+            "id": 5,
+            "name": "Torben, Tina, og børnene",
+            "udgået": false
+        }
+    ],
+    "checkins": [],
+    "posts": [
+        {
+            "id": 0,
+            "name": "Start",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 1,
+            "name": "Gammelhavn",
+            "team": 1,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 2,
+            "name": "Omvej 1 -> 2",
+            "team": 0,
+            "detour": true,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 3,
+            "name": "Strib legeplads",
+            "team": 2,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 4,
+            "name": "Mål",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        }
+    ]
+}

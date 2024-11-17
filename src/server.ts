@@ -3,8 +3,11 @@ import * as fs from 'fs'
 import { serverClasses as sc } from './serverClasses'
 import { files } from './files'
 import * as users from "./users";
+import { Checkin, CheckinType, Post } from "./database/generic";
+import { JsonDatabase } from "./database/jsonDatabase";
 
 namespace CCMR_server {
+    const database = new JsonDatabase("data/database.json");
 
     namespace log{
         const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", {flags:'a'})
@@ -40,8 +43,8 @@ namespace CCMR_server {
          * @param postId the id of the post
          * @returns information about post
          */
-        export const getPost = (postId: number): sc.Post | undefined => {
-            return poster[postId];
+        export const getPost = (postId: number): Post => {
+            return database.postInfo(postId);
         }
 
         /**
@@ -52,75 +55,116 @@ namespace CCMR_server {
          */
         export const changeDetourStatus = (postId: number, open: boolean): boolean => {
             let post = getPost(postId);
-            if (!post.erOmvej || post.omvejÅben === open) {
+            if (!post.detour || post.open === open) {
                 return false;
             }
-            post.omvejÅben = open;
+            database.changePostStatus(postId, open);
             return true;
         }
 
     }
 
-    namespace patruljer{ //Funktioner der varetager patruljerne
-        export const sendAllPatruljerTowardsFirstPost = (ppMatrix: string[][]) => {
-            const time = getTimeString()
-            ppMatrix.forEach((patrulje) => {
-                patrulje.push(time)
-            })
+    namespace patruljer { //Funktioner der varetager patruljerne
+
+        /**
+         * Check all patrols in at post 0.
+         */
+        export const sendAllPatruljerTowardsFirstPost = () => {
+            console.log("Sending all patrols to first post");
+            let time = new Date();
+            database.allPatrolIds().forEach((patrolId) => {
+                applyCheckin({
+                    patrolId: patrolId,
+                    postId: 0,
+                    type: CheckinType.CheckIn,
+                    time: time,
+                });
+            });
         }
-        export const canPatruljeBeCheckedUd = (pNum: number, post: number, postOrOmvej: string): boolean => {
-            return (ppMatrix[pNum].length == 3 * post + 2  && loeb.patruljeIkkeUdgået(pNum) && (postOrOmvej == "post" || (postOrOmvej == "omvej" && poster[post + 1].omvejÅben)))
+
+        /**
+         * Verifies that a patrol can be checkout out of a post.
+         *
+         * @param patrolId the id of the patrol to check out
+         * @param postId the id of the post to check out of
+         * @param detour `true` if the patrol is sent on a detour, `false` otherwise
+         * @return `true` if the patrol can be checked out, `false` otherwise
+         */
+        export const canPatruljeBeCheckedUd = (patrolId: number, postId: number, detour: boolean): boolean => {
+            const lastCheckin = database.latestCheckinOfPatrol(patrolId);
+            const patrolInfo = database.patrolInfo(patrolId);
+            const nextPostIsDetour = database.postInfo(postId + 1).detour;
+
+            return lastCheckin.postId === postId
+                && lastCheckin.type === CheckinType.CheckIn
+                && !patrolInfo.udgået
+                && (detour ? nextPostIsDetour : true);
         }
-        export const canPatruljeBeCheckedIn = (pNum: number, post: number): boolean => {
-            return (ppMatrix[pNum].length == 3 * post + 1 && loeb.patruljeIkkeUdgået(pNum))
+
+        /**
+         * Check if a patrol can be checked in at a post.
+         *
+         * @param patrolId the id of the patrol
+         * @param postId the id of the post
+         * @return `true` if the patrol can be checked in, `false` otherwise
+         */
+        export const canPaltrolBeCheckedIn = (patrolId: number, postId: number): boolean => {
+            const lastCheckin = database.latestCheckinOfPatrol(patrolId);
+            const patrolIsOnDetour = lastCheckin.type === CheckinType.Detour;
+            const patrolInfo = database.patrolInfo(patrolId);
+
+            return lastCheckin.type !== CheckinType.CheckIn
+                && nextPostId(lastCheckin.postId, patrolIsOnDetour) === postId
+                && !patrolInfo.udgået;
         }
-        export const patruljerPåPost = (post: number): number[] =>{
-            let patruljer: number[] = []
-            for (let i = 0; i < ppMatrix.length; i++) {
-                if(ppMatrix[i].length == post * 3 + 2 && loeb.patruljeIkkeUdgået(i))
-                    patruljer.push(i + 1)
+
+        /**
+         * Get list of patrols at a post.
+         * @param postId the id of the post
+         * @returns the patrol ids of the patrols at the post
+         */
+        export const patruljerPåPost = (postId: number): number[] => {
+            let checkins = database.checkinsAtPost(postId);
+            let patrolsCheckedOut = checkins
+                .filter((checkin) => checkin.type !== CheckinType.CheckIn)
+                .map((checkin) => checkin.patrolId);
+            let patrolsAtPost = checkins
+                .filter((checkin) => {
+                    return checkin.type === CheckinType.CheckIn
+                    && !patrolsCheckedOut.includes(checkin.patrolId)
+                })
+                .map((checkin) => checkin.patrolId);
+            return patrolsAtPost;
+        }
+
+        /**
+         * Get patrols on detour from post.
+         *
+         * @param postId the id of the post the patrol is on detour from.
+         * @return a list of patrol ids
+         */
+        export const patruljerPåVej = (postId: number): number[] => {
+            return database.allPatrolIds()
+                .filter((patrolId) => canPaltrolBeCheckedIn(patrolId, postId));
+            // let patrolsCheckedIn = database.checkinsAtPost(postId)
+            //     .filter((checkin) => checkin.type === CheckinType.CheckIn)
+            //     .map((checkin) => checkin.patrolId);
+            // return database.checkinsAtPost(postId-1)
+            //     .filter((checkin) => {
+            //         return checkin.type !== CheckinType.CheckIn
+            //             && !patrolsCheckedIn.includes(checkin.patrolId);
+            //     })
+            //     .map((checkin) => checkin.patrolId);
+        }
+
+        export const nextPostId = (postId: number, detour: boolean): number => {
+            //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
+            if(!detour && posts.getPost(postId + 1).detour) {
+                return postId + 2;
             }
-            return patruljer
+            return postId + 1;
         }
-        export const patruljerPåVej = (post: number): number[] =>{
-            let patruljer: number[] = []
-            for (let i = 0; i < ppMatrix.length; i++) {
-                if(ppMatrix[i].length == post * 3 + 1 && loeb.patruljeIkkeUdgået(i))
-                    patruljer.push(i + 1)
-            }
-            return patruljer
-        }
-        export const checkPatruljeUdAndTowardsNext = (pIndex: number, currentPostIndex: number, omvejOrPost: string) => {
-            const date = new Date()
-            ppMatrix[pIndex].push(getTimeString(date))
-            lastUpdateTimesPost[currentPostIndex] = date.getTime()
-            lastUpdateTimesPatrulje[pIndex] = date.getTime()
-            if(currentPostIndex < poster.length - 1){//Hvis det ikke er sidste post, skal der gøres noget mere
-                const nextPostIsOmvej = poster[currentPostIndex + 1].erOmvej
-                const patruljeSkalPåOmvej = omvejOrPost == "omvej"
-                if(nextPostIsOmvej && !patruljeSkalPåOmvej && poster[currentPostIndex + 1].omvejÅben){ //Tilføjer tomme felter hvis næste post er en omvej og patruljen IKKE skal på omvej
-                    for (let i = 0; i < 3; i++) {
-                        ppMatrix[pIndex].push("") 
-                    }
-                }
-                ppMatrix[pIndex].push(getTimeString(date))
-                lastUpdateTimesPost[currentPostIndex + postIndexAddition(omvejOrPost, currentPostIndex)] = date.getTime()
-            }
-            fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {});
-        }
-        export const checkPatruljeInd = (pIndex: number, currentPostIndex: number) => {
-            ppMatrix[pIndex].push(getTimeString())
-            const date = new Date().getTime()
-            lastUpdateTimesPost[currentPostIndex] = date
-            lastUpdateTimesPatrulje[pIndex] = date
-            fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {});
-        }
-        export const postIndexAddition = (postOrOmvej: string, userPostIndex: number): number => {
-            let postIndexAddition = 1 //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
-            if(postOrOmvej == "post" && poster[userPostIndex + 1].erOmvej)
-                postIndexAddition = 2
-            return postIndexAddition
-        }
+
         export const updatePostStatus = (): void => {
             postStatus = sc.Post.getPostStatus(poster, ppMatrix, loeb)
         }
@@ -132,7 +176,8 @@ namespace CCMR_server {
          * @returns `true` if the patrol is "udgået", `false` otherwise
          */
         export const patrolUdgået = (patrolId: number): boolean => {
-            return !loeb.patruljeIkkeUdgået(patrolId);
+            let patrol = database.patrolInfo(patrolId);
+            return patrol.udgået;
         }
 
         /**
@@ -141,7 +186,7 @@ namespace CCMR_server {
          * @param patrolId the id of the patrol to change status of
          */
         export const patrolUdgår = (patrolId: number): void => {
-            loeb.patruljeUdgår(patrolId);
+            database.changePatrolStatus(patrolId, true);
         }
 
         /**
@@ -150,7 +195,44 @@ namespace CCMR_server {
          * @param patrolId the id of the patrol to change status of
          */
         export const patrolGenindgår = (patrolId: number): void => {
-            loeb.patruljeGeninddgår(patrolId);
+            database.changePatrolStatus(patrolId, false);
+        }
+
+        /**
+         * Verify a checkin is valid.
+         *
+         * @param checkin the checkin to verify
+         * @returns `true` if checkin is valid, `false` otherwise
+         */
+        export const isCheckinValid = (checkin: Checkin): boolean => {
+            if(checkin.type === CheckinType.CheckIn) {
+                return canPaltrolBeCheckedIn(checkin.patrolId, checkin.postId);
+            } else {
+                const detour = checkin.type === CheckinType.Detour;
+                return canPatruljeBeCheckedUd(checkin.patrolId, checkin.postId, detour);
+            }
+        }
+
+        /**
+         * Apply checkin to database.
+         *
+         * @param checkin the checkin to apply
+         */
+        export const applyCheckin = (checkin: Checkin) => {
+            console.log(checkin);
+            database.checkin(checkin);
+
+            const patrolId = checkin.patrolId;
+            const postId = checkin.postId;
+            if(checkin.type === CheckinType.CheckIn) {
+                log.writeToPatruljeLog(`Patrol ${patrolId} checked in at ${postId}`);
+            } else {
+                const detour = checkin.type === CheckinType.Detour;
+                const nextPost = nextPostId(postId, detour);
+                log.writeToPatruljeLog(
+                    `Patrulje ${patrolId} tjekkes ud fra ${postId} og går mod ${nextPost}`
+                );
+            }
         }
     }
     namespace reqRes{ //Alle funktioner der håndterer de specifikke request url's der kommer
@@ -178,7 +260,7 @@ namespace CCMR_server {
             }
         }
 
-        export const getUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+        export const postUpdateRequest = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const user = users.userFromRequest(req);
             if (!user.isPostUser()) {
                 res.end();
@@ -186,9 +268,12 @@ namespace CCMR_server {
             }
 
             const userLastUpdate = parseInt(req.headers['last-update'] as string)
-            if(userLastUpdate < lastUpdateTimesPost[user.postId]){ //Der er kommet ny update siden sidst klienten spurgte
+            const post = posts.getPost(user.postId);
+
+            //Der er kommet ny update siden sidst klienten spurgte
+            if(userLastUpdate < post.lastUpdate.getTime()){ 
                 res.setHeader("update", "true")
-                getDataReq(req, res)
+                postDataRequest(req, res)
             }
             else{
                 res.setHeader("update", "false")
@@ -196,7 +281,7 @@ namespace CCMR_server {
             }
         }
 
-        export const getDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+        export const postDataRequest = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const user = users.userFromRequest(req);
             if(!user.isPostUser()) {
                 res.writeHead(403);
@@ -204,15 +289,15 @@ namespace CCMR_server {
                 return;
             }
 
-            const post = posts.getPost(user.postId);
+            const post: Post = posts.getPost(user.postId);
             const nextPost = posts.getPost(user.postId + 1);
             let isLastPost = nextPost === undefined;
-            let omvejÅben = !isLastPost && !post.erOmvej && nextPost.erOmvej && nextPost.omvejÅben;
+            let omvejÅben = !isLastPost && !post.detour && nextPost.detour && nextPost.open;
 
             res.setHeader("data", JSON.stringify({
                 "påPost": patruljer.patruljerPåPost(user.postId),
                 "påVej": patruljer.patruljerPåVej(user.postId),
-                "post": post.navn,
+                "post": post.name,
                 "omvejÅben": omvejÅben,
             }))
             res.end()
@@ -224,7 +309,7 @@ namespace CCMR_server {
          * @param req the http request
          * @param res the http response builder
          */
-        export const sendUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
+        export const handleCheckinRequest = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const user = users.userFromRequest(req);
 
             // User is master or unauthenticated
@@ -241,7 +326,7 @@ namespace CCMR_server {
             const commit = req.headers['commit-type'] as string == "commit"
             try {
                 const split = update.split('%')
-                patrolId = Number.parseInt(split[0]) - 1;
+                patrolId = Number.parseInt(split[0]);
                 melding = split[1]
                 postOrOmvej = split[2]
             } catch(error) {
@@ -251,44 +336,30 @@ namespace CCMR_server {
                 return;
             }
 
-            // Client does not want to commit changes
-            if (!commit) {
-                res.writeHead(200);
+            const checkin: Checkin = {
+                time: new Date(),
+                patrolId: patrolId,
+                postId: user.postId,
+                type: melding === "ind"
+                    ? CheckinType.CheckIn
+                    : postOrOmvej === "omvej"
+                        ? CheckinType.Detour
+                        : CheckinType.CheckOut
+            };
+
+            if(!patruljer.isCheckinValid(checkin)) {
+                res.writeHead(400);
                 res.end();
                 return;
             }
 
-            let post = posts.getPost(user.postId);
-
-            if(melding == "ud"){ //Klienten vil tjekke en patrulje UD eller undersøge om det er muligt
-                // Patrol can not be checked out
-                if (!patruljer.canPatruljeBeCheckedUd(patrolId, user.postId, postOrOmvej)) {
-                    res.writeHead(400);
-                    res.end();
-                    return;
-                }
-
-                // Check patrulje ud og sæt som gå mod enten post eller omvej
-                patruljer.checkPatruljeUdAndTowardsNext(patrolId, user.postId, postOrOmvej)
-                if(user.postId < poster.length - 1){ //Den nuværende post er IKKE den sidste post
-                    let postAddition = patruljer.postIndexAddition(postOrOmvej, user.postId)
-                    let nextPost = posts.getPost(user.postId + postAddition);
-                    log.writeToPatruljeLog(`Patrulje ${patrolId + 1} tjekkes UD fra ${post.navn} og går mod ${nextPost.navn}`)
-                } else {
-                    log.writeToPatruljeLog(`Patrulje ${patrolId + 1} tjekkes UD fra ${post.navn} og går mod MÅL`)
-                }
-            } else if(melding == "ind"){ //Klienten vil tjekke en patrulje IND eller undersøge om det er muligt
-                if (!patruljer.canPatruljeBeCheckedIn(patrolId, user.postId)) {
-                    res.writeHead(400);
-                    res.end();
-                    return;
-                }
-
-                patruljer.checkPatruljeInd(patrolId, user.postId)
-                log.writeToPatruljeLog(`Patrulje ${patrolId + 1} tjekkes IND på post ${post.navn}`)
+            // Client wants to commit changes
+            if (commit) {
+                patruljer.applyCheckin(checkin);
             }
-            res.writeHead(200)
-            res.end()
+
+            res.writeHead(200);
+            res.end();
         }
 
         export const masterDataReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
@@ -307,7 +378,7 @@ namespace CCMR_server {
 
         export const masterUpdateReq = (req: http.IncomingMessage, res: http.ServerResponse): void => {
             const user = users.userFromRequest(req);
-            res.setHeader("recognized", user.isMasterUser() ? "true": "false")
+            res.setHeader("recognized", user.isMasterUser().toString());
 
             const mastersLastUpdate = parseInt(req.headers['last-update'] as string);
             let patruljerDerSkalOpdateres: number[] = [];
@@ -475,16 +546,7 @@ namespace CCMR_server {
                 return;
             }
 
-            ppMatrix = Array.apply(null, Array(loeb.patruljer.length)).map((): string[] => [])
-            patruljer.sendAllPatruljerTowardsFirstPost(ppMatrix)
-            fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
-            for (let i = 0; i < poster.length; i++) {
-                const post = poster[i];
-                if(post.erOmvej)
-                    post.omvejÅben = true
-            }
-            loeb.udgåedePatruljer = loeb.patruljer.map(() => false)
-            fs.writeFile("data/loeb.json", JSON.stringify(loeb), () => {})
+            database.reset();
             log.writeToServerLog("LØB NULSTILLET AF KLIENT")
             log.writeToPatruljeLog("LØB NULSTILLET AF KLIENT")
             res.writeHead(200)
@@ -507,7 +569,7 @@ namespace CCMR_server {
 
     const getTimeString = (date?: Date) => {
         if(date == undefined) {}
-            date = new Date()
+        date = new Date()
         return date.getFullYear() +'-'+ (date.getMonth() + 1) +'-'+ (date.getDate()) + ' ' + date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
     }
 
@@ -524,7 +586,7 @@ namespace CCMR_server {
             fs.writeFile(path, JSON.stringify(ppMatrix), () => {});
             console.log("Patruljepost-matrix (ppMatrix.json) oprettet med " + ppMatrix.length + " patruljer");
 
-            patruljer.sendAllPatruljerTowardsFirstPost(ppMatrix);
+            patruljer.sendAllPatruljerTowardsFirstPost();
             fs.writeFile(path, JSON.stringify(ppMatrix), () => {});
         }
         return ppMatrix;
@@ -565,13 +627,19 @@ namespace CCMR_server {
 
     sc.User.users = sc.User.createUserArray(files.readJSONFileSync("data/users.json", true))
     sc.User.startDeleteInterval()
-    console.log(`Alle filer succesfuldt loadet. Loadet ${poster.length} poster, ${sc.User.users.length} brugere og ${ppMatrix.length} patruljer`)
-    log.writeToServerLog(`Alle filer succesfuldt loadet. Loadet ${poster.length} poster, ${sc.User.users.length} brugere og ${ppMatrix.length} patruljer`)
+
+    const numberOfPosts = database.allPostIds().length;
+    const numberOfPatrols = database.allPatrolIds().length;
+    const numberOfUsers = sc.User.users.length;
+    const startUpMessage =`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`; 
+    console.log(startUpMessage);
+    log.writeToServerLog(startUpMessage);
 
     let lastUpdateTimesPost: number[] = Array.apply(null, Array(poster.length)).map(() => new Date().getTime())
     let lastUpdateTimesPatrulje: number[] = Array.apply(null, Array(ppMatrix.length)).map(() => new Date().getTime())
     //#endregion
 
+    patruljer.sendAllPatruljerTowardsFirstPost();
     let [address, port] = readArguments();
     const server: http.Server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse): void => {
         if (req.method != "GET") {
@@ -579,8 +647,6 @@ namespace CCMR_server {
             res.end();
             return;
         }
-
-        console.log(`REQUEST: ${req.url}`);
 
         if (files.isAssetFile(req.url)) {
             let relative_path = req.url.slice(1);
@@ -610,13 +676,13 @@ namespace CCMR_server {
                 files.sendFileToClient(res, "assets/html/mandskab.html")
                 break
             case "/getUpdate":
-                reqRes.getUpdateReq(req, res)
+                reqRes.postUpdateRequest(req, res)
                 break
             case "/getData":
-                reqRes.getDataReq(req, res)
+                reqRes.postDataRequest(req, res)
                 break
             case "/sendUpdate":
-                reqRes.sendUpdateReq(req, res)
+                reqRes.handleCheckinRequest(req, res)
                 break
             case "/master":
                 files.sendFileToClient(res, "assets/html/master.html")
