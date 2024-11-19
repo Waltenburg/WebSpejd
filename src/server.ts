@@ -3,49 +3,16 @@ import * as fs from 'fs'
 import { serverClasses as sc } from './serverClasses'
 import { files } from './files'
 import * as users from "./users";
+import * as utils from "./utils";
+import * as logging from "./logging";
 import { Checkin, CheckinType, Post } from "./database/generic";
 import { JsonDatabase } from "./database/jsonDatabase";
+import { LoggingDatabase } from './database/loggingDatabase';
 
-namespace CCMR_server {
-    const database = new JsonDatabase("data/database.json");
-
-    namespace log{
-        const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", {flags:'a'})
-        const serverLogWriteStream = fs.createWriteStream("data/serverLog.txt", {flags:'a'});
-        export const writeToServerLog = (message: string) => {
-            serverLogWriteStream.write("\n" + getTimeString() + " - " + message)
-        }
-        export const writeToPatruljeLog = (melding: string) => {
-            const skriv = getTimeString() + " - " + melding
-            patruljeLogWriteStream.write(skriv + "\n")
-            addToLastUpdates(skriv)
-            patruljer.updatePostStatus()
-        }
-        let lastUpdates: string[] = ["", "", "", "", "", ""]
-        let lastUpdatesIndex: number = 0
-        const numberOfLogsToKeep = 6
-        const addToLastUpdates = (update: string): void => {
-            lastUpdates.push(update)
-            lastUpdatesIndex++
-            if(lastUpdates.length > numberOfLogsToKeep)
-                lastUpdates.shift()
-        }
-        export const getNewUpdates = (): string[] => {
-            return lastUpdates
-        }
-    }
+export namespace CCMR_server {
+    const database = new LoggingDatabase(new JsonDatabase("data/database.json"));
 
     namespace posts {
-
-        /**
-         * Get post information.
-         *
-         * @param postId the id of the post
-         * @returns information about post
-         */
-        export const getPost = (postId: number): Post => {
-            return database.postInfo(postId);
-        }
 
         /**
          * Change detour from open to closed or closed to open.
@@ -54,7 +21,7 @@ namespace CCMR_server {
          * @returns `true` if status changed, `false` otherwise
          */
         export const changeDetourStatus = (postId: number, open: boolean): boolean => {
-            let post = getPost(postId);
+            let post = database.postInfo(postId);
             if (!post.detour || post.open === open) {
                 return false;
             }
@@ -64,16 +31,16 @@ namespace CCMR_server {
 
     }
 
-    namespace patruljer { //Funktioner der varetager patruljerne
+    export namespace patruljer { //Funktioner der varetager patruljerne
 
         /**
          * Check all patrols in at post 0.
          */
         export const sendAllPatruljerTowardsFirstPost = () => {
-            console.log("Sending all patrols to first post");
+            logging.log("Sending all patrols to first post");
             let time = new Date();
             database.allPatrolIds().forEach((patrolId) => {
-                applyCheckin({
+                database.checkin({
                     patrolId: patrolId,
                     postId: 0,
                     type: CheckinType.CheckIn,
@@ -146,56 +113,14 @@ namespace CCMR_server {
         export const patruljerPåVej = (postId: number): number[] => {
             return database.allPatrolIds()
                 .filter((patrolId) => canPaltrolBeCheckedIn(patrolId, postId));
-            // let patrolsCheckedIn = database.checkinsAtPost(postId)
-            //     .filter((checkin) => checkin.type === CheckinType.CheckIn)
-            //     .map((checkin) => checkin.patrolId);
-            // return database.checkinsAtPost(postId-1)
-            //     .filter((checkin) => {
-            //         return checkin.type !== CheckinType.CheckIn
-            //             && !patrolsCheckedIn.includes(checkin.patrolId);
-            //     })
-            //     .map((checkin) => checkin.patrolId);
         }
 
         export const nextPostId = (postId: number, detour: boolean): number => {
-            //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
-            if(!detour && posts.getPost(postId + 1).detour) {
-                return postId + 2;
-            }
-            return postId + 1;
+            return utils.nextPostId(database, postId, detour);
         }
 
         export const updatePostStatus = (): void => {
             postStatus = sc.Post.getPostStatus(poster, ppMatrix, loeb)
-        }
-
-        /**
-         * Check if a patrol is "udgået".
-         *
-         * @param patrolId the id of the patrol to check
-         * @returns `true` if the patrol is "udgået", `false` otherwise
-         */
-        export const patrolUdgået = (patrolId: number): boolean => {
-            let patrol = database.patrolInfo(patrolId);
-            return patrol.udgået;
-        }
-
-        /**
-         * Set a patrol status to "udgået".
-         *
-         * @param patrolId the id of the patrol to change status of
-         */
-        export const patrolUdgår = (patrolId: number): void => {
-            database.changePatrolStatus(patrolId, true);
-        }
-
-        /**
-         * Remove patrol status of "udgået".
-         *
-         * @param patrolId the id of the patrol to change status of
-         */
-        export const patrolGenindgår = (patrolId: number): void => {
-            database.changePatrolStatus(patrolId, false);
         }
 
         /**
@@ -210,28 +135,6 @@ namespace CCMR_server {
             } else {
                 const detour = checkin.type === CheckinType.Detour;
                 return canPatruljeBeCheckedUd(checkin.patrolId, checkin.postId, detour);
-            }
-        }
-
-        /**
-         * Apply checkin to database.
-         *
-         * @param checkin the checkin to apply
-         */
-        export const applyCheckin = (checkin: Checkin) => {
-            console.log(checkin);
-            database.checkin(checkin);
-
-            const patrolId = checkin.patrolId;
-            const postId = checkin.postId;
-            if(checkin.type === CheckinType.CheckIn) {
-                log.writeToPatruljeLog(`Patrol ${patrolId} checked in at ${postId}`);
-            } else {
-                const detour = checkin.type === CheckinType.Detour;
-                const nextPost = nextPostId(postId, detour);
-                log.writeToPatruljeLog(
-                    `Patrulje ${patrolId} tjekkes ud fra ${postId} og går mod ${nextPost}`
-                );
             }
         }
     }
@@ -268,7 +171,7 @@ namespace CCMR_server {
             }
 
             const userLastUpdate = parseInt(req.headers['last-update'] as string)
-            const post = posts.getPost(user.postId);
+            const post = database.postInfo(user.postId);
 
             //Der er kommet ny update siden sidst klienten spurgte
             if(userLastUpdate < post.lastUpdate.getTime()){ 
@@ -289,8 +192,8 @@ namespace CCMR_server {
                 return;
             }
 
-            const post: Post = posts.getPost(user.postId);
-            const nextPost = posts.getPost(user.postId + 1);
+            const post: Post = database.postInfo(user.postId);
+            const nextPost = database.postInfo(user.postId + 1);
             let isLastPost = nextPost === undefined;
             let omvejÅben = !isLastPost && !post.detour && nextPost.detour && nextPost.open;
 
@@ -355,7 +258,7 @@ namespace CCMR_server {
 
             // Client wants to commit changes
             if (commit) {
-                patruljer.applyCheckin(checkin);
+                database.checkin(checkin);
             }
 
             res.writeHead(200);
@@ -370,7 +273,7 @@ namespace CCMR_server {
                 "loeb": loeb,
                 "ppMatrix": ppMatrix,
                 "poster": poster,
-                "sidsteMeldinger": log.getNewUpdates(),
+                "sidsteMeldinger": logging.getNewUpdates(),
                 "postStatus": postStatus
             }))
             res.end()
@@ -394,7 +297,7 @@ namespace CCMR_server {
                 res.setHeader("data", JSON.stringify({
                     "patruljer": patruljerDerSkalOpdateres,
                     "ppArrays": ppArrays,
-                    "senesteUpdates": log.getNewUpdates(),
+                    "senesteUpdates": logging.getNewUpdates(),
                     "postStatus": postStatus
                 }));
             }
@@ -416,23 +319,8 @@ namespace CCMR_server {
             const action = req.headers['action'] as string;
             let patrolId = Number(req.headers['pnum'] as string);
 
-            let patrolIsUdGået = patruljer.patrolUdgået(patrolId);
-            let changedHappened = (action === "UDGÅ" && !patrolIsUdGået) || (action == "GEN-INDGÅ" && patrolIsUdGået);
-
-            if (action === "UDGÅ") {
-                patruljer.patrolUdgår(patrolId);
-            } else if (action === "GEN-INDGÅ") {
-                patruljer.patrolGenindgår(patrolId);
-            }
-
-            if(changedHappened){
-                res.writeHead(200);
-                log.writeToPatruljeLog(`Patrulje ${patrolId + 1} ${action}R ${action == "UDGÅ" ? "fra": "i"} løbet`);
-                patruljer.updatePostStatus();
-            }
-            else {
-                res.writeHead(400);
-            }
+            database.changePatrolStatus(patrolId, action === "UDGÅ");
+            res.writeHead(200);
             res.end()
         }
 
@@ -510,7 +398,7 @@ namespace CCMR_server {
                     change = true
                 }
                 if(change){
-                    log.writeToPatruljeLog(toLog)
+                    logging.writeToPatrolLog(toLog)
                     fs.writeFile("data/ppMatrix.json", JSON.stringify(ppMatrix), () => {})
                 }
                 //Remove empty fields from end of array
@@ -547,8 +435,8 @@ namespace CCMR_server {
             }
 
             database.reset();
-            log.writeToServerLog("LØB NULSTILLET AF KLIENT")
-            log.writeToPatruljeLog("LØB NULSTILLET AF KLIENT")
+            logging.writeToServerLog("LØB NULSTILLET AF KLIENT")
+            logging.writeToPatrolLog("LØB NULSTILLET AF KLIENT")
             res.writeHead(200)
             res.end();
         }
@@ -558,7 +446,7 @@ namespace CCMR_server {
         console.log("Program exiting with code: " + event);
         console.log(event);
         try{
-            log.writeToServerLog("Program exiting with code: " + event);
+            logging.writeToServerLog("Program exiting with code: " + event);
             fs.writeFileSync("data/users.json", JSON.stringify(sc.User.users));
             fs.writeFileSync("data/loeb.json", JSON.stringify(loeb));
         }catch{
@@ -567,11 +455,6 @@ namespace CCMR_server {
         process.exit()
     };
 
-    const getTimeString = (date?: Date) => {
-        if(date == undefined) {}
-        date = new Date()
-        return date.getFullYear() +'-'+ (date.getMonth() + 1) +'-'+ (date.getDate()) + ' ' + date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
-    }
 
     /**
      * Read ppmatrix from disk or initialize new pp matrix.
@@ -616,7 +499,7 @@ namespace CCMR_server {
 
     //#region -  Loading files into variables and defining variables needed for the server
 
-    log.writeToServerLog("PROGRAM STARTED - Loading files")
+    logging.debug("PROGRAM STARTED - Loading files")
 
     const loeb: sc.Loeb = new sc.Loeb(files.readJSONFileSync("data/loeb.json", true))
     const poster: sc.Post[] = sc.Post.createArray(files.readJSONFileSync("data/poster.json", true))
@@ -632,8 +515,8 @@ namespace CCMR_server {
     const numberOfPatrols = database.allPatrolIds().length;
     const numberOfUsers = sc.User.users.length;
     const startUpMessage =`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`; 
-    console.log(startUpMessage);
-    log.writeToServerLog(startUpMessage);
+    logging.log(startUpMessage);
+    logging.writeToServerLog(startUpMessage);
 
     let lastUpdateTimesPost: number[] = Array.apply(null, Array(poster.length)).map(() => new Date().getTime())
     let lastUpdateTimesPatrulje: number[] = Array.apply(null, Array(ppMatrix.length)).map(() => new Date().getTime())
@@ -712,6 +595,6 @@ namespace CCMR_server {
         }
     }).listen(port, address, () => {
         console.log(`Server is now listening at http://${address}:${port}`)
-        log.writeToServerLog("Server running")
+        logging.writeToServerLog("Server running")
     })
 }
