@@ -41,7 +41,7 @@ export interface Database {
      * @param patrol the patrol to get the latest checkin of
      * @return the latest checkin of the patrol or `null` if none exist
      */
-    latestCheckinOfPatrol(patrol: number): Checkin | null;
+    latestCheckinOfPatrol(patrol: number): Checkin | undefined;
 
     /** Check patrol in or out of post. */
     checkin(checkin: Checkin): void;
@@ -51,7 +51,7 @@ export interface Database {
     * @param patrolId the id of the patrol to get information about
     * @returns information about the patrol
     */
-    patrolInfo(patrolId: number): Patrol;
+    patrolInfo(patrolId: number): Patrol | undefined;
 
     /**
      * Change udgået status of patrol.
@@ -73,7 +73,7 @@ export interface Database {
      * @param postId the id of the post
      * @return information about the post
      */
-    postInfo(postId: number): Post;
+    postInfo(postId: number): Post | undefined;
 
     /**
      * Change status of post.
@@ -104,11 +104,11 @@ export interface Database {
      */
     deleteCheckin(checkinId: number): void;
 
+
     /**
-     * Reset database.
-     * * Remove all checkins
-     * * Set all posts to open
-     * * Remove "udgået" status from all patrols
+     * Get all ids of checkins.
+     *
+     * @returns list of checkin ids
      */
-    reset(): void;
+    allCheckinIds(): number[];
 }

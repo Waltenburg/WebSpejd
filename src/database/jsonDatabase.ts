@@ -1,18 +1,22 @@
 import * as fs from "fs";
-import { CheckinType, Checkin, Database, Patrol, Post } from "./generic";
+import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
 
 /** Database storing everything in a json file. */
 export class JsonDatabase implements Database {
     readonly datafile: string;
     private data: Internal;
+    private inMemory: boolean;
     private checkinCounter = 0;
 
     /**
      * Create new `JsonDatabase`.
+     *
      * @param datafile the json file to store data in
+     * @param inMemory will not save data to disk if `true`
      */
-    constructor(datafile: string) {
+    constructor(datafile: string, inMemory = false) {
         this.datafile = datafile;
+        this.inMemory = inMemory;
         if (fs.existsSync(datafile)) {
             // TODO error handling
             let content = fs.readFileSync(datafile, "utf-8");
@@ -21,7 +25,7 @@ export class JsonDatabase implements Database {
                 post.lastUpdate = new Date(post.lastUpdate);
             });
             this.checkinCounter = 1 + Math.max(
-                ...this.data.checkins.map((checkin) => checkin.id)
+                ...this.data.checkins.map((checkin) => checkin.id || 0)
             );
         } else {
             this.data = {
@@ -37,13 +41,14 @@ export class JsonDatabase implements Database {
      * Write stored data to file.
      */
     write() {
+        if(this.inMemory) {
+            return;
+        }
         let content = JSON.stringify(this.data);
-        fs.writeFile(this.datafile, content, () => {
-            // TODO error handling
-        });
+        fs.writeFileSync(this.datafile, content);
     }
 
-    patrolInfo(patrolId: number): Patrol {
+    patrolInfo(patrolId: number): Patrol | undefined {
         return this.data.patrols
             .find((patrol) => patrol.id === patrolId);
     }
@@ -56,19 +61,22 @@ export class JsonDatabase implements Database {
         return this.data.patrols.map((patrol) => patrol.id);
     }
 
-    latestCheckinOfPatrol(patrol: number): Checkin | null {
+    latestCheckinOfPatrol(patrol: number): Checkin | undefined {
         return this.data.checkins
             .filter((checkin) => checkin.patrolId === patrol)
             .reverse()[0];
     }
 
-    postInfo(postId: number): Post {
+    postInfo(postId: number): Post | undefined {
         return this.data.posts
             .find((post) => post.id == postId);
     }
 
     changePostStatus(postId: number, open: boolean): void {
         let post = this.postInfo(postId);
+        if(post === undefined) {
+            return;
+        }
         post.open = open;
         this.updatePost(postId);
     }
@@ -84,11 +92,10 @@ export class JsonDatabase implements Database {
     }
 
     checkin(checkin: Checkin): void {
-        if(checkin.id === null) {
-            checkin.id = this.checkinCounter;
-            this.checkinCounter += 1;
-        }
-        this.data.checkins.push(checkin);
+        this.data.checkins.push({
+            id: checkin.id || this.checkinCounter++,
+            ...checkin
+        });
         this.updatePost(checkin.postId);
     }
 
@@ -98,7 +105,7 @@ export class JsonDatabase implements Database {
      * @param checkinId the id of the checkin to get
      * @returns the checkin with the given id
      */
-    checkinById(checkinId: number): Checkin {
+    checkinById(checkinId: number): Checkin | undefined {
         return this.data.checkins
             .find((checkin) => checkin.id === checkinId);
     }
@@ -107,17 +114,15 @@ export class JsonDatabase implements Database {
         this.data.checkins = this.data.checkins
             .filter((checkin) => checkin.id !== checkinId);
         let checkin = this.checkinById(checkinId);
+        if(checkin === undefined) {
+            return;
+        }
         this.updatePost(checkin.postId);
     }
 
-    reset(): void {
-        this.data.checkins = [];
-        this.data.posts.forEach((post) => {
-            post.open = true;
-        });
-        this.data.patrols.forEach((patrol) => {
-            patrol.udgået = false;
-        });
+    allCheckinIds(): number[] {
+        return this.data.checkins
+            .map((checkin) => checkin.id);
     }
 
     /**
@@ -127,6 +132,9 @@ export class JsonDatabase implements Database {
      */
     updatePost(postId: number): void {
         let post = this.postInfo(postId);
+        if(post === undefined) {
+            return;
+        }
         post.lastUpdate = new Date();
     }
 
@@ -134,6 +142,19 @@ export class JsonDatabase implements Database {
 
 interface Internal {
     patrols: Patrol[];
-    checkins: Checkin[];
+    checkins: StoredCheckin[];
     posts: Post[];
+}
+
+interface StoredCheckin {
+    /** Id of the checkin. */
+    id: number;
+    /** The id of the patrol that checked in. */
+    patrolId: number;
+    /** The id of the post the patrol was checked in at. */
+    postId: number;
+    /** The type of checkin. */
+    type: CheckinType;
+    /** The time the patrol was checked in. */
+    time: Date;
 }

@@ -117,7 +117,7 @@ export namespace files {
      * @param path the path to get mimetype of
      * @return the mimetype based on the path
      */
-    const determineContentType = (path: string): sc.MIME => {
+    export const determineContentType = (path: string): sc.MIME => {
         let split = path.split(".")
         let extension = split[split.length - 1].toLowerCase()
 
