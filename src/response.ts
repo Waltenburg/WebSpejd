@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import * as http from 'http'
 import {files} from "./files";
+import * as pages from "./pages";
 
 export interface Response {
     status_code: number;
@@ -56,6 +57,12 @@ export function response_code(status_code: number, content?: any): Response {
         status_code: status_code,
         content: content
     }
+}
+
+export async function template(filename: string, data: any): Promise<Response> {
+    let template = await pages.createTemplate(filename);
+    let page = template(data);
+    return ok(page);
 }
 
 /**

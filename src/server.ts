@@ -3,12 +3,14 @@ import { files } from './files'
 import * as users from "./users";
 import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
 import * as responses from "./response";
+import * as pages from "./pages";
 
 type Response = responses.Response;
 
 class Server {
     private db: DatabaseWrapper;
     private users: users.UserCache;
+    private templates: pages.Templates;
 
     /**
      * Create new server.
@@ -22,6 +24,7 @@ class Server {
         this.db.initialize();
 
         this.users = new users.UserCache();
+        this.templates = new pages.Templates(false);
 
         const numberOfPosts = db.allPostIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
@@ -29,7 +32,10 @@ class Server {
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
-                const response = await this.handleRequest(req);
+                let response = await this.handleRequest(req);
+                if(typeof response === "string") {
+                    response = responses.ok(response);
+                }
                 responses.send(connection, response);
             })
             .listen(port, address, () => {
@@ -55,7 +61,7 @@ class Server {
      * @param req the incoming http request
      * @param res the http response builder
      */
-    async handleRequest(req: http.IncomingMessage): Promise<Response> {
+    async handleRequest(req: http.IncomingMessage): Promise<Response | string> {
         if (req.method != "GET") {
             return responses.server_error();
         }
@@ -91,8 +97,14 @@ class Server {
                 return this.requestPostData(req);
             case "/sendUpdate":
                 return this.handleCheckinRequest(req);
+            // case "/master":
+            //     return await responses.file("assets/html/master.html");
             case "/master":
-                return await responses.file("assets/html/master.html");
+                return await this.templates.respond(pages.MAIN, {
+                    posts: await this.postsView(),
+                });
+            case "/master/posts":
+                return await this.postsView();
             // case "/masterData":
             //     return this.masterDataReq(req);
             // case "/masterUpdate":
@@ -106,7 +118,7 @@ class Server {
             // case "/reset":
             //     return this.reset(req);
         }
-        return responses.not_found();
+        return responses.not_found("Page not found");
     }
 
     /**
@@ -229,6 +241,14 @@ class Server {
         }
 
         return responses.ok();
+    }
+
+    async postsView(): Promise<string> {
+        let posts = this.db.allPostIds()
+            .map((postId) => this.db.postInfo(postId));
+        return await this.templates.render(pages.POSTS, {
+            posts: posts
+        });
     }
 
 }
