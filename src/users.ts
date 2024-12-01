@@ -1,5 +1,48 @@
 import * as http from 'http';
-import { serverClasses as sc } from "./serverClasses";
+
+export class UserCache {
+    private users: { [key: string]: User };
+
+    constructor() {
+        this.users = {};
+    }
+
+    /**
+     * Add user to cache.
+     *
+     * @param identifier the identifier of the user
+     * @param postId the id of the post the user is authorized to adminster
+     * @returns the user object
+     */
+    addUser(identifier: string, postId: number): User {
+        const user = new User(postId);
+        this.users[identifier] = user;
+        return user;
+    }
+
+    /**
+     * Retrieve user of client sending request.
+     *
+     * @param req the request from the client
+     * @returns the matching user
+     */
+    userFromRequest(req: http.IncomingMessage): User {
+        const identifier = req.headers["id"] as string;
+        const user = this.users[identifier];
+        if(user === undefined) {
+            return new User(-1);
+        }
+        return user;
+    }
+
+    /**
+     * Delete users not access recently.
+     */
+    deleteUnusedUsers() {
+        // TODO
+    }
+
+}
 
 export class User {
     /** Id of the post the user is connected to. */
@@ -28,16 +71,4 @@ export class User {
     isPostUser(): boolean {
         return this.postId >= 0 && this.postId !== Infinity;
     }
-}
-
-/**
- * Extract user id from request.
- *
- * @param req the incoming http request
- * @return user id in request
- */
-export const userFromRequest = (req: http.IncomingMessage): User => {
-    const userId = req.headers["id"] as string;
-    const postId = sc.User.recognizeUser(userId);
-    return new User(postId);
 }

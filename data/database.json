@@ -68,5 +68,27 @@
             "open": true,
             "lastUpdate": 0
         }
+    ],
+    "users": [
+        {
+            "password": "løbetstartersnart",
+            "postId": 0
+        },
+        {
+            "password": "dennyehavnergrim",
+            "postId": 1
+        },
+        {
+            "password": "sejlegeplads",
+            "postId": 2
+        },
+        {
+            "password": "søvnerovervurderet",
+            "postId": 3
+        },
+        {
+            "password": "viskalsovenu",
+            "postId": 4
+        }
     ]
 }

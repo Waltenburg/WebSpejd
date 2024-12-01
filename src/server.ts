@@ -1,6 +1,4 @@
 import * as http from 'http'
-import * as fs from 'fs'
-import { serverClasses as sc } from './serverClasses'
 import { files } from './files'
 import * as users from "./users";
 import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
@@ -10,6 +8,7 @@ type Response = responses.Response;
 
 class Server {
     private db: DatabaseWrapper;
+    private users: users.UserCache;
 
     /**
      * Create new server.
@@ -22,9 +21,11 @@ class Server {
         this.db = new DatabaseWrapper(db);
         this.db.initialize();
 
+        this.users = new users.UserCache();
+
         const numberOfPosts = db.allPostIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
-        const numberOfUsers = sc.User.users.length;
+        const numberOfUsers = db.userIds().length;
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
@@ -114,24 +115,21 @@ class Server {
     loginReq (req: http.IncomingMessage): Response {
         const password = req.headers['password'] as string
         const identifier = req.headers['id'] as string
-        for (let i = 0; i < sc.User.users.length; i++) {
-            const user = sc.User.users[i];
-            if(user.kode == password){
-                user.addIdentifier(identifier)
-                let response = responses.ok(null, {
-                    "isMaster": user.master
-                });
-                return response;
-            }
+        const postId = this.db.authenticate(password);
+        if(postId === undefined) {
+            return responses.unauthorized();
         }
-        return responses.unauthorized();
+        const user = this.users.addUser(identifier, postId);
+        return responses.ok(null, {
+            "isMaster": user.isMasterUser()
+        });
     }
 
     /**
      * Get updated information about post.
      */
     requestPostUpdate(req: http.IncomingMessage): Response {
-        const user = users.userFromRequest(req);
+        const user = this.users.userFromRequest(req);
         if (!user.isPostUser()) {
             return responses.unauthorized();
         }
@@ -158,8 +156,9 @@ class Server {
      * Get information about post.
      */
     requestPostData(req: http.IncomingMessage): Response {
-        const user = users.userFromRequest(req);
+        const user = this.users.userFromRequest(req);
         if(!user.isPostUser()) {
+            console.log(`Not post user: ${user.postId}`)
             return responses.unauthorized();
         }
 
@@ -188,7 +187,7 @@ class Server {
      * @param res the http response builder
      */
     handleCheckinRequest(req: http.IncomingMessage): Response {
-        const user = users.userFromRequest(req);
+        const user = this.users.userFromRequest(req);
 
         // User is master or unauthenticated
         if (!user.isPostUser()) {
@@ -235,9 +234,9 @@ class Server {
 }
 
 /**
-     * Read command line arguments to get address and port.
-     * @return binding address and port
-     */
+ * Read command line arguments to get address and port.
+ * @return binding address and port
+ */
 const readArguments = (): [string, number] => {
     let address = "127.0.0.1";
     if (process.argv.length >= 3) {
@@ -263,47 +262,4 @@ async function main(): Promise<void> {
     })
 }
 
-sc.User.users = sc.User.createUserArray(files.readJSONFileSync("data/users.json", true))
-sc.User.startDeleteInterval()
-
 main();
-
-namespace CCMR_server {
-    namespace log {
-        const patruljeLogWriteStream = fs.createWriteStream("data/patruljeLog.txt", {flags:'a'})
-        const serverLogWriteStream = fs.createWriteStream("data/serverLog.txt", {flags:'a'});
-
-        let lastUpdates: string[] = ["", "", "", "", "", ""]
-        let lastUpdatesIndex: number = 0
-        const numberOfLogsToKeep = 6
-
-        export const writeToServerLog = (message: string) => {
-            serverLogWriteStream.write("\n" + getTimeString() + " - " + message)
-        }
-
-        export const writeToPatruljeLog = (melding: string) => {
-            const skriv = getTimeString() + " - " + melding
-            patruljeLogWriteStream.write(skriv + "\n")
-            addToLastUpdates(skriv)
-        }
-
-
-        const addToLastUpdates = (update: string): void => {
-            lastUpdates.push(update)
-            lastUpdatesIndex++
-            if(lastUpdates.length > numberOfLogsToKeep)
-                lastUpdates.shift()
-        }
-
-        export const getNewUpdates = (): string[] => {
-            return lastUpdates
-        }
-    }
-
-    const getTimeString = (date?: Date) => {
-        if(date == undefined) {}
-        date = new Date()
-        return date.getFullYear() +'-'+ (date.getMonth() + 1) +'-'+ (date.getDate()) + ' ' + date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
-    }
-
-}

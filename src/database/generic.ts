@@ -111,4 +111,19 @@ export interface Database {
      * @returns list of checkin ids
      */
     allCheckinIds(): number[];
+
+    /**
+     * Get post id matching password.
+     *
+     * @param password the password to login with
+     * @returns the post id of the post authenticated with
+     */
+    authenticate(password: string): number | undefined;
+
+    /**
+     * Get list of all user ids.
+     * 
+     * @returns list of user ids
+     */
+    userIds(): number[];
 }

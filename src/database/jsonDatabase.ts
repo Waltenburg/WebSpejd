@@ -32,6 +32,7 @@ export class JsonDatabase implements Database {
                 checkins: [],
                 patrols: [],
                 posts: [],
+                users: []
             }
         }
         console.log(this.data);
@@ -138,12 +139,25 @@ export class JsonDatabase implements Database {
         post.lastUpdate = new Date();
     }
 
+    authenticate(password: string): number | undefined {
+        return this.data.users
+            .find((user) => user.password === password)
+            .postId;
+    }
+
+    userIds(): number[] {
+        let counter = 0;
+        return this.data.users
+            .map((_user) => counter++);
+    }
+
 }
 
 interface Internal {
     patrols: Patrol[];
     checkins: StoredCheckin[];
     posts: Post[];
+    users: User[];
 }
 
 interface StoredCheckin {
@@ -157,4 +171,9 @@ interface StoredCheckin {
     type: CheckinType;
     /** The time the patrol was checked in. */
     time: Date;
+}
+
+interface User {
+    password: string;
+    postId: number
 }

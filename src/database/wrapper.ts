@@ -221,4 +221,12 @@ export class DatabaseWrapper implements Database {
         return this.db.allCheckinIds();
     }
 
+    authenticate(password: string): number | undefined {
+        return this.db.authenticate(password);
+    }
+
+    userIds(): number[] {
+        return this.db.userIds();
+    }
+
 }
