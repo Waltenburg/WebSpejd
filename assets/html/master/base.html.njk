@@ -1,17 +1,16 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <title>Webspejd</title>
         <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+        <link rel="stylesheet" href="/assets/css/master.css">
     </head>
     <body>
-        <h1>Webspejd</h1>
-        <div>
-            <h2>Overview</h2>
-        </div>
-        <div hx-get="/master/posts" hx-trigger="every 5s">
-            {{{posts}}}
+        {% include "./header.html.njk" %}
+        <div id="content">
+            {% block body %}
+            {% endblock %}
         </div>
     </body>
 </html>

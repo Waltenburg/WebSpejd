@@ -1,0 +1,51 @@
+.grid {
+    display: table;
+}
+
+.row {
+    width: 95%;
+    display: table-row;
+    padding: 0.3em;
+    margin: 0;
+}
+
+.cell {
+    display: table-cell;
+    padding: 1em;
+    margin: 0 auto;
+}
+
+.highlight-grey:hover {
+    background-color: #dcdcdc;
+}
+
+max-width {
+    width: 100%;
+}
+
+a {
+    color: #000;
+    text-decoration: none;
+}
+
+body {
+    background-color: #fcfcfc;
+    font-family: "Monospace";
+    margin: 0;
+}
+
+#content {
+    margin: 2vh 3vw;
+}
+
+#header {
+    background-color: #58A2E7;
+    height: 5vh;
+    margin: 0;
+    line-height: 5vh;
+    box-shadow: 5px 5px 5px #f0f0f0;
+}
+
+#header a {
+    padding: 1em;
+}

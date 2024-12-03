@@ -1,0 +1,10 @@
+{% extends "./base.html.njk" %}
+
+{% block body %}
+    <h1>{{patrol.name}}</h1>
+
+    <div>
+        <h2>Checkins</h2>
+        {% include "./checkins.html.njk" %}
+    </div>
+{% endblock %}

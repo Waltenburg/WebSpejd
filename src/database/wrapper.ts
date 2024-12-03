@@ -12,7 +12,7 @@ export class DatabaseWrapper implements Database {
      * Add initial data to database.
      */
     initialize(): void {
-        const isInitialized = this.db.allCheckinIds().length === 0;
+        const isInitialized = this.db.allCheckinIds().length !== 0;
         if(isInitialized) {
             return;
         }
@@ -60,7 +60,7 @@ export class DatabaseWrapper implements Database {
      * @return `true` if the patrol can be checked out, `false` otherwise
      */
     canPatruljeBeCheckedUd(patrolId: number, postId: number, detour: boolean): boolean {
-        const lastCheckin = this.db.latestCheckinOfPatrol(patrolId);
+        const lastCheckin = this.latestCheckinOfPatrol(patrolId);
         const patrolInfo = this.db.patrolInfo(patrolId);
         const nextPostIsDetour = this.db.postInfo(postId + 1)?.detour || false;
 
@@ -80,7 +80,7 @@ export class DatabaseWrapper implements Database {
      * @return `true` if the patrol can be checked in, `false` otherwise
      */
     canPaltrolBeCheckedIn(patrolId: number, postId: number): boolean {
-        const lastCheckin = this.db.latestCheckinOfPatrol(patrolId);
+        const lastCheckin = this.latestCheckinOfPatrol(patrolId);
         if(lastCheckin === undefined) {
             return postId === 0;
         }
@@ -92,6 +92,10 @@ export class DatabaseWrapper implements Database {
             && lastCheckin.type !== CheckinType.CheckIn
             && this.nextPostId(lastCheckin.postId, patrolIsOnDetour) === postId
             && !patrolInfo.udgået;
+    }
+
+    latestCheckinOfPatrol(patrolId: number): Checkin | undefined {
+        return this.db.latestCheckinsOfPatrol(patrolId, 1)[0];
     }
 
     /**
@@ -122,6 +126,19 @@ export class DatabaseWrapper implements Database {
     patruljerPåVej(postId: number): number[] {
         return this.db.allPatrolIds()
             .filter((patrolId) => this.canPaltrolBeCheckedIn(patrolId, postId));
+    }
+
+    /**
+     * Get ids of patrols that are checked out of a post.
+     *
+     *
+     * @param postId the id of the post the patrols have leaved
+     * @returns a list of patrol ids
+     */
+    patrolsCheckedOut(postId: number): number[] {
+        return this.db.checkinsAtPost(postId)
+            .filter((checkin) => checkin.type !== CheckinType.CheckIn)
+            .map((checkin) => checkin.postId);
     }
 
     /**
@@ -181,8 +198,8 @@ export class DatabaseWrapper implements Database {
         this.db.checkin(checkin);
     }
 
-    latestCheckinOfPatrol(patrol: number): Checkin | undefined {
-        return this.db.latestCheckinOfPatrol(patrol);
+    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {
+        return this.db.latestCheckinsOfPatrol(patrol, amount);
     }
 
     patrolInfo(patrolId: number): Patrol | undefined {
@@ -215,6 +232,10 @@ export class DatabaseWrapper implements Database {
 
     deleteCheckin(checkinId: number): void {
         this.db.deleteCheckin(checkinId);
+    }
+
+    lastCheckins(amount: number): Checkin[] {
+        return this.db.lastCheckins(amount);
     }
 
     allCheckinIds(): number[] {

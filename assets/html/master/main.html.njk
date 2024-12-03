@@ -1,0 +1,16 @@
+{% extends "./base.html.njk" %}
+
+{% block body %}
+    <h2>Poster</h2>
+    <div hx-get="/master/posts" hx-trigger="every 5s">
+        {% include "./posts.html.njk" %}
+    </div>
+    <h2>Patruljer</h2>
+    <div hx-get="/master/patrols" hx-trigger="every 5s">
+        {% include "./patrols.html.njk" %}
+    </div>
+    <h2>Checkins</h2>
+    <div hx-get="/master/checkins" hx-trigger="every 5s">
+        {% include "./checkins.html.njk" %}
+    </div>
+{% endblock %}

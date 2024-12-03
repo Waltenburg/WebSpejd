@@ -59,12 +59,6 @@ export function response_code(status_code: number, content?: any): Response {
     }
 }
 
-export async function template(filename: string, data: any): Promise<Response> {
-    let template = await pages.createTemplate(filename);
-    let page = template(data);
-    return ok(page);
-}
-
 /**
  * Send response to client.
  *

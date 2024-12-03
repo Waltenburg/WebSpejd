@@ -62,10 +62,10 @@ export class JsonDatabase implements Database {
         return this.data.patrols.map((patrol) => patrol.id);
     }
 
-    latestCheckinOfPatrol(patrol: number): Checkin | undefined {
-        return this.data.checkins
-            .filter((checkin) => checkin.patrolId === patrol)
-            .reverse()[0];
+    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {
+        let checkins = this.data.checkins
+            .filter((checkin) => checkin.patrolId === patrol);
+        return takeLast(checkins, amount);
     }
 
     postInfo(postId: number): Post | undefined {
@@ -119,6 +119,10 @@ export class JsonDatabase implements Database {
             return;
         }
         this.updatePost(checkin.postId);
+    }
+
+    lastCheckins(amount: number): Checkin[] {
+        return takeLast(this.data.checkins, amount);
     }
 
     allCheckinIds(): number[] {
@@ -176,4 +180,9 @@ interface StoredCheckin {
 interface User {
     password: string;
     postId: number
+}
+
+function takeLast<T>(l: T[], amount: number): T[] {
+    return l.slice(Math.max(l.length - amount, 0))
+        .reverse();
 }

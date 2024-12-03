@@ -41,7 +41,7 @@ export interface Database {
      * @param patrol the patrol to get the latest checkin of
      * @return the latest checkin of the patrol or `null` if none exist
      */
-    latestCheckinOfPatrol(patrol: number): Checkin | undefined;
+    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[];
 
     /** Check patrol in or out of post. */
     checkin(checkin: Checkin): void;
@@ -104,6 +104,13 @@ export interface Database {
      */
     deleteCheckin(checkinId: number): void;
 
+    /**
+     * Get the last x checkins.
+     *
+     * @param amount the amount of checkins to get
+     * @returns the last x checkins
+     */
+    lastCheckins(amount: number): Checkin[];
 
     /**
      * Get all ids of checkins.

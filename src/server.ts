@@ -1,7 +1,7 @@
 import * as http from 'http'
 import { files } from './files'
 import * as users from "./users";
-import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
+import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType, Post } from "./database";
 import * as responses from "./response";
 import * as pages from "./pages";
 
@@ -10,7 +10,7 @@ type Response = responses.Response;
 class Server {
     private db: DatabaseWrapper;
     private users: users.UserCache;
-    private templates: pages.Templates;
+    private pages: pages.Pages;
 
     /**
      * Create new server.
@@ -24,7 +24,7 @@ class Server {
         this.db.initialize();
 
         this.users = new users.UserCache();
-        this.templates = new pages.Templates(false);
+        this.pages = new pages.Pages(this.db);
 
         const numberOfPosts = db.allPostIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
@@ -100,11 +100,17 @@ class Server {
             // case "/master":
             //     return await responses.file("assets/html/master.html");
             case "/master":
-                return await this.templates.respond(pages.MAIN, {
-                    posts: await this.postsView(),
-                });
+                return this.pages.master();
             case "/master/posts":
-                return await this.postsView();
+                return this.pages.posts();
+            case "/master/post/0":
+                return this.pages.post(0);
+            case "/master/checkins":
+                return this.pages.checkins();
+            case "/master/patrols":
+                return this.pages.patrols();
+            case "/master/patrol/1":
+                return this.pages.patrol(1);
             // case "/masterData":
             //     return this.masterDataReq(req);
             // case "/masterUpdate":
@@ -170,7 +176,6 @@ class Server {
     requestPostData(req: http.IncomingMessage): Response {
         const user = this.users.userFromRequest(req);
         if(!user.isPostUser()) {
-            console.log(`Not post user: ${user.postId}`)
             return responses.unauthorized();
         }
 
@@ -243,12 +248,10 @@ class Server {
         return responses.ok();
     }
 
-    async postsView(): Promise<string> {
+    postsView(): Post[] {
         let posts = this.db.allPostIds()
             .map((postId) => this.db.postInfo(postId));
-        return await this.templates.render(pages.POSTS, {
-            posts: posts
-        });
+        return posts;
     }
 
 }
