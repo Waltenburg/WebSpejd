@@ -1,10 +1,25 @@
 {% extends "./base.html.njk" %}
+{% import "./utils.html.njk" as utils %}
 
 {% block body %}
-    <h1>{{patrol.name}}</h1>
-
+    <h1>Patrulje {{patrol.id}}: {{patrol.name}}</h1>
     <div>
-        <h2>Checkins</h2>
-        {% include "./checkins.html.njk" %}
+        Status:
+        {% if paltrol.udgået %}
+            Udgået
+        {% else %}
+            Deltagende?
+        {% endif %}
+    </div>
+    <div>
+        Lokation:
+        <a class="hover-underline" href="/master/post?id={{location.postId}}">
+            {{location | formatLocation}}
+        </a>
+    <div>
+
+    <h2>Checkins</h2>
+    <div hx-get="/master/checkins?patrolId={{patrol.id}}" hx-trigger="every 5s">
+        {{ utils.checkins(checkins) }}
     </div>
 {% endblock %}

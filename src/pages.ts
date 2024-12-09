@@ -1,6 +1,8 @@
 import { DatabaseWrapper } from "./database";
+import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
+import { Request } from "./request";
 
 type Response = responses.Response;
 
@@ -8,6 +10,7 @@ export const MAIN: string = "master/main.html.njk";
 export const POSTS: string = "master/posts.html.njk";
 export const POST: string = "master/post.html.njk";
 export const CHECKINS: string = "master/checkins.html.njk";
+export const CHECKIN: string = "master/checkin.html.njk";
 export const PATROLS: string = "master/patrols.html.njk";
 export const PATROL: string = "master/patrol.html.njk";
 
@@ -15,18 +18,22 @@ export class Pages {
     private db: DatabaseWrapper;
     private env: nunjucks.Environment;
 
-    constructor(db: DatabaseWrapper) {
+    constructor(db: DatabaseWrapper, cache: boolean) {
         this.env = new nunjucks.Environment(
             new nunjucks.FileSystemLoader('assets/html'),
-            { autoescape: true }
+            {
+                autoescape: true,
+                noCache: !cache
+            }
         );
         this.env.addFilter("checkinName", checkinTypeToString);
-        this.env.addFilter("clock", clock);
+        this.env.addFilter("clock", formatTime);
+        this.env.addFilter("formatLocation", formatLocation);
 
         this.db = db;
     }
 
-    master(): Response {
+    master = async(): Promise<Response> => {
         return this.response(MAIN, {
             posts: this.postsData(),
             checkins: this.db.lastCheckins(10),
@@ -34,49 +41,102 @@ export class Pages {
         });
     }
 
-    posts(): Response {
+    posts = async (): Promise<Response> => {
         return this.response(POSTS, {
             posts: this.postsData(),
         });
     }
 
-    post(postId: number): Response {
+    post = async (request: Request): Promise<Response> => {
+        const postId = Number.parseInt(request.url.searchParams.get("id"));
         let post = this.db.postInfo(postId);
-        return this.response(POST, post);
-    }
-
-    checkins(): Response {
-        return this.response(CHECKINS, {
-            checkins: this.db.lastCheckins(10),
-        })
-    }
-
-    patrols(): Response {
-        return this.response(PATROLS, {
-            patrols: this.patrolsData(),
+        return this.response(POST, {
+            patrolsOnPost: this.patrolsData(this.db.patruljerPåPost(postId)),
+            patrolsOnTheirWay: this.patrolsData(this.db.patruljerPåVej(postId)),
+            patrolsCheckedOut: this.patrolsData(this.db.patrolsCheckedOut(postId)),
+            post: post,
+            checkins: this.db.checkinsAtPost(postId).reverse(),
         });
     }
 
-    patrol(patrolId: number): Response {
+    checkin = async (): Promise<Response> => {
+        return this.response(CHECKIN, {
+            patrolIds: this.db.allPatrolIds(),
+            postIds: this.db.allPostIds(),
+        });
+    }
+
+    checkins = async (request: Request): Promise<Response> => {
+        let checkins = undefined;
+        const params = request.url.searchParams;
+
+        let patrolId = params.get("patrolId");
+        if(patrolId != undefined) {
+            checkins = this.db.latestCheckinsOfPatrol(Number.parseInt(patrolId), 100);
+        }
+
+        let postId = params.get("postId");
+        if(postId != undefined) {
+            checkins = this.db.checkinsAtPost(Number.parseInt(postId)).reverse();
+        }
+
+        if(checkins === undefined){
+            checkins = this.db.lastCheckins(10);
+        }
+
+        return this.response(CHECKINS, {
+            checkins: checkins,
+        });
+    }
+
+    patrols = async (request: Request): Promise<Response> => {
+        let patrolIds = undefined;
+        const params = request.url.searchParams;
+
+        const postIdStr = params.get("postId");
+        if(postIdStr != undefined) {
+            const postId = Number.parseInt(postIdStr);
+            const selection = params.get("selection");
+            if(selection === "patrolsOnTheirWay") {
+                patrolIds = this.db.patruljerPåVej(postId);
+            } else if(selection === "patrolsOnPost") {
+                patrolIds = this.db.patruljerPåPost(postId);
+            } else if(selection === "patrolsCheckedOut") {
+                patrolIds = this.db.patrolsCheckedOut(postId);
+            }
+        }
+
+        return this.response(PATROLS, {
+            patrols: this.patrolsData(patrolIds)
+        });
+    }
+
+    patrol = async (request: Request): Promise<Response> => {
+        const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
             patrol: this.db.patrolInfo(patrolId),
             checkins: this.db.latestCheckinsOfPatrol(patrolId, 100),
+            location: this.db.locationOfPatrol(patrolId),
         });
     }
 
-    private patrolsData(): any {
-        return this.db.allPatrolIds()
+    private patrolsData = (patrolIds?: number[]): any => {
+        if(patrolIds === undefined) {
+            patrolIds = this.db.allPatrolIds();
+        }
+        return patrolIds
             .map((patrolId) => {
                 let patrol = this.db.patrolInfo(patrolId);
                 let lastCheckin = this.db.latestCheckinOfPatrol(patrolId);
                 return {
                     lastCheckin: lastCheckin,
+                    location: this.db.locationOfPatrol(patrolId),
                     ...patrol
-                }
+                };
             })
     }
 
-    private postsData(): any {
+    private postsData = (): any => {
          return this.db.allPostIds()
             .map((postId) => {
                 let base = this.db.postInfo(postId);
@@ -95,7 +155,7 @@ export class Pages {
      * @param data the data for the template
      * @returns the rendered template
      */
-    render(filename: string, data: any): string {
+    render = (filename: string, data: any): string => {
         return this.env.render(filename, data);
     }
 
@@ -106,12 +166,11 @@ export class Pages {
      * @param data the data for the template
      * @returns the rendered template
      */
-    response(filename: string, data: any): responses.Response {
+    response = (filename: string, data: any): Response => {
         return responses.ok(this.render(filename, data));
     }
 
 }
-
 
 function checkinTypeToString(value: number): string {
     if(value === 0) {
@@ -123,9 +182,17 @@ function checkinTypeToString(value: number): string {
     }
 }
 
-function clock(value: Date) {
-    let hour = value.getHours();
-    let minute = value.getMinutes();
-    let second = value.getSeconds();
+function formatLocation(location: PatrolLocation): string {
+    if(location.type === PatrolLocationType.GoingToLocation) {
+        return `Går mod post ${location.postId}`;
+    } else {
+        return `På post ${location.postId}`;
+    }
+}
+
+function formatTime(value: Date) {
+    let hour = value.getHours().toString().padStart(2, '0');
+    let minute = value.getMinutes().toString().padStart(2, '0');
+    let second = value.getSeconds().toString().padStart(2, '0');
     return `${hour}:${minute}:${second}`;
 }

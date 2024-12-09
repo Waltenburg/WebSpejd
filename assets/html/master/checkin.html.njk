@@ -1,0 +1,32 @@
+{% extends "./base.html.njk" %}
+
+{% block body %}
+    <h1>Checkin</h1>
+        <form action=/master/addcheckin>
+        <div>
+            <label>Patrulje:</label>
+            <select name="patrol">
+                {% for patrolId in patrolIds %}
+                    <option value="{{patrolId}}">Patrulje {{patrolId}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Post:</label>
+            <select name="post">
+                {% for postId in postIds %}
+                    <option value="{{postId}}">Post {{postId}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Type:</label>
+            <select name="type">
+                <option value="checkin">Check ind</option>
+                <option value="checkout">Check ud</option>
+                <option value="detour">Omvej</option>
+            </select>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}

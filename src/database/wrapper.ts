@@ -138,7 +138,7 @@ export class DatabaseWrapper implements Database {
     patrolsCheckedOut(postId: number): number[] {
         return this.db.checkinsAtPost(postId)
             .filter((checkin) => checkin.type !== CheckinType.CheckIn)
-            .map((checkin) => checkin.postId);
+            .map((checkin) => checkin.patrolId);
     }
 
     /**
@@ -192,6 +192,28 @@ export class DatabaseWrapper implements Database {
         this.db.allPatrolIds().forEach((patrolId) => {
             this.db.changePatrolStatus(patrolId, false);
         });
+    }
+
+    /**
+     * Get current location of patrol.
+     * 
+     * @param patrolId the id of the patrol
+     * @returns the location of the patrol
+     */
+    locationOfPatrol(patrolId: number): PatrolLocation {
+        let latestCheckin = this.latestCheckinOfPatrol(patrolId);
+        if(latestCheckin.type === CheckinType.CheckIn) {
+            return {
+                type: PatrolLocationType.OnLocation,
+                postId: latestCheckin.postId
+            };
+        }
+        let isDetour = latestCheckin.type === CheckinType.Detour;
+        let nextPostId = this.nextPostId(latestCheckin.postId, isDetour);
+        return {
+            type: PatrolLocationType.GoingToLocation,
+            postId: nextPostId
+        };
     }
 
     checkin(checkin: Checkin) {
@@ -250,4 +272,16 @@ export class DatabaseWrapper implements Database {
         return this.db.userIds();
     }
 
+}
+
+
+export interface PatrolLocation {
+    /** Is the patrol on a location or going to a location. */
+    type: PatrolLocationType,
+    /** Id of the post thåe patrol is going to or on */
+    postId: number,
+}
+
+export enum PatrolLocationType {
+    OnLocation, GoingToLocation
 }

@@ -1,10 +1,2 @@
-<div class="grid max-width">
-    {% for checkin in checkins %}
-        <div class="row highlight-grey">
-            <div class="cell">{{checkin.type | checkinName}}</div>
-            <div class="cell">Patrulje {{checkin.patrolId}}</div>
-            <div class="cell">Post {{checkin.postId}}</div>
-            <div class="cell">Tidspunkt: {{checkin.time | clock}}</div>
-        </div>
-    {% endfor %}
-</div>
+{% import "./utils.html.njk" as utils %}
+{{ utils.checkins(checkins) }}

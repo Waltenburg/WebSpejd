@@ -1,16 +1,17 @@
 {% extends "./base.html.njk" %}
+{% import "./utils.html.njk" as utils %}
 
 {% block body %}
     <h2>Poster</h2>
     <div hx-get="/master/posts" hx-trigger="every 5s">
-        {% include "./posts.html.njk" %}
+        {{ utils.posts(posts) }}
     </div>
     <h2>Patruljer</h2>
     <div hx-get="/master/patrols" hx-trigger="every 5s">
-        {% include "./patrols.html.njk" %}
+        {{ utils.patrols(patrols) }}
     </div>
     <h2>Checkins</h2>
     <div hx-get="/master/checkins" hx-trigger="every 5s">
-        {% include "./checkins.html.njk" %}
+        {{ utils.checkins(checkins) }}
     </div>
 {% endblock %}

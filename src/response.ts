@@ -52,6 +52,16 @@ export function unauthorized(content?: any): Response {
     }
 }
 
+export function redirect(path: string): Response {
+    return {
+        status_code: 303,
+        content: null,
+        headers: {
+            "Location": path
+        }
+    }
+}
+
 export function response_code(status_code: number, content?: any): Response {
     return {
         status_code: status_code,

@@ -1,10 +1,2 @@
-<div class="grid max-width">
-    {% for post in posts %}
-        <a class="row highlight-grey" href="/master/post/{{post.id}}">
-            <div class="cell">{{post.id}}. {{post.name}}</div>
-            <div class="cell">På vej: {{post.patrolsOnTheirWay}}</div>
-            <div class="cell">På post: {{post.patrolsOnPost}}</div>
-            <div class="cell">Forladt post: {{post.patrolsCheckedOut}}</div>
-        </a>
-    {% endfor %}
-</div>
+{% import "./utils.html.njk" as utils %}
+{{ utils.posts(posts) }}

@@ -1,9 +1,2 @@
-<div class="grid max-width">
-    {% for patrol in patrols %}
-        <a class="row highlight-grey" href="/master/patrol/{{patrol.id}}">
-            <div class="cell">{{patrol.id}}. {{patrol.name}}</div>
-            <div class="cell">Lokation:</div>
-            <div class="cell">Sidste ændring: {{patrol.lastCheckin.time | clock}}</div>
-        </a>
-    {% endfor %}
-</div>
+{% import "./utils.html.njk" as utils %}
+{{ utils.patrols(patrols) }}

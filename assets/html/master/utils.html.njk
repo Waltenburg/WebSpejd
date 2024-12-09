@@ -1,0 +1,45 @@
+{% macro checkins(checkins) %}
+    <div class="grid max-width">
+        {% for checkin in checkins %}
+            <div class="row hover-grey">
+                <div class="cell">{{checkin.type | checkinName}}</div>
+                <a href="/master/patrol?id={{checkin.patrolId}}" class="cell hover-underline">
+                    Patrulje {{checkin.patrolId}}
+                </a>
+                <a href="/master/post?id={{checkin.postId}}" class="cell hover-underline">
+                    Post {{checkin.postId}}
+                </a>
+                <div class="cell">Tidspunkt: {{checkin.time | clock}}</div>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro posts(posts) %}
+    <div class="grid max-width">
+        {% for post in posts %}
+            <a class="row hover-grey" href="/master/post?id={{post.id}}">
+                <div class="cell">{{post.id}}. {{post.name}}</div>
+                <div class="cell">På vej: {{post.patrolsOnTheirWay}}</div>
+                <div class="cell">På post: {{post.patrolsOnPost}}</div>
+                <div class="cell">Forladt post: {{post.patrolsCheckedOut}}</div>
+            </a>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro patrols(patrols) %}
+    {% if (patrols | length) == 0 %}
+        Ingen patruljer
+    {% else %}
+        <div class="grid max-width">
+            {% for patrol in patrols %}
+                <a class="row hover-grey" href="/master/patrol?id={{patrol.id}}">
+                    <div class="cell">{{patrol.id}}. {{patrol.name}}</div>
+                    <div class="cell">Lokation: {{patrol.location | formatLocation}}</div>
+                    <div class="cell">Sidste ændring: {{patrol.lastCheckin.time | clock}}</div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}

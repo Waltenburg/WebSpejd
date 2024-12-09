@@ -144,9 +144,13 @@ export class JsonDatabase implements Database {
     }
 
     authenticate(password: string): number | undefined {
-        return this.data.users
+        let postId = this.data.users
             .find((user) => user.password === password)
             .postId;
+        if(postId === -1) {
+            return Infinity;
+        }
+        return postId
     }
 
     userIds(): number[] {

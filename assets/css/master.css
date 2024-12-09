@@ -15,8 +15,12 @@
     margin: 0 auto;
 }
 
-.highlight-grey:hover {
+.hover-grey:hover {
     background-color: #dcdcdc;
+}
+
+.hover-underline:hover {
+    text-decoration: underline;
 }
 
 max-width {
@@ -40,9 +44,9 @@ body {
 
 #header {
     background-color: #58A2E7;
-    height: 5vh;
+    height: 3em;
     margin: 0;
-    line-height: 5vh;
+    line-height: 3em;
     box-shadow: 5px 5px 5px #f0f0f0;
 }
 

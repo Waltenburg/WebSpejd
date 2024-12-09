@@ -23,16 +23,26 @@ export class UserCache {
     /**
      * Retrieve user of client sending request.
      *
-     * @param req the request from the client
+     * @param identifier the identifier of an user
      * @returns the matching user
      */
-    userFromRequest(req: http.IncomingMessage): User {
-        const identifier = req.headers["id"] as string;
+    userFromIdentifier(identifier: string): User {
         const user = this.users[identifier];
         if(user === undefined) {
             return new User(-1);
         }
         return user;
+    }
+
+    /**
+     * Retrieve user of client sending request.
+     *
+     * @param req the request from the client
+     * @returns the matching user
+     */
+    userFromRequest(req: http.IncomingMessage): User {
+        const identifier = req.headers["id"] as string;
+        return this.userFromIdentifier(identifier);
     }
 
     /**
