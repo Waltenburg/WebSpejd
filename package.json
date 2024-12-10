@@ -1,11 +1,14 @@
 {
-  "devDependencies": {
-    "@types/node": "^18.15.10",
-    "@types/nunjucks": "^3.2.6",
-    "typescript": "latest"
-  },
-  "dependencies": {
-    "@types/plotly.js": "^2.12.18",
-    "nunjucks": "^3.2.4"
-  }
+    "devDependencies": {
+        "@types/node": "^18.15.10",
+        "@types/plotly.js": "^2.12.18",
+        "@types/nunjucks": "^3.2.6",
+        "typescript": "latest"
+    },
+    "dependencies": {
+        "nunjucks": "^3.2.4"
+    },
+    "scripts": {
+        "build": "npx tsc"
+    }
 }
