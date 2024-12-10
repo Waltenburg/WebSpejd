@@ -20,7 +20,7 @@ export class Pages {
 
     constructor(db: DatabaseWrapper, cache: boolean) {
         this.env = new nunjucks.Environment(
-            new nunjucks.FileSystemLoader('assets/html'),
+            new nunjucks.FileSystemLoader(`${__dirname}/assets/html`),
             {
                 autoescape: true,
                 noCache: !cache

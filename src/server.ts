@@ -46,13 +46,12 @@ class Server {
 
     private createRouter(address: string, port: number, users: users.UserCache): router.Router {
         return new router.Router(address, port, users)
-            .assetDir("/assets", "assets")
+            .assetDir("/assets", `${__dirname}/assets`)
             .assetDir("/js", `${__dirname}/clientFiles/`)
-            .file("/", "assets/html/home.html")
-            .file("/home", "assets/html/home.html")
-            .file("/plot", "assets/html/patruljePlot.html")
-            .file("/mandskab", "assets/html/mandskab.html")
-            .file("/assets/css/master.css", "assets/css/master.css")
+            .file("/", `${__dirname}/assets/html/home.html`)
+            .file("/home", `${__dirname}/assets/html/home.html`)
+            .file("/plot", `${__dirname}/assets/html/patruljePlot.html`)
+            .file("/mandskab", `${__dirname}/assets/html/mandskab.html`)
             .route("/login", UserType.None, this.login)
             .route("/logout", UserType.None, this.logout)
             .route("/getUpdate", UserType.Post, this.postUpdate)
