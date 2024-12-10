@@ -12,5 +12,12 @@
     },
     "scripts": {
         "build": "npx tsc"
+    },
+    "files": [
+        "target/"
+    ],
+    "main": "target/server.js",
+    "bin": {
+        "webspejd": "target/server.js"
     }
 }
