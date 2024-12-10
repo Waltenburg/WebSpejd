@@ -6,6 +6,7 @@ import * as responses from "./response";
 import * as pages from "./pages";
 import * as router from "./request";
 import { UserType, Request } from './request';
+import { Command } from 'commander';
 
 type Response = responses.Response;
 
@@ -226,25 +227,35 @@ class Server {
  * Read command line arguments to get address and port.
  * @return binding address and port
  */
-const readArguments = (): [string, number] => {
-    let address = "127.0.0.1";
-    if (process.argv.length >= 3) {
-        address = process.argv[2];
-    }
-
-    let port = 3000;
-    if (process.argv.length >= 4) {
-        port = parseInt(process.argv[3]);
-    }
-
-    return [address, port];
+const readArguments = (): Command => {
+    let command = new Command()
+        .option(
+            "'-a, '--address <address>",
+            "Address the server is hosted on",
+            "127.0.0.1"
+        )
+        .option(
+            "-p, --port <port>",
+            "Port the server is listening on",
+            "3000"
+        )
+        .option(
+            "--db, --database <file>",
+            "File to store data in",
+            "data/database.json"
+        );
+    command.parse();
+    return command;
 };
 
 
 async function main(): Promise<void> {
-    let [address, port] = readArguments();
-    const db = new JsonDatabase("data/database.json");
-    const server = new Server(address, port, db);
+    const command = readArguments();
+    const options = command.opts();
+    const port = Number.parseInt(options["port"]);
+
+    const db = new JsonDatabase(options["database"]);
+    const server = new Server(options["address"], port, db);
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
