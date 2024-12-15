@@ -23,13 +23,13 @@ class Server {
      * @param port the binding port
      * @param db the database
      */
-    constructor(address: string, port: number, db: Database) {
+    constructor(address: string, port: number, assets: string, db: Database) {
         this.db = new DatabaseWrapper(db);
         this.db.initialize();
 
         this.users = new users.UserCache();
-        this.pages = new pages.Pages(this.db, false);
-        this.router = this.createRouter(address, port, this.users);
+        this.pages = new pages.Pages(`${assets}/html`, this.db, false);
+        this.router = this.createRouter(address, port, assets, this.users);
 
         const numberOfPosts = db.allPostIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
@@ -45,18 +45,19 @@ class Server {
             });
     }
 
-    private createRouter(address: string, port: number, users: users.UserCache): router.Router {
+    private createRouter(address: string, port: number, assets: string, users: users.UserCache): router.Router {
         return new router.Router(address, port, users)
-            .assetDir("/assets", `${__dirname}/assets`)
-            .assetDir("/js", `${__dirname}/clientFiles/`)
-            .file("/", `${__dirname}/assets/html/home.html`)
-            .file("/home", `${__dirname}/assets/html/home.html`)
-            .file("/plot", `${__dirname}/assets/html/patruljePlot.html`)
-            .file("/mandskab", `${__dirname}/assets/html/mandskab.html`)
+            .assetDir("/assets", assets)
+            .assetDir("/js", `${__dirname}/clientFiles`)
+            .file("/", `${assets}/html/home.html`)
+            .file("/home", `${assets}/html/home.html`)
+            .file("/plot", `${assets}/html/patruljePlot.html`)
+            .file("/mandskab", `${assets}/html/mandskab.html`)
             .route("/login", UserType.None, this.login)
             .route("/logout", UserType.None, this.logout)
             .route("/getUpdate", UserType.Post, this.postUpdate)
             .route("/getData", UserType.Post, this.postData)
+            .route("/sendUpdate", UserType.Post, this.postCheckin)
             .route("/master", UserType.Master, this.pages.master)
             .route("/master/checkin", UserType.Master, this.pages.checkin)
             .route("/master/addcheckin", UserType.Master, this.masterCheckin)
@@ -230,7 +231,7 @@ class Server {
 const readArguments = (): Command => {
     let command = new Command()
         .option(
-            "'-a, '--address <address>",
+            "-a, --address <address>",
             "Address the server is hosted on",
             "127.0.0.1"
         )
@@ -238,6 +239,11 @@ const readArguments = (): Command => {
             "-p, --port <port>",
             "Port the server is listening on",
             "3000"
+        )
+        .option(
+            "--assets <assets>",
+            "Assets file directory",
+            `${__dirname}/assets`
         )
         .option(
             "--db, --database <file>",
@@ -253,9 +259,10 @@ async function main(): Promise<void> {
     const command = readArguments();
     const options = command.opts();
     const port = Number.parseInt(options["port"]);
+    const assets = options["assets"]
 
     const db = new JsonDatabase(options["database"]);
-    const server = new Server(options["address"], port, db);
+    const server = new Server(options["address"], port, assets, db);
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));

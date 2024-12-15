@@ -7,9 +7,7 @@
         {{ utils.posts(posts) }}
     </div>
     <h2>Patruljer</h2>
-    <div hx-get="/master/patrols" hx-trigger="every 5s">
-        {{ utils.patrols(patrols) }}
-    </div>
+    {{ utils.patrols(patrols) }}
     <h2>Checkins</h2>
     <div hx-get="/master/checkins" hx-trigger="every 5s">
         {{ utils.checkins(checkins) }}

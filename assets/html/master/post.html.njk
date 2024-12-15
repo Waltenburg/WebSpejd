@@ -5,17 +5,11 @@
     <h1>Post {{post.id}}: {{post.name}}</h1>
 
     <h2>Går mod post</h2>
-    <div hx-get="/master/patrols?postId={{post.id}}&selection=patrolsOnTheirWay" hx-trigger="every 5s">
-        {{ utils.patrols(patrolsOnTheirWay) }}
-    </div>
+    {{ utils.patrols(patrolsOnTheirWay, postId=post.id, selection="patrolsOnTheirWay") }}
     <h2>På post</h2>
-    <div hx-get="/master/patrols?postId={{post.id}}&selection=patrolsOnPost" hx-trigger="every 5s">
-        {{ utils.patrols(patrolsOnPost) }}
-    </div>
+    {{ utils.patrols(patrolsOnPost, postId=post.id, selection="patrolsOnPost") }}
     <h2>Har forladt post</h2>
-    <div hx-get="/master/patrols?postId={{post.id}}&selection=patrolsCheckedOut" hx-trigger="every 5s">
-        {{ utils.patrols(patrolsCheckedOut) }}
-    </div>
+    {{ utils.patrols(patrolsCheckedOut, postId=post.id, selection="patrolsCheckedOut") }}
     <h2>Checkins</h2>
     <div hx-get="/master/checkins?postId={{post.id}}" hx-trigger="every 5s">
         {{ utils.checkins(checkins) }}

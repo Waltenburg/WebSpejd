@@ -1,20 +1,3 @@
-.grid {
-    display: table;
-}
-
-.row {
-    width: 95%;
-    display: table-row;
-    padding: 0.3em;
-    margin: 0;
-}
-
-.cell {
-    display: table-cell;
-    padding: 1em;
-    margin: 0 auto;
-}
-
 .hover-grey:hover {
     background-color: #dcdcdc;
 }
@@ -52,4 +35,27 @@ body {
 
 #header a {
     padding: 1em;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+}
+
+tr:nth-child(even) {
+    padding: 0.1em;
+    background-color: #f0f0f0;
+}
+
+td {
+    padding: 0.3em 0;
+    margin: 0;
+    border: 0;
 }

@@ -18,9 +18,9 @@ export class Pages {
     private db: DatabaseWrapper;
     private env: nunjucks.Environment;
 
-    constructor(db: DatabaseWrapper, cache: boolean) {
+    constructor(templateDir: string, db: DatabaseWrapper, cache: boolean) {
         this.env = new nunjucks.Environment(
-            new nunjucks.FileSystemLoader(`${__dirname}/assets/html`),
+            new nunjucks.FileSystemLoader(templateDir),
             {
                 autoescape: true,
                 noCache: !cache
@@ -29,6 +29,7 @@ export class Pages {
         this.env.addFilter("checkinName", checkinTypeToString);
         this.env.addFilter("clock", formatTime);
         this.env.addFilter("formatLocation", formatLocation);
+        this.env.addGlobal("patrolsUrl", patrolsUrl);
 
         this.db = db;
     }
@@ -91,12 +92,14 @@ export class Pages {
 
     patrols = async (request: Request): Promise<Response> => {
         let patrolIds = undefined;
+        let postId = undefined;
+        let selection = undefined
         const params = request.url.searchParams;
 
         const postIdStr = params.get("postId");
         if(postIdStr != undefined) {
-            const postId = Number.parseInt(postIdStr);
-            const selection = params.get("selection");
+            postId = Number.parseInt(postIdStr);
+            selection = params.get("selection");
             if(selection === "patrolsOnTheirWay") {
                 patrolIds = this.db.patruljerPåVej(postId);
             } else if(selection === "patrolsOnPost") {
@@ -106,8 +109,13 @@ export class Pages {
             }
         }
 
+        const sortBy = params.get("sortBy") || "id";
+
         return this.response(PATROLS, {
-            patrols: this.patrolsData(patrolIds)
+            patrols: this.patrolsData(patrolIds, sortBy),
+            sortBy: sortBy,
+            postId: postId,
+            selection: selection,
         });
     }
 
@@ -120,7 +128,7 @@ export class Pages {
         });
     }
 
-    private patrolsData = (patrolIds?: number[]): any => {
+    private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
         if(patrolIds === undefined) {
             patrolIds = this.db.allPatrolIds();
         }
@@ -133,6 +141,16 @@ export class Pages {
                     location: this.db.locationOfPatrol(patrolId),
                     ...patrol
                 };
+            })
+            .sort((a, b) => {
+                if(sortBy === "time") {
+                    return a.lastCheckin.time.getTime()
+                        - b.lastCheckin.time.getTime();
+                }
+                if(sortBy === "post") {
+                    return a.location.postId - b.location.postId;
+                }
+                return a.id - b.id;
             })
     }
 
@@ -195,4 +213,26 @@ function formatTime(value: Date) {
     let minute = value.getMinutes().toString().padStart(2, '0');
     let second = value.getSeconds().toString().padStart(2, '0');
     return `${hour}:${minute}:${second}`;
+}
+
+function patrolsUrl(sortBy: string =undefined, postId: string = undefined, selection: string = undefined): string {
+    return createUrlPath("/master/patrols", {
+        sortBy: sortBy,
+        postId: postId,
+        selection: selection,
+    });
+}
+
+function createUrlPath(base: string, params: { [key: string]: string | undefined }): string {
+    let path = base;
+    let symbol = "?";
+    for(let key in params) {
+        const value = params[key];
+        if(value == undefined || value === "") {
+            continue;
+        }
+        path = `${path}${symbol}${key}=${value}`;
+        symbol = "&";
+    }
+    return path;
 }
