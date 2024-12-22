@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./Deployed",
+        "rootDir": "./Development/src"
+    },
+    "include": ["./Development/src/**/*.ts"],
+    "exclude": [
+        "node_modules"
+    ]
+}
