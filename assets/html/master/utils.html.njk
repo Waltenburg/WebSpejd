@@ -22,6 +22,13 @@
                     </a>
                 </td>
                 <td>{{checkin.time | clock}}</td>
+                <td>
+                    <button
+                        hx-confirm="Vil du slette dette checkin?"
+                        hx-post="/master/deleteCheckin?id={{checkin.id}}"
+                        hx-target="closest tr"
+                        hx-swap="outerHTML">Slet</button>
+                </td>
             </tr>
         {% endfor %}
     </table>
@@ -93,10 +100,14 @@
                             </a>
                         </td>
                         <td>
-                            <a href="/master/post?id={{patrol.location.postId}}"
-                               class="hover-underline">
+                            {% if patrol.location.postId >= 0 %}
+                                <a href="/master/post?id={{patrol.location.postId}}"
+                                   class="hover-underline">
+                                    {{patrol.location | formatLocation}}
+                                </a>
+                            {% else %}
                                 {{patrol.location | formatLocation}}
-                            </a>
+                            {% endif %}
                         </td>
                         <td>{{patrol.lastCheckin.time | clock}}</td>
                     </tr>

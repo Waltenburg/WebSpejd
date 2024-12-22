@@ -6,16 +6,22 @@
         <div>
             <label>Patrulje:</label>
             <select name="patrol">
-                {% for patrolId in patrolIds %}
-                    <option value="{{patrolId}}">Patrulje {{patrolId}}</option>
+                {% for patrol in patrols %}
+                    <option
+                        value="{{patrol.id}}"
+                        {% if patrol.id == selectedPatrol %}selected{% endif %}
+                        >{{patrol.id}}. {{patrol.name}}</option>
                 {% endfor %}
             </select>
         </div>
         <div>
             <label>Post:</label>
             <select name="post">
-                {% for postId in postIds %}
-                    <option value="{{postId}}">Post {{postId}}</option>
+                {% for post in posts %}
+                    <option
+                        value="{{post.id}}"
+                        {% if post.id == selectedPost %}selected{% endif %}
+                        >{{post.id}}. {{post.name}}</option>
                 {% endfor %}
             </select>
         </div>

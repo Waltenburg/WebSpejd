@@ -17,6 +17,8 @@ export class JsonDatabase implements Database {
     constructor(datafile: string, inMemory = false) {
         this.datafile = datafile;
         this.inMemory = inMemory;
+
+        // Load initial data
         if (fs.existsSync(datafile)) {
             // TODO error handling
             let content = fs.readFileSync(datafile, "utf-8");
@@ -24,8 +26,11 @@ export class JsonDatabase implements Database {
             this.data.posts.forEach((post) => {
                 post.lastUpdate = new Date(post.lastUpdate);
             });
+            this.data.checkins.forEach((checkin) => {
+                checkin.time = new Date(checkin.time);
+            });
             this.checkinCounter = 1 + Math.max(
-                ...this.data.checkins.map((checkin) => checkin.id || 0)
+                0, ...this.data.checkins.map((checkin) => checkin.id || 0)
             );
         } else {
             this.data = {
@@ -35,17 +40,22 @@ export class JsonDatabase implements Database {
                 users: []
             }
         }
+
         console.log(this.data);
+
+        if(!this.inMemory) {
+            setInterval(this.write, 5000);
+        }
     }
 
     /**
      * Write stored data to file.
      */
-    write() {
+    write = () => {
         if(this.inMemory) {
             return;
         }
-        let content = JSON.stringify(this.data);
+        const content = JSON.stringify(this.data);
         fs.writeFileSync(this.datafile, content);
     }
 
@@ -55,7 +65,7 @@ export class JsonDatabase implements Database {
     }
 
     changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.data.patrols[patrolId].udgået = udgået;
+        this.patrolInfo(patrolId).udgået = udgået;
     }
 
     allPatrolIds(): number[] {

@@ -60,10 +60,15 @@ export class Pages {
         });
     }
 
-    checkin = async (): Promise<Response> => {
+    checkin = async (request: Request): Promise<Response> => {
+        const params = request.url.searchParams;
+        const patrolId = params.get("patrolId");
+        const postId = params.get("postId");
         return this.response(CHECKIN, {
-            patrolIds: this.db.allPatrolIds(),
-            postIds: this.db.allPostIds(),
+            patrols: this.db.allPatrolIds().map((patrolId) => this.db.patrolInfo(patrolId)),
+            posts: this.db.allPostIds().map((postId) => this.db.postInfo(postId)),
+            selectedPatrol: patrolId,
+            selectedPost: postId,
         });
     }
 
@@ -174,7 +179,8 @@ export class Pages {
      * @returns the rendered template
      */
     render = (filename: string, data: any): string => {
-        return this.env.render(filename, data);
+        const value = this.env.render(filename, data);
+        return value;
     }
 
     /**
@@ -203,8 +209,10 @@ function checkinTypeToString(value: number): string {
 function formatLocation(location: PatrolLocation): string {
     if(location.type === PatrolLocationType.GoingToLocation) {
         return `Går mod post ${location.postId}`;
-    } else {
+    } else if(location.type === PatrolLocationType.OnLocation) {
         return `På post ${location.postId}`;
+    } else {
+        return `Udgået`;
     }
 }
 

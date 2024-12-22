@@ -1,5 +1,4 @@
 import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
-import { JsonDatabase } from "./jsonDatabase";
 
 export class DatabaseWrapper implements Database {
     private db: Database;
@@ -42,7 +41,7 @@ export class DatabaseWrapper implements Database {
         console.log("Sending all patrols to first post");
         let time = new Date();
         this.db.allPatrolIds().forEach((patrolId) => {
-            this.checkin({
+            this.db.checkin({
                 patrolId: patrolId,
                 postId: 0,
                 type: CheckinType.CheckIn,
@@ -113,7 +112,8 @@ export class DatabaseWrapper implements Database {
                 return checkin.type === CheckinType.CheckIn
                     && !patrolsCheckedOut.includes(checkin.patrolId)
             })
-            .map((checkin) => checkin.patrolId);
+            .map((checkin) => checkin.patrolId)
+            .filter((patrolId) => !this.db.patrolInfo(patrolId).udgået);
         return patrolsAtPost;
     }
 
@@ -201,6 +201,12 @@ export class DatabaseWrapper implements Database {
      * @returns the location of the patrol
      */
     locationOfPatrol(patrolId: number): PatrolLocation {
+        if(this.db.patrolInfo(patrolId).udgået) {
+            return {
+                type: PatrolLocationType.Udgået,
+                postId: -1,
+            };
+        }
         let latestCheckin = this.latestCheckinOfPatrol(patrolId);
         if(latestCheckin.type === CheckinType.CheckIn) {
             return {
@@ -229,7 +235,7 @@ export class DatabaseWrapper implements Database {
     }
 
     changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.db.changePostStatus(patrolId, udgået);
+        this.db.changePatrolStatus(patrolId, udgået);
     }
 
     allPatrolIds(): number[] {
@@ -274,7 +280,6 @@ export class DatabaseWrapper implements Database {
 
 }
 
-
 export interface PatrolLocation {
     /** Is the patrol on a location or going to a location. */
     type: PatrolLocationType,
@@ -283,5 +288,5 @@ export interface PatrolLocation {
 }
 
 export enum PatrolLocationType {
-    OnLocation, GoingToLocation
+    OnLocation, GoingToLocation, Udgået
 }

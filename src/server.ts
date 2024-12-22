@@ -1,7 +1,6 @@
 import * as http from 'http'
-import { files } from './files'
 import * as users from "./users";
-import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType, Post } from "./database";
+import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
 import * as responses from "./response";
 import * as pages from "./pages";
 import * as router from "./request";
@@ -65,7 +64,9 @@ class Server {
             .route("/master/posts", UserType.Master, this.pages.posts)
             .route("/master/post", UserType.Master, this.pages.post)
             .route("/master/patrols", UserType.Master, this.pages.patrols)
-            .route("/master/patrol", UserType.Master, this.pages.patrol);
+            .route("/master/patrol", UserType.Master, this.pages.patrol)
+            .route("/master/patrolStatus", UserType.Master, this.patrolStatus)
+            .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin);
     }
 
     /**
@@ -222,6 +223,22 @@ class Server {
         return responses.redirect("/master");
     }
 
+    patrolStatus = async (request: Request): Promise<Response> => {
+        const params = request.url.searchParams;
+        const patrolId = Number.parseInt(params.get("patrolId"));
+        const status = params.get("status");
+        const isOut = status === "out";
+        this.db.changePatrolStatus(patrolId, isOut);
+        return responses.redirect(`/master/patrol?id=${patrolId}`);
+    }
+
+    deleteCheckin = async (request: Request): Promise<Response> => {
+        const params = request.url.searchParams;
+        const checkinId = Number.parseInt(params.get("id"));
+        this.db.deleteCheckin(checkinId);
+        return responses.ok();
+    }
+
 }
 
 /**
@@ -261,7 +278,7 @@ async function main(): Promise<void> {
     const port = Number.parseInt(options["port"]);
     const assets = options["assets"]
 
-    const db = new JsonDatabase(options["database"]);
+    const db = new JsonDatabase(options["database"], true);
     const server = new Server(options["address"], port, assets, db);
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {

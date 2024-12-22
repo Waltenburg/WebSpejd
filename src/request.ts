@@ -67,29 +67,33 @@ export class Router {
      * @returns a http response
      */
     async handleRequest(incoming: http.IncomingMessage): Promise<Response> {
-        let request = this.parseRequest(incoming);
-        let path = request.url.pathname;
+        try {
+            let request = this.parseRequest(incoming);
+            let path = request.url.pathname;
 
-        // Asset directories
-        let assetDir = this.assetDirs
+            // Asset directories
+            let assetDir = this.assetDirs
             .find((assetDir) => path.startsWith(`${assetDir.urlPath}/`));
-        if(assetDir != undefined) {
-            let relativePath = path.slice(assetDir.urlPath.length + 1);
-            let fullPath = `${assetDir.dir}/${relativePath}`;
-            return responses.file(fullPath);
-        }
+            if(assetDir != undefined) {
+                let relativePath = path.slice(assetDir.urlPath.length + 1);
+                let fullPath = `${assetDir.dir}/${relativePath}`;
+                return responses.file(fullPath);
+            }
 
-        // Function routes
-        let route = this.routes
+            // Function routes
+            let route = this.routes
             .find((route) => route.path === path);
-        if(route === undefined) {
-            return responses.not_found("Page not found");
-        }
-        if(!this.isAuthorized(request, route)) {
-            return responses.unauthorized("Not authorized");
-        }
+            if(route === undefined) {
+                return responses.not_found("Page not found");
+            }
+            if(!this.isAuthorized(request, route)) {
+                return responses.unauthorized("Not authorized");
+            }
 
-        return await route.func(request);
+            return await route.func(request);
+        } catch(err) {
+            return responses.server_error(err);
+        }
     }
 
     /**

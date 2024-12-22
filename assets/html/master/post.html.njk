@@ -3,6 +3,7 @@
 
 {% block body %}
     <h1>Post {{post.id}}: {{post.name}}</h1>
+    <a class="button" href="/master/checkin?postId={{post.id}}">Check ind</a>
 
     <h2>Går mod post</h2>
     {{ utils.patrols(patrolsOnTheirWay, postId=post.id, selection="patrolsOnTheirWay") }}
