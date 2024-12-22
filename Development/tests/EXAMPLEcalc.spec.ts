@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { addition } from "../src/calc";
+import { addition } from "../src/EXAMPLEcalc";
 
 describe("Calculator Tests", () => {
       it("should return 5 when 2 is added to 3", () => {
