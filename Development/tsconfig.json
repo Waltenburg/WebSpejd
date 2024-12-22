@@ -8,9 +8,10 @@
       "preserveConstEnums": true,
       "sourceMap": false,
     },
-    "files": [
+    "include": [
         "server.ts",
         "serverClasses.ts",
-        "files.ts"
+        "files.ts",
+        "__tests__/**/*.ts"
     ]
 }

@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import { serverClasses as sc } from './serverClasses'
 import { files } from './files'
 
-namespace CCMR_server {
+export namespace CCMR_server {
     process.chdir(__dirname);
     const hostname = '127.0.0.1';
     const port = 3000;
@@ -407,7 +407,7 @@ namespace CCMR_server {
         }
         process.exit()
     };
-    const getTimeString = (date?: Date) => {
+    export const getTimeString = (date?: Date) => {
         if(date == undefined)
             date = new Date()
         return date.getFullYear() +'-'+ (date.getMonth() + 1) +'-'+ (date.getDate()) + ' ' + date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
