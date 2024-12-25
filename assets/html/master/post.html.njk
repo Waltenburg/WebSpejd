@@ -1,0 +1,20 @@
+{% extends "./base.html.njk" %}
+{% import "./utils.html.njk" as utils %}
+
+{% block body %}
+    <h1>Post {{post.id}}: {{post.name}}</h1>
+    <a class="button" href="/master/checkin?postId={{post.id}}">Check ind</a>
+
+    <h2>Går mod post</h2>
+    {{ utils.patrols(patrolsOnTheirWay, postId=post.id, selection="patrolsOnTheirWay") }}
+    <h2>På post</h2>
+    {{ utils.patrols(patrolsOnPost, postId=post.id, selection="patrolsOnPost") }}
+    <h2>Har forladt post</h2>
+    {{ utils.patrols(patrolsCheckedOut, postId=post.id, selection="patrolsCheckedOut") }}
+    <h2>Checkins</h2>
+    <div hx-get="/master/checkins?postId={{post.id}}" hx-trigger="every 5s">
+        {{ utils.checkins(checkins) }}
+    </div>
+
+
+{% endblock %}

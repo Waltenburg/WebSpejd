@@ -1,0 +1,118 @@
+{% macro checkins(checkins) %}
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="bold">Type</td>
+            <td class="bold">Patrulje</td>
+            <td class="bold">Post</td>
+            <td class="bold">Tidspunkt</td>
+        </tr>
+        {% for checkin in checkins %}
+            <tr class="hover-grey">
+                <td>{{checkin.type | checkinName}}</td>
+                <td>
+                    <a href="/master/patrol?id={{checkin.patrolId}}"
+                       class="hover-underline">
+                        Patrulje {{checkin.patrolId}}
+                    </a>
+                </td>
+                <td>
+                    <a href="/master/post?id={{checkin.postId}}"
+                       class="hover-underline">
+                        Post {{checkin.postId}}
+                    </a>
+                </td>
+                <td>{{checkin.time | clock}}</td>
+                <td>
+                    <button
+                        hx-confirm="Vil du slette dette checkin?"
+                        hx-post="/master/deleteCheckin?id={{checkin.id}}"
+                        hx-target="closest tr"
+                        hx-swap="outerHTML">Slet</button>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endmacro %}
+
+{% macro posts(posts) %}
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="bold">Post</td>
+            <td class="bold">På vej</td>
+            <td class="bold">På post</td>
+            <td class="bold">Forladt post</td>
+        </tr>
+        {% for post in posts %}
+            <tr class="hover-grey">
+                <td>
+                    {{post.id}}.
+                    <a href="/master/post?id={{post.id}}" class="hover-underline">
+                         {{post.name}}
+                    </a>
+                </td>
+                <td>På vej: {{post.patrolsOnTheirWay}}</td>
+                <td>På post: {{post.patrolsOnPost}}</td>
+                <td>Forladt post: {{post.patrolsCheckedOut}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endmacro %}
+
+{% macro patrols(patrols, sortBy="id", postId="", selection="") %}
+    <div class="patrols"
+         hx-get="{{ patrolsUrl(sortBy, postId, selection) }}"
+         hx-trigger="every 5s"
+         hx-swap="outerHTML">
+        {% if (patrols | length) == 0 %}
+            Ingen patruljer
+        {% else %}
+            <table cellspacing="0" cellpadding="0">
+                <tr>
+                    <td>
+                        <a class="bold clickable"
+                           hx-get="{{ patrolsUrl("id", postId, selection) }}"
+                           hx-trigger="click"
+                           hx-target="closest .patrols"
+                           hx-swap="outerHTML">Patrulje</button>
+                    </td>
+                    <td>
+                        <a class="bold clickable"
+                           hx-get="{{ patrolsUrl("post", postId, selection) }}"
+                           hx-trigger="click"
+                           hx-target="closest .patrols"
+                           hx-swap="outerHTML">Lokation</button>
+                    </td>
+                    <td>
+                        <a class="bold clickable"
+                           hx-get="{{ patrolsUrl("time", postId, selection) }}"
+                           hx-trigger="click"
+                           hx-target="closest .patrols"
+                           hx-swap="outerHTML">Sidste ændring</button>
+                    </td>
+                </tr>
+                {% for patrol in patrols %}
+                    <tr class="hover-grey">
+                        <td>
+                            {{patrol.id}}. 
+                            <a href="/master/patrol?id={{patrol.id}}"
+                               class="hover-underline">
+                                {{patrol.name}}
+                            </a>
+                        </td>
+                        <td>
+                            {% if patrol.location.postId >= 0 %}
+                                <a href="/master/post?id={{patrol.location.postId}}"
+                                   class="hover-underline">
+                                    {{patrol.location | formatLocation}}
+                                </a>
+                            {% else %}
+                                {{patrol.location | formatLocation}}
+                            {% endif %}
+                        </td>
+                        <td>{{patrol.lastCheckin.time | clock}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+{% endmacro %}

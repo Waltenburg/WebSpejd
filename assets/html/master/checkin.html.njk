@@ -1,0 +1,38 @@
+{% extends "./base.html.njk" %}
+
+{% block body %}
+    <h1>Checkin</h1>
+        <form action=/master/addcheckin>
+        <div>
+            <label>Patrulje:</label>
+            <select name="patrol">
+                {% for patrol in patrols %}
+                    <option
+                        value="{{patrol.id}}"
+                        {% if patrol.id == selectedPatrol %}selected{% endif %}
+                        >{{patrol.id}}. {{patrol.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Post:</label>
+            <select name="post">
+                {% for post in posts %}
+                    <option
+                        value="{{post.id}}"
+                        {% if post.id == selectedPost %}selected{% endif %}
+                        >{{post.id}}. {{post.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Type:</label>
+            <select name="type">
+                <option value="checkin">Check ind</option>
+                <option value="checkout">Check ud</option>
+                <option value="detour">Omvej</option>
+            </select>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}

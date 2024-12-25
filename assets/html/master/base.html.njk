@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Webspejd</title>
+        <link rel="stylesheet" href="/assets/css/master.css">
+    </head>
+    <body>
+        {% include "./header.html.njk" %}
+        <div id="content">
+            {% block body %}
+            {% endblock %}
+        </div>
+        <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    </body>
+</html>

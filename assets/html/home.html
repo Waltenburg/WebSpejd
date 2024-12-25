@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <title>WebSpejd - Login</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/loginStyle.css" />
+    <script src="/js/cookie.js"></script>
+    <script src="/js/sendHTTPRequest.js"></script>
+    <script src="/js/home.js"></script>
+</head>
+
+<body onload="Client.Home.onLoadFunction()">
+    <div class="bg">
+        <img width="240" height="240" src="/assets/images/logo.png" decoding="async" sizes="(max-width: 240px) 85vw, 240px">
+        <h1 class="header" style="margin-top: -20%;">CCMR </h1>
+        <h1 class="header">WebSpejd </h1>
+        <div
+            style="width: 700px; height: 1200px; opacity: 80%; background-color: #000000; margin: auto; margin-top: auto;">
+            <h2 style="color: white; opacity: 100%;">Log ind med dit udleverede login</h2>
+            <p>Kode</p>
+            <input type="text" id="kode" onchange="Client.Home.codeChanged()">
+
+            <button id="button" onclick="Client.Home.loginClicked(false)">Log ind med kode</button>
+            <button id="loginInMandskab" onclick="location.assign('/mandskab')" disabled>Log ind med gemt mandskabsbruger</button>
+            <button id="loginInMaster" onclick="location.assign('/master')" disabled>Log ind med gemt masterbruger</button>
+            <!-- <button id="loginWithExistingUser" onclick="Client.Home.loginClicked(true)" disabled>Log ind med eksisterende bruger</button> -->
+        </div>
+    </div>
+</body>
+
+</html>

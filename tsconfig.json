@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2020",
+        "outDir": "target",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": false,
+        "esModuleInterop": true,
+    },
+    "include": [ "src" ],
+    "exclude": [ "node_modules" ]
+}
