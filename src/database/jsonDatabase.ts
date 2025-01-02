@@ -153,10 +153,15 @@ export class JsonDatabase implements Database {
         post.lastUpdate = new Date();
     }
 
+    /**
+     * Get the post id that tied to the user with the given password.
+     * @param password The password the user is trying to login with.
+     * @returns The post id if the password is correct, `undefined` otherwise.
+     */
     authenticate(password: string): number | undefined {
-        let postId = this.data.users
-            .find((user) => user.password === password)
-            .postId;
+        const user = this.data.users.find((user) => user.password === password);
+        const postId = user?.postId;
+        
         if(postId === -1) {
             return Infinity;
         }

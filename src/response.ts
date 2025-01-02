@@ -47,6 +47,13 @@ export function not_found(content?: any): Response {
 
 export function unauthorized(content?: any): Response {
     return {
+        status_code: 401,
+        content: content
+    }
+}
+
+export function forbidden(content?: any): Response {
+    return {
         status_code: 403,
         content: content
     }
