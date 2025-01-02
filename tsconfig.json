@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es2020",
-        "outDir": "target",
+        // "outDir": "target",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
