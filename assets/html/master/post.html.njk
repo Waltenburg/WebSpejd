@@ -4,6 +4,15 @@
 {% block body %}
     <h1>Post {{post.id}}: {{post.name}}</h1>
     <a class="button" href="/master/checkin?postId={{post.id}}">Check ind</a>
+    {% if post.detour %}
+        {% if post.open %}
+            <a class="button"
+               href="/master/postStatus?post={{post.id}}&status=close">Luk post</a>
+        {% else %}
+            <a class="button"
+               href="/master/postStatus?post={{post.id}}&status=open">Åben post</a>
+        {% endif %}
+    {% endif %}
 
     <h2>Går mod post</h2>
     {{ utils.patrols(patrolsOnTheirWay, postId=post.id, selection="patrolsOnTheirWay") }}

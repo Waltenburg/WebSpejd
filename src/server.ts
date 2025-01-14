@@ -68,7 +68,8 @@ class Server {
             .route("/master/patrol", UserType.Master, this.pages.patrol)
             .route("/master/patrolStatus", UserType.Master, this.patrolStatus)
             .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin)
-            .route("/master/graph", UserType.Master, this.pages.graph);
+            .route("/master/graph", UserType.Master, this.pages.graph)
+            .route("/master/postStatus", UserType.Master, this.postStatus);
     }
 
     /**
@@ -224,6 +225,16 @@ class Server {
         this.db.checkin(checkin);
 
         return responses.redirect("/master");
+    }
+
+    postStatus = async(request: Request): Promise<Response> => {
+        const params = request.url.searchParams;
+        const statusParam = params.get("status");
+        const postId = Number.parseInt(params.get("post"));
+        const newStatus = statusParam === "open";
+
+        this.db.changePostStatus(postId, newStatus);
+        return responses.redirect(`/master/post?id=${postId}`);
     }
 
     patrolStatus = async (request: Request): Promise<Response> => {
