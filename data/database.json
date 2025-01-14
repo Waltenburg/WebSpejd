@@ -2,29 +2,186 @@
     "patrols": [
         {
             "id": 1,
-            "name": "Vuggestuen",
+            "name": "Dominoerne!",
             "udgået": false
         },
         {
             "id": 2,
-            "name": "Den Knaldrøde Gummibåd",
+            "name": "Viggerne",
             "udgået": false
         },
         {
             "id": 3,
-            "name": "Kælemongolerne",
+            "name": "DommedagsDivaer",
             "udgået": false
         },
         {
             "id": 4,
-            "name": "Prinsesserne",
+            "name": "Gavtyvene",
             "udgået": false
         },
         {
             "id": 5,
-            "name": "Torben, Tina, og børnene",
+            "name": "Prokaryoterne",
+            "udgået": false
+        },
+        {
+            "id": 6,
+            "name": "Det ved vi ikke",
+            "udgået": false
+        },
+        {
+            "id": 7,
+            "name": "De mørkerædde",
+            "udgået": false
+        },
+        {
+            "id": 8,
+            "name": "De Iberiske Højlandsundulater",
+            "udgået": false
+        },
+        {
+            "id": 9,
+            "name": "De Knæhøje KanarieMåger",
+            "udgået": false
+        },
+        {
+            "id": 10,
+            "name": "De Små Sure",
+            "udgået": false
+        },
+        {
+            "id": 11,
+            "name": "Lysegrøn",
+            "udgået": false
+        },
+        {
+            "id": 12,
+            "name": "Os Med Ingen Plan",
+            "udgået": false
+        },
+
+        {
+            "id": 13,
+            "name": "De uduelige",
+            "udgået": false
+        },
+        {
+            "id": 14,
+            "name": "De Lyserøde Delfiner",
+            "udgået": false
+        },
+        {
+            "id": 15,
+            "name": "Nititur FAX",
+            "udgået": false
+        },
+        {
+            "id": 16,
+            "name": "RC's disciple",
+            "udgået": false
+        },
+        {
+            "id": 17,
+            "name": "Barbiebanden",
+            "udgået": false
+        },
+        {
+            "id": 18,
+            "name": "Ludobanden",
+            "udgået": false
+        },
+        {
+            "id": 19,
+            "name": "Enhjørningerne",
+            "udgået": false
+        },
+        {
+            "id": 20,
+            "name": "Onu Momænto",
+            "udgået": false
+        },
+        {
+            "id": 21,
+            "name": "De 3 måske 4",
+            "udgået": false
+        },
+        {
+            "id": 22,
+            "name": "Egerndræberne",
+            "udgået": false
+        },
+        {
+            "id": 23,
+            "name": "Jupiter",
+            "udgået": false
+        },
+        {
+            "id": 24,
+            "name": "Mars",
+            "udgået": true
+        },
+        {
+            "id": 25,
+            "name": "Saturn",
+            "udgået": true
+        },
+        {
+            "id": 26,
+            "name": "Pasta Peters patrulje",
+            "udgået": false
+        },
+        {
+            "id": 27,
+            "name": "Weekendmix",
+            "udgået": false
+        },
+        {
+            "id": 28,
+            "name": "Bifrost",
+            "udgået": false
+        },
+        {
+            "id": 29,
+            "name": "Cocio",
+            "udgået": false
+        },
+        {
+            "id": 30,
+            "name": "Power Puff Pigerne",
+            "udgået": false
+        },
+        {
+            "id": 31,
+            "name": "Jisiplene",
+            "udgået": false
+        },
+        {
+            "id": 32,
+            "name": "Nathajens Disciple",
+            "udgået": false
+        },
+        {
+            "id": 33,
+            "name": "Citrusfrugterne",
+            "udgået": false
+        },
+        {
+            "id": 34,
+            "name": "Jordbær elskerne",
+            "udgået": false
+        },
+        {
+            "id": 35,
+            "name": "Castor Fibre",
+            "udgået": false
+        },
+        {
+            "id": 36,
+            "name": "Döner kebab",
             "udgået": false
         }
+
     ],
     "checkins": [],
     "posts": [
@@ -38,31 +195,135 @@
         },
         {
             "id": 1,
-            "name": "Gammelhavn",
-            "team": 1,
+            "name": "Sandra & Zum",
+            "team": 0,
             "detour": false,
             "open": true,
             "lastUpdate": 0
         },
         {
             "id": 2,
-            "name": "Omvej 1 -> 2",
+            "name": "Omvej 1",
             "team": 0,
             "detour": true,
-            "open": true,
+            "open": false,
             "lastUpdate": 0
         },
         {
             "id": 3,
-            "name": "Strib legeplads",
-            "team": 2,
+            "name": "Fiasko på flaske",
+            "team": 0,
             "detour": false,
             "open": true,
             "lastUpdate": 0
         },
         {
             "id": 4,
-            "name": "Mål",
+            "name": "Omvej 2",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 5,
+            "name": "Cicero",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 6,
+            "name": "Omvej 3",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 7,
+            "name": "Sovepost",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 8,
+            "name": "Færgehans",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 9,
+            "name": "Omvej 4",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 10,
+            "name": "IPA",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 11,
+            "name": "Omvej 5",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 12,
+            "name": "KFOK",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 13,
+            "name": "Omvej 6",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 14,
+            "name": "Gudvar",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 15,
+            "name": "Omvej 7",
+            "team": 0,
+            "detour": true,
+            "open": false,
+            "lastUpdate": 0
+        },
+        {
+            "id": 16,
+            "name": "Conox",
+            "team": 0,
+            "detour": false,
+            "open": true,
+            "lastUpdate": 0
+        },
+        {
+            "id": 17,
+            "name": "HQ",
             "team": 0,
             "detour": false,
             "open": true,
@@ -70,26 +331,6 @@
         }
     ],
     "users": [
-        {
-            "password": "løbetstartersnart",
-            "postId": 0
-        },
-        {
-            "password": "dennyehavnergrim",
-            "postId": 1
-        },
-        {
-            "password": "sejlegeplads",
-            "postId": 2
-        },
-        {
-            "password": "søvnerovervurderet",
-            "postId": 3
-        },
-        {
-            "password": "viskalsovenu",
-            "postId": 4
-        },
         {
             "password": "egernsamlernødder",
             "postId": -1
