@@ -1,61 +1,18 @@
 import { assert } from "chai";
-import { ChildProcess, ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ServerShell } from "./testFunctions";
 
 const pathToServer = 'test/server.js'
 const pathToDatabase = 'test/database.json'
 const pathToAssets = 'assets'
-const PORT = 43210;
-let serverProcess: ChildProcessWithoutNullStreams;
+const PORT = 3000;
+
 const reqTimedOut = new Error("Request timed out");
 
-const startServer = (done: Mocha.Done) => {
-    serverProcess = spawn('node', [pathToServer, '--database', pathToDatabase, '--port', `${PORT}`, '--assets', pathToAssets], { stdio: 'pipe' });
-
-    serverProcess.on('error', (err) => {
-        console.error("Error starting server:", err);
-        done(err);
-        assert.fail(err.message);
-    });
-
-    serverProcess.stdout?.on('data', (data) => {
-        const output:string = data.toString();
-        if (output.includes("Server is now listening")) {
-            done();
-        }
-        else if(output.includes("Program exiting")) {
-            // done("Server exited");
-            assert.fail("Server exited");
-        }
-    });
-
-    serverProcess.stderr?.on('data', (data) => {
-        console.error("stderr:", data.toString());
-        done(data);
-        assert.fail(data.toString());
-    });
-}
-
-const stopServer = () => {
-    console.log("Stopping server");
-    serverProcess.kill();
-}
-
-const request = (adress: String, headers: Headers, assertion: (response: Response) => void, done: Mocha.Done) => {
-    const url = `http://localhost:${PORT}/` + adress
-    fetch(url, {
-        headers: headers,
-        signal: AbortSignal.timeout(200)
-    }).then((response) => {
-        assertion(response);
-        done();
-    }).catch(() => {
-        done(reqTimedOut);
-    });
-}
-
 describe("Requests to server", () => {
-    before(startServer);
-    after(stopServer);
+    const server = new ServerShell(pathToServer, pathToDatabase, PORT, pathToAssets)
+    before(server.startServer);
+    after(server.stopServer);
 
     it("Should respond with 200", (done) => {
         fetch(`http://localhost:${PORT}`).then((response) => {
