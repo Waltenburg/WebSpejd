@@ -6,6 +6,7 @@ import * as pages from "./pages";
 import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
+import { inspect } from 'util';
 
 type Response = responses.Response;
 
@@ -267,6 +268,10 @@ const readArguments = (): Command => {
             "--db, --database <file>",
             "File to store data in",
             "data/database.json"
+        )
+        .option(
+            "--databaseInMemory ", //Boolean flag
+            "Whether to save the database or keep it in memory",
         );
     command.parse();
     return command;
@@ -277,10 +282,23 @@ async function main(): Promise<void> {
     const command = readArguments();
     const options = command.opts();
     const port = Number.parseInt(options["port"]);
+    const address = options["address"]
+    const database = options["database"]
     const assets = options["assets"]
+    const inMemory = options["DatabaseInMemory"] === true;
 
-    const db = new JsonDatabase(options["database"], true);
-    const server = new Server(options["address"], port, assets, db);
+    console.log(`Starting server with options: ${inspect(
+        {
+            address: address,
+            port: port,
+            database: database,
+            assets: assets,
+            inMemory: inMemory
+        },
+        { colors: true, depth: null })}`);
+
+    const db = new JsonDatabase(database, false);
+    const server = new Server(address, port, assets, db);
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));

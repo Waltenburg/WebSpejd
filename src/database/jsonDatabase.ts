@@ -41,7 +41,7 @@ export class JsonDatabase implements Database {
             }
         }
 
-        console.log(this.data);
+        //console.log(this.data);
 
         if(!this.inMemory) {
             setInterval(this.write, 5000);
