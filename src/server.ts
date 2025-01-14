@@ -66,7 +66,8 @@ class Server {
             .route("/master/patrols", UserType.Master, this.pages.patrols)
             .route("/master/patrol", UserType.Master, this.pages.patrol)
             .route("/master/patrolStatus", UserType.Master, this.patrolStatus)
-            .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin);
+            .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin)
+            .route("/master/graph", UserType.Master, this.pages.graph);
     }
 
     /**

@@ -1,4 +1,4 @@
-import { DatabaseWrapper } from "./database";
+import { CheckinType, DatabaseWrapper } from "./database";
 import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
@@ -7,6 +7,7 @@ import { Request } from "./request";
 type Response = responses.Response;
 
 export const MAIN: string = "master/main.html.njk";
+export const GRAPH: string = "master/graph.html.njk";
 export const POSTS: string = "master/posts.html.njk";
 export const POST: string = "master/post.html.njk";
 export const CHECKINS: string = "master/checkins.html.njk";
@@ -39,6 +40,7 @@ export class Pages {
             posts: this.postsData(),
             checkins: this.db.lastCheckins(10),
             patrols: this.patrolsData(),
+            graph: this.graphData(),
         });
     }
 
@@ -87,7 +89,7 @@ export class Pages {
         }
 
         if(checkins === undefined){
-            checkins = this.db.lastCheckins(10);
+            checkins = this.db.lastCheckins(20);
         }
 
         return this.response(CHECKINS, {
@@ -131,6 +133,31 @@ export class Pages {
             checkins: this.db.latestCheckinsOfPatrol(patrolId, 100),
             location: this.db.locationOfPatrol(patrolId),
         });
+    }
+
+    graph = async(): Promise<Response> => {
+        return this.response(GRAPH, {
+            patrols: this.graphData()
+        });
+    }
+
+    private graphData = (): any => {
+        const amountOfPosts = this.db.allPostIds().length;
+        const patrols = this.db.allPatrolIds()
+            .map((patrolId) => {
+                const postIds = this.db.latestCheckinsOfPatrol(patrolId, 1000)
+                    .filter((checkin) => checkin.type === CheckinType.CheckIn)
+                    .map((checkin) => checkin.postId);
+                let posts = Array(amountOfPosts - 1).fill(false);
+                for(let postId of postIds) {
+                    if(postId === amountOfPosts) {
+                        continue;
+                    }
+                    posts[postId] = true;
+                }
+                return { posts: posts, amount: Math.max(...postIds) };
+            });
+        return patrols;
     }
 
     private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
