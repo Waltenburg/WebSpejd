@@ -20,6 +20,7 @@
         "start": "node target/server.js --assets assets",
         "start:ts": "ts-node src/server.ts",
         "build": "npx tsc --project tsconfig.deployed.json && cp -r assets target",
+        "build:watch": "npx tsc --project tsconfig.deployed.json --watch && cp -r assets target",
         "build:test": "npm run clean:test && npx tsc --project tsconfig.test.json && cp -r test_data test",
         "clean": "rimraf --glob target",
         "clean:test": "rimraf --glob test",
