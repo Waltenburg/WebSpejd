@@ -116,7 +116,8 @@ class Server {
         }
 
         //Der er kommet ny update siden sidst klienten spurgte
-        if(userLastUpdate < post.lastUpdate.getTime()){
+        //+5000ms sikrer at hvis der er en lille forskel i tid mellem klient og server, så vil klienten stadig få opdateringen
+        if(userLastUpdate < post.lastUpdate.getTime() + 5000){
             let response = await this.postData(req);
             if(response.headers) {
                 response.headers.update = "true";
@@ -260,7 +261,7 @@ const readArguments = (): Command => {
         .option(
             "--assets <assets>",
             "Assets file directory",
-            `${__dirname}/assets`
+            `assets`
         )
         .option(
             "--db, --database <file>",
