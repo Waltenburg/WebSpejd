@@ -116,3 +116,29 @@
         {% endif %}
     </div>
 {% endmacro %}
+
+{% macro graph(patrols) %}
+{% set height = 3 + (patrols | length) * 2%}
+{% set posts = patrols[0].posts | length %}
+<svg viewBox="0 0 100 {{height}}">
+    <style>
+        text {
+            font: bold 1px sans-serif;
+        }
+    </style>
+
+    {% for patrol in patrols %}
+        {% set y = 1 + (loop.index - 1) * 2%}
+        {% set linex = ((patrol.amount) / posts) * 95.5 + 3 %}
+        <text x="1%" y="{{y + 0.3}}">{{loop.index}}</text>
+        <line x1="3%" y1="{{y}}" x2="{{linex}}%" y2="{{y}}" stroke="lightgreen" stroke-width="0.4" />
+        <line x1="{{linex}}%" y1="{{y}}" x2="98.5%" y2="{{y}}" stroke="lightgrey" stroke-width="0.4" />
+        {% for post in patrol.posts %}
+            {% set x = ((loop.index - 1) / posts) * 95.5 + 3 %}
+            {% set color = "lightgreen" if post else "lightgrey" %}
+            <circle cx="{{x}}%" cy="{{y}}" r="0.5" fill="{{color}}" stroke-width="0.1" stroke="white" />
+        {% endfor %}
+        <text x="98.5%" y="{{y}}.3">🏁</text>
+    {% endfor %}
+</svg>
+{% endmacro %}
