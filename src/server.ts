@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 import * as http from 'http'
 import * as users from "./users";
 import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
@@ -58,7 +60,7 @@ class Server {
             .route("/getUpdate", UserType.Post, this.postUpdate)
             .route("/getData", UserType.Post, this.postData)
             .route("/sendUpdate", UserType.Post, this.postCheckin)
-            .route("deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
+            .route("/deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
             .route("/master", UserType.Master, this.pages.master)
             .route("/master/checkin", UserType.Master, this.pages.checkin)
             .route("/master/addcheckin", UserType.Master, this.masterCheckin)
@@ -176,6 +178,7 @@ class Server {
             melding = split[1]
             postOrOmvej = split[2]
         } catch(error) {
+            console.error(error);
             return responses.server_error();
         }
 
@@ -256,12 +259,19 @@ class Server {
     }
 
     mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
+        const timeToUndo = 1000 * 5; // 5 seconds
+
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
-        const postIdRequest = Number.parseInt(params.get("post"));
-        const postIdCheckin = this.db.checkinById(checkinId)?.postId;
+        // const postIdRequest = this.db.authenticate(request.headers['id'])
+        const postIdRequest = this.users.userFromIdentifier(request.headers['id']).postId;
+        const checkin = this.db.checkinById(checkinId);
+        const postIdCheckin = checkin?.postId;
 
-        if(postIdCheckin == postIdRequest && postIdCheckin != null) {
+        const requestAndCheckinMatch = postIdCheckin == postIdRequest && postIdCheckin != null;
+        const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
+
+        if(requestAndCheckinMatch && checkinIsRecent) {
             this.db.deleteCheckin(checkinId);
             return responses.ok();
         }

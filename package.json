@@ -9,7 +9,8 @@
         "chai": "^5.1.2",
         "mocha": "^11.0.1",
         "ts-node": "^10.9.1",
-        "typescript": "latest"
+        "typescript": "latest",
+        "source-map-support": "^0.5.21"
     },
     "dependencies": {
         "commander": "^12.1.0",
