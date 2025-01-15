@@ -5,7 +5,7 @@ import * as pages from "./pages";
 
 export interface Response {
     status_code: number;
-    content: any;
+    content: string | Buffer | null;
     headers?: {
         [key: string]: any
     }
@@ -83,9 +83,15 @@ export function response_code(status_code: number, content?: any): Response {
  * @param response the response to send to the client
  */
 export function send(connection: http.ServerResponse, response: Response) {
-    for(let header in response.headers) {
-        connection.setHeader(header, response.headers[header]);
+    try{
+        for(let header in response.headers) {
+            connection.setHeader(header, response.headers[header]);
+        }
+        connection.writeHead(response.status_code);
+        connection.end(response.content);
     }
-    connection.writeHead(response.status_code);
-    connection.end(response.content);
+    catch(e) {
+        connection.statusCode = 500;
+        connection.end();
+    }
 }

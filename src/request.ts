@@ -86,6 +86,7 @@ export class Router {
             if(route === undefined) {
                 return responses.not_found("Page not found");
             }
+            //TODO: Autherization check is failing
             if(!this.isAuthorized(request, route)) {
                 return responses.unauthorized("Not authorized");
             }
