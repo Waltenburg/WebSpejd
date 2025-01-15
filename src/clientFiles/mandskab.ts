@@ -17,8 +17,8 @@ namespace Client{
         let patruljerPåVej: number[] = [] //De patruljer der er på vej til posten i nummeret rækkefølge
         let patruljeElementsPåVej: HTMLInputElement[]= [] //De tilhørende elementer
         
-        let undoTime = 3 * 1000
-        let undoTimer: NodeJS.Timeout
+        let undoTime = 10 * 1000
+        let undoTimer: NodeJS.Timeout[] = []
         let undoActions: callback[] = []
         let timeBetweenUpdates = 2 * 1000
         let lastUpdateTimeString = new Date().getTime().toString()
@@ -40,40 +40,50 @@ namespace Client{
         export const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
             const postOrOmvejAtCLickedTime = postOrOmvej
-
-            sendRequest("/sendUpdate", new Headers({
-                "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
-            }), (status, headers) => {
-                //Checkout succesfull
-                undoButton.disabled = false
-                setUndoButtonTimer()
-                removePatruljePåPost(pNum)
-                const checkinID = Number.parseInt(headers.get("checkinID"))
-                undoActions.push(() => {
-                    addPatruljePåPost(pNum)
-                    undoCheckin(checkinID)
-                })
-            }, _ => checkError("ud", pNum))
+            if(confirmCheckinWithUser(pNum, "ud", postOrOmvejAtCLickedTime)){
+                sendRequest("/sendUpdate", new Headers({
+                    "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
+                }), (status, headers) => {
+                    //Checkout succesfull
+                    undoButton.disabled = false
+                    setUndoButtonTimer()
+                    removePatruljePåPost(pNum)
+                    const checkinID = Number.parseInt(headers.get("checkinID"))
+                    undoActions.push(() => {
+                        addPatruljePåPost(pNum)
+                        undoCheckin(checkinID)
+                    })
+                }, _ => checkError("ud", pNum))
+            }
         }
 
         export const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
-
-            sendRequest("/sendUpdate", new Headers({
-                "update": pNum.toString() + "%ind",
-            }), (status, headers) => { //Test succesfull
-                undoButton.disabled = false
-                setUndoButtonTimer()
-                removePatruljePåVej(pNum)
-                addPatruljePåPost(pNum, true)
-                const checkinID = Number.parseInt(headers.get("checkinID"))
-                undoActions.push(() => {
-                    addPatruljeToPåVej(pNum)
-                    removePatruljePåPost(pNum)
-                    undoCheckin(checkinID)
-                })
-            }, status => checkError("ind", pNum))
+            if(confirmCheckinWithUser(pNum, "ind", "")){
+                sendRequest("/sendUpdate", new Headers({
+                    "update": pNum.toString() + "%ind",
+                }), (status, headers) => { //Test succesfull
+                    undoButton.disabled = false
+                    setUndoButtonTimer()
+                    removePatruljePåVej(pNum)
+                    addPatruljePåPost(pNum)
+                    const checkinID = Number.parseInt(headers.get("checkinID"))
+                    undoActions.push(() => {
+                        addPatruljeToPåVej(pNum)
+                        removePatruljePåPost(pNum)
+                        undoCheckin(checkinID)
+                    })
+                }, status => checkError("ind", pNum))
+            }
         }
+
+        const confirmCheckinWithUser = (patruljeNummer: number, udEllerInd: string, postOrOmvej?: string): boolean => {
+            if(udEllerInd == "ud")
+                return confirm(`Er du sikker på at du vil tjekke patrulje ${patruljeNummer} ud mod ${postOrOmvej}?`)
+            else
+                return confirm(`Er du sikker på at du vil tjekke patrulje ${patruljeNummer} ind?`)
+        }
+
 
         const undoCheckin = (id: number) => {
             sendRequest(`/deleteCheckin?id=${id}`, null, (status, headers) => {}, status => {
@@ -83,14 +93,17 @@ namespace Client{
         }
 
         const setUndoButtonTimer = () => {
-            undoTimer = setTimeout(() => {
-                undoButton.disabled = true
-                undoActions = []
-            }, undoTime)
+            undoTimer.push(setTimeout(() => {
+                undoActions.shift()
+                undoTimer.shift()
+                if(undoTimer.length == 0)
+                    undoButton.disabled = true
+            }, undoTime))
         }
 
         export const undoButtonClicked = () => {
             undoActions.pop()()
+            clearTimeout(undoTimer.pop())
             if(undoActions.length == 0)
                 undoButton.disabled = true 
         }
@@ -132,15 +145,10 @@ namespace Client{
             }
         }
 
-        const addPatruljePåPost = (patruljeNummer: number, timeout?: boolean) => {
+        const addPatruljePåPost = (patruljeNummer: number) => {
             const newElement = createPatruljeElement(patruljeNummer)
             newElement.setAttribute("onclick", "Client.Mandskab.clickedPatruljePåPost(this)")
-            if(timeout){
-                newElement.disabled = true
-                setTimeout(() => {
-                    newElement.disabled = false
-                }, undoTime)
-            }
+
             insertElement(patruljeNummer, newElement , patruljerPåPost, patruljeElementsPåPost, listPåPost)
             postOmvejChanged()
             noPatruljerPåPostText.style.display = 'none'

@@ -259,7 +259,7 @@ class Server {
     }
 
     mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
-        const timeToUndo = 1000 * 5; // 5 seconds
+        const timeToUndo = 1000 * 20; // 20 seconds
 
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
