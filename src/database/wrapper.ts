@@ -258,6 +258,10 @@ export class DatabaseWrapper implements Database {
         return this.db.checkinsAtPost(postId);
     }
 
+    checkinById(checkinId: number): Checkin | undefined {
+        return this.db.checkinById(checkinId);
+    }
+
     deleteCheckin(checkinId: number): void {
         this.db.deleteCheckin(checkinId);
     }

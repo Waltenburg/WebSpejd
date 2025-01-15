@@ -110,12 +110,6 @@ export class JsonDatabase implements Database {
         this.updatePost(checkin.postId);
     }
 
-    /**
-     * Get checkin by id.
-     *
-     * @param checkinId the id of the checkin to get
-     * @returns the checkin with the given id
-     */
     checkinById(checkinId: number): Checkin | undefined {
         return this.data.checkins
             .find((checkin) => checkin.id === checkinId);

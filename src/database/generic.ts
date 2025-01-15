@@ -98,6 +98,14 @@ export interface Database {
     checkinsAtPost(postId: number): Checkin[];
 
     /**
+     * Get checkin by id.
+     *
+     * @param checkinId the id of the checkin
+     * @returns the checkin with the id or `undefined` if checkin does not exist
+     */
+    checkinById(checkinId: number): Checkin | undefined
+
+    /**
      * Delete checkin from database.
      *
      * @param checkinId the id of the checkin to delete

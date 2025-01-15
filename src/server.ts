@@ -58,6 +58,7 @@ class Server {
             .route("/getUpdate", UserType.Post, this.postUpdate)
             .route("/getData", UserType.Post, this.postData)
             .route("/sendUpdate", UserType.Post, this.postCheckin)
+            .route("deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
             .route("/master", UserType.Master, this.pages.master)
             .route("/master/checkin", UserType.Master, this.pages.checkin)
             .route("/master/addcheckin", UserType.Master, this.masterCheckin)
@@ -251,6 +252,19 @@ class Server {
         const checkinId = Number.parseInt(params.get("id"));
         this.db.deleteCheckin(checkinId);
         return responses.ok();
+    }
+
+    mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
+        const params = request.url.searchParams;
+        const checkinId = Number.parseInt(params.get("id"));
+        const postIdRequest = Number.parseInt(params.get("post"));
+        const postIdCheckin = this.db.checkinById(checkinId)?.postId;
+
+        if(postIdCheckin == postIdRequest && postIdCheckin != null) {
+            this.db.deleteCheckin(checkinId);
+            return responses.ok();
+        }
+        return responses.forbidden();
     }
 
 }
