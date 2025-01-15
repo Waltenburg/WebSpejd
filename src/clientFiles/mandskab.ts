@@ -17,10 +17,9 @@ namespace Client{
         let patruljerPåVej: number[] = [] //De patruljer der er på vej til posten i nummeret rækkefølge
         let patruljeElementsPåVej: HTMLInputElement[]= [] //De tilhørende elementer
         
-        let undoDepth = 0
         let undoTime = 3 * 1000
+        let undoTimer: NodeJS.Timeout
         let undoActions: callback[] = []
-        let commitTimeoutArr: NodeJS.Timeout[] = []
         let timeBetweenUpdates = 2 * 1000
         let lastUpdateTimeString = new Date().getTime().toString()
 
@@ -41,96 +40,64 @@ namespace Client{
         export const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
             const postOrOmvejAtCLickedTime = postOrOmvej
-            //lastUpdateTimeString = new Date().getTime().toString()
+
             sendRequest("/sendUpdate", new Headers({
                 "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
-                "commit-type": "test"
-            }), (status, headers) => { //Test succesfull
-                undoDepth++
+            }), (status, headers) => {
+                //Checkout succesfull
                 undoButton.disabled = false
+                setUndoButtonTimer()
                 removePatruljePåPost(pNum)
+                const checkinID = Number.parseInt(headers.get("checkinID"))
                 undoActions.push(() => {
-                    console.log("UNDO")
                     addPatruljePåPost(pNum)
+                    undoCheckin(checkinID)
                 })
-                commitTimeoutArr.push(setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
-                    if(undoDepth > 0){
-                        //lastUpdateTimeString = new Date().getTime().toString()
-                        sendRequest("/sendUpdate", new Headers({
-                            "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
-                            "commit-type": "commit"
-                        }
-                        ), (status, headers) => { //Check in succesfull
-                                console.log('Tjekket patrulje ' + pNum + " ud")
-                                undoActions.shift()
-                        }, status => { //Check in failed
-                            undoActions.shift()()
-                            checkError("ud", pNum)
-                        })
-                        decreaseUndoDepth()
-                    }
-                    commitTimeoutArr.shift()
-                }, undoTime))
-            }, status => { //Test failed
-                checkError("ud", pNum)
-            })
+            }, _ => checkError("ud", pNum))
         }
 
         export const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
-            //lastUpdateTimeString = new Date().getTime().toString()
+
             sendRequest("/sendUpdate", new Headers({
                 "update": pNum.toString() + "%ind",
-                "commit-type": "test"
             }), (status, headers) => { //Test succesfull
-                undoDepth++
                 undoButton.disabled = false
+                setUndoButtonTimer()
                 removePatruljePåVej(pNum)
                 addPatruljePåPost(pNum, true)
+                const checkinID = Number.parseInt(headers.get("checkinID"))
                 undoActions.push(() => {
                     addPatruljeToPåVej(pNum)
                     removePatruljePåPost(pNum)
+                    undoCheckin(checkinID)
                 })
-                commitTimeoutArr.push(setTimeout(() => { //Kalder funktionen der rent faktisk eksekvere tjek ind efter given tid, hvis ikke undo er blevet trykket
-                    if(undoDepth > 0){
-                        sendRequest("/sendUpdate", new Headers({
-                            "update": pNum.toString() + "%ind",
-                            "commit-type": "commit"
-                        }), (status, headers) => { //Check in succesfull
-                                console.log('Tjekket patrulje ' + pNum + " ind")
-                                undoActions.shift()
-                                //lastUpdateTimeString = new Date().getTime().toString()
-                        }, status => { //Check in failed
-                            undoActions.shift()()
-                            checkError("ind", pNum)
-                        })
-                        decreaseUndoDepth()
-                    }
-                    commitTimeoutArr.shift()
-                }, undoTime))
-            }, status => { //Test failed
-                checkError("ind", pNum)
+            }, status => checkError("ind", pNum))
+        }
+
+        const undoCheckin = (id: number) => {
+            sendRequest(`/deleteCheckin?id=${id}`, null, (status, headers) => {}, status => {
+                lastUpdateTimeString = "0"
+                getUpdateFunc()
             })
         }
-        const decreaseUndoDepth = () =>{
-            undoDepth--
-            if(undoDepth <= 0){
+
+        const setUndoButtonTimer = () => {
+            undoTimer = setTimeout(() => {
                 undoButton.disabled = true
-                undoDepth = 0
-            }
+                undoActions = []
+            }, undoTime)
         }
+
         export const undoButtonClicked = () => {
-            // const undoAction = undoActions[undoActions.length - 1]
-            // undoAction()
-            // undoActions.pop() //Disse tre linjer gør det samme som den ene nedenunder
             undoActions.pop()()
-            decreaseUndoDepth()
-            clearTimeout(commitTimeoutArr.pop())
+            if(undoActions.length == 0)
+                undoButton.disabled = true 
         }
         const removePatruljePåPost = (patruljeNummer: number) => {
             const i = patruljerPåPost.indexOf(patruljeNummer)
             if(i < 0)
-                console.log("Patrulje kan ikke fjernes, den ikke er i listen")
+                console.log("Patrulje kan ikke fjernes, den er ikke i listen")
             else{
                 patruljeElementsPåPost[i].remove()
                 patruljeElementsPåPost.splice(i, 1)
@@ -209,12 +176,8 @@ namespace Client{
             }
         }
         export const logOut = () => {
-            if(undoDepth > 0)
-                alert("Kan ikke logge ud endnu. Vent lidt til alle patruljer er tjekkel helt ind/ud.")
-            else{
-                deleteCookie("identifier")
-                location.href = "/home"
-            }
+            deleteCookie("identifier")
+            location.href = "/home"
         }
         class PatruljePostData{
             påPost: number[]
@@ -262,43 +225,41 @@ namespace Client{
             postOmvejChanged()
         }
         const getUpdateFunc = () => {
-            if(undoDepth == 0){
-                const headers = new Headers({
-                    'last-update': lastUpdateTimeString
-                })
-                lastUpdateTimeString = new Date().getTime().toString()
-                sendRequest("/getUpdate", headers, (status, headers) => {
-                    if(headers.get('update') == "true"){ //Update has arrived since last time client checked
-                        const data = JSON.parse(headers.get("data")) as PatruljePostData
-    
-                        const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
-                        updatePåPost[0].forEach(patrulje => {
-                            removePatruljePåPost(patrulje)
-                        })
-                        updatePåPost[1].forEach(patrulje => {
-                            addPatruljePåPost(patrulje)
-                        })
-    
-                        const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
-                        updatePåVej[0].forEach(patrulje => {
-                            removePatruljePåVej(patrulje)
-                        })
-                        updatePåVej[1].forEach(patrulje => {
-                            addPatruljeToPåVej(patrulje)
-                        })
-                        setOmvejSelector(data.omvejÅben)
-                    }
-                }, status => {
-                    clearInterval(updateInterval)
-    
-                    if(confirm("Fejl ved opdatering. Log ind igen")){
-                        logOut()
-                    }
-                    else{
-                        updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
-                    }
-                })
-            }
+            const headers = new Headers({
+                'last-update': lastUpdateTimeString
+            })
+            lastUpdateTimeString = new Date().getTime().toString()
+            sendRequest("/getUpdate", headers, (status, headers) => {
+                if(headers.get('update') == "true"){ //Update has arrived since last time client checked
+                    const data = JSON.parse(headers.get("data")) as PatruljePostData
+
+                    const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
+                    updatePåPost[0].forEach(patrulje => {
+                        removePatruljePåPost(patrulje)
+                    })
+                    updatePåPost[1].forEach(patrulje => {
+                        addPatruljePåPost(patrulje)
+                    })
+
+                    const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
+                    updatePåVej[0].forEach(patrulje => {
+                        removePatruljePåVej(patrulje)
+                    })
+                    updatePåVej[1].forEach(patrulje => {
+                        addPatruljeToPåVej(patrulje)
+                    })
+                    setOmvejSelector(data.omvejÅben)
+                }
+            }, status => {
+                clearInterval(updateInterval)
+
+                if(confirm("Fejl ved opdatering. Log ind igen")){
+                    logOut()
+                }
+                else{
+                    updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
+                }
+            })
         }
         let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
         //Getting initial data from server

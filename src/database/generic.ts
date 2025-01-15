@@ -43,8 +43,11 @@ export interface Database {
      */
     latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[];
 
-    /** Check patrol in or out of post. */
-    checkin(checkin: Checkin): void;
+    /** Check patrol in or out of post.
+     * @param checkin the checkin to add to the database
+     * @returns the id of the checkin
+    */
+    checkin(checkin: Checkin): number;
 
     /**
     * Get information about patrol.
@@ -96,6 +99,14 @@ export interface Database {
      * @returns the checkins at the post
      */
     checkinsAtPost(postId: number): Checkin[];
+
+    /**
+     * Get checkin by id.
+     *
+     * @param checkinId the id of the checkin
+     * @returns the checkin with the id or `undefined` if checkin does not exist
+     */
+    checkinById(checkinId: number): Checkin | undefined
 
     /**
      * Delete checkin from database.

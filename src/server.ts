@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 import * as http from 'http'
 import * as users from "./users";
 import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
@@ -58,6 +60,7 @@ class Server {
             .route("/getUpdate", UserType.Post, this.postUpdate)
             .route("/getData", UserType.Post, this.postData)
             .route("/sendUpdate", UserType.Post, this.postCheckin)
+            .route("/deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
             .route("/master", UserType.Master, this.pages.master)
             .route("/master/checkin", UserType.Master, this.pages.checkin)
             .route("/master/addcheckin", UserType.Master, this.masterCheckin)
@@ -168,13 +171,14 @@ class Server {
         let melding: string;
         let postOrOmvej: string;
         const update = request.headers['update'] //{patruljenummer}%{melding}%{post/omvej}
-        const commit = request.headers['commit-type'] === "commit"
+
         try {
             const split = update.split('%')
             patrolId = Number.parseInt(split[0]);
             melding = split[1]
             postOrOmvej = split[2]
         } catch(error) {
+            console.error(error);
             return responses.server_error();
         }
 
@@ -193,12 +197,13 @@ class Server {
             return responses.response_code(400);
         }
 
-        // Client wants to commit changes
-        if (commit) {
-            this.db.checkin(checkin);
-        }
+        const checkinID = this.db.checkin(checkin);
 
-        return responses.ok();
+        //Send id back to client
+        return responses.ok("", {
+            "checkinID": checkinID
+        });
+
     }
 
     masterCheckin = async (request: Request): Promise<Response> => {
@@ -251,6 +256,26 @@ class Server {
         const checkinId = Number.parseInt(params.get("id"));
         this.db.deleteCheckin(checkinId);
         return responses.ok();
+    }
+
+    mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
+        const timeToUndo = 1000 * 5; // 5 seconds
+
+        const params = request.url.searchParams;
+        const checkinId = Number.parseInt(params.get("id"));
+        // const postIdRequest = this.db.authenticate(request.headers['id'])
+        const postIdRequest = this.users.userFromIdentifier(request.headers['id']).postId;
+        const checkin = this.db.checkinById(checkinId);
+        const postIdCheckin = checkin?.postId;
+
+        const requestAndCheckinMatch = postIdCheckin == postIdRequest && postIdCheckin != null;
+        const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
+
+        if(requestAndCheckinMatch && checkinIsRecent) {
+            this.db.deleteCheckin(checkinId);
+            return responses.ok();
+        }
+        return responses.forbidden();
     }
 
 }

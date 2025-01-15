@@ -91,6 +91,7 @@ export function send(connection: http.ServerResponse, response: Response) {
         connection.end(response.content);
     }
     catch(e) {
+        console.error(e);
         connection.statusCode = 500;
         connection.end();
     }

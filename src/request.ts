@@ -93,6 +93,7 @@ export class Router {
 
             return await route.func(request);
         } catch(err) {
+            console.error(err);
             return responses.server_error(err);
         }
     }
@@ -105,7 +106,6 @@ export class Router {
      * @returns `true` if request is authorized, `false` otherwise
      */
     isAuthorized(request: Request, route: Route): boolean {
-        return true;
         const userType = route.userType;
         const user = request.user;
         return (userType === UserType.Master && user.isMasterUser())

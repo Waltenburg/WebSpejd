@@ -102,20 +102,16 @@ export class JsonDatabase implements Database {
             .filter((checkin) => checkin.postId === postId)
     }
 
-    checkin(checkin: Checkin): void {
+    checkin(checkin: Checkin): number {
+        const id = checkin.id || this.checkinCounter++
         this.data.checkins.push({
-            id: checkin.id || this.checkinCounter++,
+            id: id,
             ...checkin
         });
         this.updatePost(checkin.postId);
+        return id
     }
 
-    /**
-     * Get checkin by id.
-     *
-     * @param checkinId the id of the checkin to get
-     * @returns the checkin with the given id
-     */
     checkinById(checkinId: number): Checkin | undefined {
         return this.data.checkins
             .find((checkin) => checkin.id === checkinId);

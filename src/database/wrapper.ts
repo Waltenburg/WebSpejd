@@ -222,8 +222,8 @@ export class DatabaseWrapper implements Database {
         };
     }
 
-    checkin(checkin: Checkin) {
-        this.db.checkin(checkin);
+    checkin(checkin: Checkin): number {
+        return this.db.checkin(checkin);
     }
 
     latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {
@@ -256,6 +256,10 @@ export class DatabaseWrapper implements Database {
 
     checkinsAtPost(postId: number): Checkin[] {
         return this.db.checkinsAtPost(postId);
+    }
+
+    checkinById(checkinId: number): Checkin | undefined {
+        return this.db.checkinById(checkinId);
     }
 
     deleteCheckin(checkinId: number): void {
