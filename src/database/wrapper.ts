@@ -222,8 +222,8 @@ export class DatabaseWrapper implements Database {
         };
     }
 
-    checkin(checkin: Checkin) {
-        this.db.checkin(checkin);
+    checkin(checkin: Checkin): number {
+        return this.db.checkin(checkin);
     }
 
     latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {

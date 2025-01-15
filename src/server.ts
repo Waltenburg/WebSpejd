@@ -169,7 +169,7 @@ class Server {
         let melding: string;
         let postOrOmvej: string;
         const update = request.headers['update'] //{patruljenummer}%{melding}%{post/omvej}
-        const commit = request.headers['commit-type'] === "commit"
+
         try {
             const split = update.split('%')
             patrolId = Number.parseInt(split[0]);
@@ -194,12 +194,13 @@ class Server {
             return responses.response_code(400);
         }
 
-        // Client wants to commit changes
-        if (commit) {
-            this.db.checkin(checkin);
-        }
+        const checkinID = this.db.checkin(checkin);
 
-        return responses.ok();
+        //Send id back to client
+        return responses.ok("", {
+            "checkinID": checkinID
+        });
+
     }
 
     masterCheckin = async (request: Request): Promise<Response> => {
