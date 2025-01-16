@@ -5,17 +5,17 @@ export class DatabaseWrapper implements Database {
 
     constructor(db: Database) {
         this.db = db;
+        this.initialize();
     }
 
     /**
      * Add initial data to database.
      */
-    initialize(): void {
+    private initialize(): void {
         const isInitialized = this.db.allCheckinIds().length !== 0;
         if(isInitialized) {
             return;
         }
-
         this.sendAllPatruljerTowardsFirstPost();
     }
 
@@ -264,6 +264,12 @@ export class DatabaseWrapper implements Database {
 
     deleteCheckin(checkinId: number): void {
         this.db.deleteCheckin(checkinId);
+    }
+
+    deleteAllCheckins(): void {
+        this.db.allCheckinIds().forEach(id => {
+            this.deleteCheckin(id);
+        });
     }
 
     lastCheckins(amount: number): Checkin[] {

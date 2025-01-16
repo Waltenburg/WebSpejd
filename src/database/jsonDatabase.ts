@@ -14,7 +14,7 @@ export class JsonDatabase implements Database {
      * @param datafile the json file to store data in
      * @param inMemory will not save data to disk if `true`
      */
-    constructor(datafile: string, inMemory = false) {
+    constructor(datafile: string, inMemory = false, deleteCheckins = false) {
         this.datafile = datafile;
         this.inMemory = inMemory;
 
@@ -45,6 +45,9 @@ export class JsonDatabase implements Database {
 
         if(!this.inMemory) {
             setInterval(this.write, 5000);
+        }
+        if(deleteCheckins) {
+            this.data.checkins = [];
         }
     }
 

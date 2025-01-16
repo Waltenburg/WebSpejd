@@ -25,9 +25,9 @@ class Server {
      * @param port the binding port
      * @param db the database
      */
-    constructor(address: string, port: number, assets: string, db: Database) {
+    constructor(address: string, port: number, assets: string, db: DatabaseWrapper) {
         this.db = new DatabaseWrapper(db);
-        this.db.initialize();
+        //this.db.initialize();
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false);
@@ -309,6 +309,10 @@ const readArguments = (): Command => {
         .option(
             "--databaseInMemory ", //Boolean flag
             "Whether to save the database or keep it in memory",
+        )
+        .option(
+            "--resetDatabase", //Boolean flag
+            "Whether to start all patrols at first post"
         );
     command.parse();
     return command;
@@ -323,6 +327,7 @@ async function main(): Promise<void> {
     const database = options["database"]
     const assets = options["assets"]
     const inMemory = options["DatabaseInMemory"] === true;
+    const resetDatabase = options["resetDatabase"] === true;
 
     console.log(`Starting server with options: ${inspect(
         {
@@ -330,12 +335,13 @@ async function main(): Promise<void> {
             port: port,
             database: database,
             assets: assets,
-            inMemory: inMemory
+            inMemory: inMemory,
+            resetDatabase: resetDatabase
         },
         { colors: true, depth: null })}`);
 
-    const db = new JsonDatabase(database, false);
-    const server = new Server(address, port, assets, db);
+    const db = new JsonDatabase(database, inMemory, resetDatabase);
+    const server = new Server(address, port, assets, new DatabaseWrapper(db));
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
