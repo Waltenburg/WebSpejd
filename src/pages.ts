@@ -3,6 +3,7 @@ import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
 import { Request } from "./request";
+import { Post } from "./database/generic";
 
 type Response = responses.Response;
 
@@ -186,7 +187,7 @@ export class Pages {
             })
     }
 
-    private postsData = (): any => {
+    private postsData = (): postDataToMaster[] => {
          return this.db.allPostIds()
             .map((postId) => {
                 let base = this.db.postInfo(postId);
@@ -270,4 +271,10 @@ function createUrlPath(base: string, params: { [key: string]: string | undefined
         symbol = "&";
     }
     return path;
+}
+
+export interface postDataToMaster extends Post{
+    patrolsOnPost: number;
+    patrolsOnTheirWay: number;
+    patrolsCheckedOut: number;
 }
