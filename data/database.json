@@ -24,6 +24,81 @@
             "id": 5,
             "name": "Torben, Tina, og børnene",
             "udgået": false
+        },
+        {
+            "id": 6,
+            "name": "De Vilde Vikinger",
+            "udgået": false
+        },
+        {
+            "id": 7,
+            "name": "Eventyrerne",
+            "udgået": false
+        },
+        {
+            "id": 8,
+            "name": "De Modige Riddere",
+            "udgået": false
+        },
+        {
+            "id": 9,
+            "name": "Skovens Vogtere",
+            "udgået": false
+        },
+        {
+            "id": 10,
+            "name": "Havets Helte",
+            "udgået": false
+        },
+        {
+            "id": 11,
+            "name": "De Frygtløse",
+            "udgået": false
+        },
+        {
+            "id": 12,
+            "name": "De Snedige Slanger",
+            "udgået": false
+        },
+        {
+            "id": 13,
+            "name": "De Stærke Bjørne",
+            "udgået": false
+        },
+        {
+            "id": 14,
+            "name": "De Listige Ræve",
+            "udgået": false
+        },
+        {
+            "id": 15,
+            "name": "De Hurtige Geparder",
+            "udgået": false
+        },
+        {
+            "id": 16,
+            "name": "De Kloge Ugler",
+            "udgået": false
+        },
+        {
+            "id": 17,
+            "name": "De Modige Løver",
+            "udgået": false
+        },
+        {
+            "id": 18,
+            "name": "De Skarpe Ørne",
+            "udgået": false
+        },
+        {
+            "id": 19,
+            "name": "De Seje Skildpadder",
+            "udgået": false
+        },
+        {
+            "id": 20,
+            "name": "De Tapre Tigre",
+            "udgået": false
         }
     ],
     "checkins": [],
