@@ -3,7 +3,7 @@ import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
 import { Request } from "./request";
-import { Post } from "./database/generic";
+import { Checkin, Post } from "./database/generic";
 
 type Response = responses.Response;
 
@@ -30,7 +30,8 @@ export class Pages {
         );
         this.env.addFilter("checkinName", checkinTypeToString);
         this.env.addFilter("clock", formatTime);
-        this.env.addFilter("formatLocation", formatLocation);
+        this.env.addFilter("formatPatrolLocation", this.formatPatrolLocation);
+        this.env.addFilter("formatCheckinLocation", this.formatCheckinLocation);
         this.env.addGlobal("patrolsUrl", patrolsUrl);
 
         this.db = db;
@@ -222,25 +223,31 @@ export class Pages {
         return responses.ok(this.render(filename, data));
     }
 
+    formatPatrolLocation = (location: PatrolLocation): string => {
+        const post = this.db.postInfo(location.postId);
+        if(location.type === PatrolLocationType.GoingToLocation) {
+            return `Går mod ${post.detour ? post.name : `post ${post.name}`}`;
+            // return `Går mod ${post.name}`;
+        } else if(location.type === PatrolLocationType.OnLocation) {
+            return `På post ${post.name}`;
+        } else {
+            return `Udgået`;
+        }
+    }
+
+    formatCheckinLocation = (checkin: Checkin): string => {
+        const post = this.db.postInfo(checkin.postId);
+        return post.detour ? post.name : `Post ${post.name}`;
+    }
 }
 
 function checkinTypeToString(value: number): string {
     if(value === 0) {
         return "Check ind";
     } else if (value === 1) {
-        return "Check ud";
+        return "Check ud mod post";
     } else {
-        return "Omvej";
-    }
-}
-
-function formatLocation(location: PatrolLocation): string {
-    if(location.type === PatrolLocationType.GoingToLocation) {
-        return `Går mod post ${location.postId}`;
-    } else if(location.type === PatrolLocationType.OnLocation) {
-        return `På post ${location.postId}`;
-    } else {
-        return `Udgået`;
+        return "Check ud mod omvej";
     }
 }
 

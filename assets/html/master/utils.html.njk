@@ -18,7 +18,7 @@
                 <td>
                     <a href="/master/post?id={{checkin.postId}}"
                        class="hover-underline">
-                        Post {{checkin.postId}}
+                        {{checkin | formatCheckinLocation}}
                     </a>
                 </td>
                 <td>{{checkin.time | clock}}</td>
@@ -45,7 +45,7 @@
         {% for post in posts %}
             <tr class="hover-grey">
                 <td>
-                    {{post.id}}.
+                    {# {{post.id}}. #}
                     <a href="/master/post?id={{post.id}}" class="hover-underline">
                          {{post.name}}
                     </a>
@@ -103,10 +103,10 @@
                             {% if patrol.location.postId >= 0 %}
                                 <a href="/master/post?id={{patrol.location.postId}}"
                                    class="hover-underline">
-                                    {{patrol.location | formatLocation}}
+                                    {{patrol.location | formatPatrolLocation}}
                                 </a>
                             {% else %}
-                                {{patrol.location | formatLocation}}
+                                {{patrol.location | formatPatrolLocation}}
                             {% endif %}
                         </td>
                         <td>{{patrol.lastCheckin.time | clock}}</td>

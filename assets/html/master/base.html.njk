@@ -3,6 +3,40 @@
     <head>
         <meta charset="UTF-8">
         <title>Webspejd</title>
+        <style>
+            .last-update {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 1em;
+            }
+        </style>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const lastUpdateElement = document.createElement('div');
+                lastUpdateElement.className = 'last-update';
+                document.body.appendChild(lastUpdateElement);
+
+                const headerBar = document.header
+                let lastUpdateTime = new Date();
+                const updateFunction = () => {
+                    fetch('/checkins')
+                    .then(response => response.text())
+                    .then(_ => {
+                        lastUpdateElement.textContent = `Last update: ${getTime(new Date())}`;
+                        document.getElementById("header").style.backgroundColor = "#58A2E7"
+                    }).catch(() => {
+                        lastUpdateElement.textContent = 'Error updating! Last update: ' + getTime(lastUpdateTime);
+                        document.getElementById("header").style.backgroundColor = "#cc0000"
+                    });
+                }
+                updateFunction();
+                setInterval(updateFunction, 5000);
+            });
+            const getTime = (date) => {
+                return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+            }
+        </script>
         <link rel="stylesheet" href="/assets/css/master.css">
     </head>
     <body>
