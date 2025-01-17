@@ -23,6 +23,8 @@ namespace Client{
         let timeBetweenUpdates = 2 * 1000
         let lastUpdateTimeString = new Date().getTime().toString()
 
+        let showingError = false
+
         const createPatruljeElement = (patruljeNummer: number): HTMLInputElement => {
             let newPatrulje: HTMLInputElement = document.createElement("input")
             newPatrulje.classList.add("patrulje")
@@ -260,11 +262,14 @@ namespace Client{
                 }
             }, status => {
                 clearInterval(updateInterval)
-
-                if(confirm("Fejl ved opdatering. Log ind igen")){
-                    logOut()
-                }
-                else{
+                
+                if(!showingError)
+                    showingError = true
+                    if(confirm("Fejl ved opdatering. Log ind igen")){
+                        logOut()
+                    }
+                    else{
+                    showingError = false
                     updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
                 }
             })
