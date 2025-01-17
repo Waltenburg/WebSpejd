@@ -23,7 +23,7 @@
         Lokation:
         {% if not patrol.udgået %}
             <a class="hover-underline" href="/master/post?id={{location.postId}}">
-                {{location | formatLocation}}
+                {{location | formatPatrolLocation}}
             </a>
         {% else %}
             Udgået
