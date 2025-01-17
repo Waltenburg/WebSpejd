@@ -8,19 +8,19 @@
                 position: absolute;
                 top: 10px;
                 right: 10px;
-                font-size: 1em;
+                font-size: 0.8em;
+                color: #666;
             }
         </style>
         <script>
+            const lastUpdateTime = new Date();
             document.addEventListener("DOMContentLoaded", () => {
                 const lastUpdateElement = document.createElement('div');
                 lastUpdateElement.className = 'last-update';
                 document.body.appendChild(lastUpdateElement);
 
-                const headerBar = document.header
-                let lastUpdateTime = new Date();
                 const updateFunction = () => {
-                    fetch('/checkins')
+                    fetch('/master/checkins')
                     .then(response => response.text())
                     .then(_ => {
                         lastUpdateElement.textContent = `Last update: ${getTime(new Date())}`;
@@ -29,12 +29,14 @@
                         lastUpdateElement.textContent = 'Error updating! Last update: ' + getTime(lastUpdateTime);
                         document.getElementById("header").style.backgroundColor = "#cc0000"
                     });
-                }
-                updateFunction();
-                setInterval(updateFunction, 5000);
+                };
+
+                setInterval(updateFunction, 3100);
+                updateFunction(); // Run immediately on page load
             });
             const getTime = (date) => {
-                return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+            const leadingZero = (num) => num < 10 ? '0' + num : num;
+                return leadingZero(date.getHours()) + ":" + leadingZero(date.getMinutes()) + ":" + leadingZero(date.getSeconds());
             }
         </script>
         <link rel="stylesheet" href="/assets/css/master.css">
