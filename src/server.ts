@@ -39,9 +39,14 @@ class Server {
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
+            try{
                 let response = await this.router.handleRequest(req);
                 responses.send(connection, response);
-            })
+            }catch(e) {
+                console.error(e);
+                responses.send(connection, responses.server_error());
+            }
+        })
             .listen(port, address, () => {
                 console.log(`Server is now listening at http://${address}:${port}`);
             });

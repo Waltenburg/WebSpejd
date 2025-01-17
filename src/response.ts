@@ -20,14 +20,19 @@ export function ok(content?: any, headers?: {[key: string]: any}): Response {
 }
 
 export async function file(path: string): Promise<Response> {
-    const content = await fs.readFile(path);
-    const mimeType = files.determineContentType(path);
-    return {
-        status_code: 200,
-        content: content,
-        headers: {
-            "Content-Type": mimeType
+    try{
+        const content = await fs.readFile(path);
+        const mimeType = files.determineContentType(path);
+        return {
+            status_code: 200,
+            content: content,
+            headers: {
+                "Content-Type": mimeType
+            }
         }
+    }catch(e) {
+        // console.error(e);
+        return server_error();
     }
 }
 
