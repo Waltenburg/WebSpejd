@@ -8,10 +8,6 @@
     </div>
     <h2>Patruljer</h2>
     {{ utils.patrols(patrols) }}
-    <h2>Graf</h2>
-    <div hx-get="/master/graph", hx-trigger="every 5s">
-        {{ utils.graph(graph) }}
-    </div>
     <h2>Checkins</h2>
     <div hx-get="/master/checkins" hx-trigger="every 5s">
         {{ utils.checkins(checkins) }}
