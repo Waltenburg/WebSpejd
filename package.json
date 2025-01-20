@@ -4,18 +4,18 @@
     "devDependencies": {
         "@types/chai": "^5.0.1",
         "@types/mocha": "^10.0.10",
-        "@types/node": "^18.15.10",
-        "@types/nunjucks": "^3.2.6",
         "chai": "^5.1.2",
         "mocha": "^11.0.1",
-        "ts-node": "^10.9.1",
-        "typescript": "latest",
-        "source-map-support": "^0.5.21"
+        "ts-node": "^10.9.1"
     },
     "dependencies": {
         "commander": "^12.1.0",
         "nunjucks": "^3.2.4",
-        "rimraf": "^6.0.1"
+        "rimraf": "^6.0.1",
+        "typescript": "latest",
+        "@types/node": "^18.15.10",
+        "@types/nunjucks": "^3.2.6",
+        "source-map-support": "^0.5.21"
     },
     "scripts": {
         "start": "node target/server.js --assets assets",
