@@ -311,7 +311,7 @@ const readArguments = (): Command => {
         .option(
             "--db, --database <file>",
             "File to store data in",
-            "../data/database.json"
+            "data/database.json"
         )
         .option(
             "--databaseInMemory ", //Boolean flag
@@ -348,7 +348,7 @@ async function main(): Promise<void> {
         { colors: true, depth: null })}`);
 
     const db = new JsonDatabase(database, inMemory, resetDatabase);
-    const server = new Server(address, parseInt(process.env.PORT), assets, new DatabaseWrapper(db));
+    const server = new Server(process.env.IP || address, parseInt(process.env.PORT) || port, assets, new DatabaseWrapper(db));
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
