@@ -9,6 +9,7 @@ import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
 import { inspect } from 'util';
+import { env } from 'process';
 
 type Response = responses.Response;
 
@@ -347,7 +348,7 @@ async function main(): Promise<void> {
         { colors: true, depth: null })}`);
 
     const db = new JsonDatabase(database, inMemory, resetDatabase);
-    const server = new Server(address, port, assets, new DatabaseWrapper(db));
+    const server = new Server(address, parseInt(process.env.PORT), assets, new DatabaseWrapper(db));
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
