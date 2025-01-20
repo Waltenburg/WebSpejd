@@ -295,7 +295,7 @@ const readArguments = (): Command => {
         .option(
             "-a, --address <address>",
             "Address the server is hosted on",
-            "127.0.0.1"
+            "localhost"
         )
         .option(
             "-p, --port <port>",
