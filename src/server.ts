@@ -305,12 +305,12 @@ const readArguments = (): Command => {
         .option(
             "--assets <assets>",
             "Assets file directory",
-            `assets`
+            ``
         )
         .option(
             "--db, --database <file>",
             "File to store data in",
-            "data/database.json"
+            "../data/database.json"
         )
         .option(
             "--databaseInMemory ", //Boolean flag
