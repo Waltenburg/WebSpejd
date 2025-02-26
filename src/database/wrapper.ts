@@ -230,6 +230,10 @@ export class DatabaseWrapper implements Database {
         return this.db.latestCheckinsOfPatrol(patrol, amount);
     }
 
+    createPatrol(name: string): number {
+        return this.db.createPatrol(name);
+    }
+
     patrolInfo(patrolId: number): Patrol | undefined {
         return this.db.patrolInfo(patrolId);
     }
@@ -238,12 +242,20 @@ export class DatabaseWrapper implements Database {
         this.db.changePatrolStatus(patrolId, udgået);
     }
 
+    changePatrol(patrolId: number, patrol: Patrol): void {
+        this.db.changePatrol(patrolId, patrol);
+    }
+
     allPatrolIds(): number[] {
         return this.db.allPatrolIds();
     }
 
     changePostStatus(postId: number, open: boolean): void {
         this.db.changePostStatus(postId, open);
+    }
+
+    createPost(post: Post): void {
+        this.db.createPost(post);
     }
 
     postInfo(postId: number): Post | undefined {

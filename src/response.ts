@@ -43,6 +43,13 @@ export function server_error(content?: any): Response {
     }
 }
 
+export function bad_request(content?: any): Response {
+    return {
+        status_code: 400,
+        content: content,
+    }
+}
+
 export function not_found(content?: any): Response {
     return {
         status_code: 404,

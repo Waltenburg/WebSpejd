@@ -50,6 +50,14 @@ export interface Database {
     checkin(checkin: Checkin): number;
 
     /**
+     * Create new patrl
+     *
+     * @param name the name of the new patrol
+     * @returns the new patrol id
+     */
+    createPatrol(name: string): number;
+
+    /**
     * Get information about patrol.
     * @param patrolId the id of the patrol to get information about
     * @returns information about the patrol
@@ -65,11 +73,26 @@ export interface Database {
     changePatrolStatus(patrolId: number, udgået: boolean): void;
 
     /**
+     * Change information about patrol
+     *
+     * @param patrolId the id of the patrol to change
+     * @param patrol the new patrol info
+     */
+    changePatrol(patrolId: number, patrol: Patrol): void;
+
+    /**
      * Get list of all patrol ids.
      *
      * @returns a list of all patrol ids
      */
     allPatrolIds(): number[];
+
+    /**
+     * Create new post in database
+     *
+     * @param post the new post
+     */
+    createPost(post: Post): void;
 
     /**
      * Get information about a post.

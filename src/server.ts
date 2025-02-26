@@ -9,6 +9,7 @@ import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
 import { inspect } from 'util';
+import { Api } from './endpoints/api';
 
 type Response = responses.Response;
 
@@ -77,7 +78,8 @@ class Server {
             .route("/master/patrolStatus", UserType.Master, this.patrolStatus)
             .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin)
             .route("/master/graph", UserType.Master, this.pages.graph)
-            .route("/master/postStatus", UserType.Master, this.postStatus);
+            .route("/master/postStatus", UserType.Master, this.postStatus)
+            .subRoute("/api", UserType.None, new Api(this.db));
     }
 
     /**
