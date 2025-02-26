@@ -40,5 +40,4 @@ export class Api implements Routing {
         this.db.deletePost(body["postId"]);
         return responses.ok();
     }
-
 }
