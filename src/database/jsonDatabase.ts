@@ -62,6 +62,17 @@ export class JsonDatabase implements Database {
         fs.writeFileSync(this.datafile, content);
     }
 
+    createPatrol(name: string): number {
+        const id = 1 + this.data.patrols
+            .reduce((acc, x) => Math.max(acc, x.id), 0);
+        this.data.patrols.push({
+            id,
+            name,
+            udgået: false,
+        });
+        return id;
+    }
+
     patrolInfo(patrolId: number): Patrol | undefined {
         return this.data.patrols
             .find((patrol) => patrol.id === patrolId);
@@ -69,6 +80,11 @@ export class JsonDatabase implements Database {
 
     changePatrolStatus(patrolId: number, udgået: boolean): void {
         this.patrolInfo(patrolId).udgået = udgået;
+    }
+
+    changePatrol(patrolId: number, info: Patrol): void {
+        let patrolInfo = this.patrolInfo(patrolId);
+        patrolInfo = { ...patrolInfo, ...info };
     }
 
     allPatrolIds(): number[] {
@@ -79,6 +95,13 @@ export class JsonDatabase implements Database {
         let checkins = this.data.checkins
             .filter((checkin) => checkin.patrolId === patrol);
         return takeLast(checkins, amount);
+    }
+
+    createPost(post: Post): void {
+        const lastPostId: number = this.data.posts[this.data.posts.length-1].id || 0;
+        const newPostId = lastPostId + 1;
+        post.id = newPostId;
+        this.data.posts.push(post);
     }
 
     postInfo(postId: number): Post | undefined {
