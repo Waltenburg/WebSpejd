@@ -251,7 +251,10 @@ function checkinTypeToString(value: number): string {
     }
 }
 
-function formatTime(value: Date) {
+function formatTime(value: Date | undefined) {
+    if(value === undefined) {
+        return "";
+    }
     let hour = value.getHours().toString().padStart(2, '0');
     let minute = value.getMinutes().toString().padStart(2, '0');
     let second = value.getSeconds().toString().padStart(2, '0');
