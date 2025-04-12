@@ -5,7 +5,6 @@ export class DatabaseWrapper implements Database {
 
     constructor(db: Database) {
         this.db = db;
-        this.initialize();
     }
 
     /**
@@ -26,10 +25,6 @@ export class DatabaseWrapper implements Database {
      * @returns `true` if status changed, `false` otherwise
      */
     changeDetourStatus(postId: number, open: boolean): boolean {
-        let post = this.db.postInfo(postId);
-        if (!post?.detour || post.open === open) {
-            return false;
-        }
         this.db.changePostStatus(postId, open);
         return true;
     }
@@ -61,14 +56,15 @@ export class DatabaseWrapper implements Database {
     canPatruljeBeCheckedUd(patrolId: number, postId: number, detour: boolean): boolean {
         const lastCheckin = this.latestCheckinOfPatrol(patrolId);
         const patrolInfo = this.db.patrolInfo(patrolId);
-        const nextPostIsDetour = this.db.postInfo(postId + 1)?.detour || false;
+        const post = this.db.postInfo(postId);
+        const hasDetour = post.detour !== undefined;
 
         return lastCheckin !== undefined
             && patrolInfo !== undefined
             && lastCheckin.postId === postId
             && lastCheckin.type === CheckinType.CheckIn
             && !patrolInfo.udgået
-            && (detour ? nextPostIsDetour : true);
+            && (detour ? hasDetour : true);
     }
 
     /**
@@ -102,7 +98,7 @@ export class DatabaseWrapper implements Database {
      * @param postId the id of the post
      * @returns the patrol ids of the patrols at the post
      */
-    patruljerPåPost(postId: number): number[] {
+    patrolsAtPost(postId: number): number[] {
         let checkins = this.db.checkinsAtPost(postId);
         let patrolsCheckedOut = checkins
             .filter((checkin) => checkin.type !== CheckinType.CheckIn)
@@ -118,12 +114,12 @@ export class DatabaseWrapper implements Database {
     }
 
     /**
-     * Get patrols on detour from post.
+     * Get patrols on their way to a post
      *
-     * @param postId the id of the post the patrol is on detour from.
+     * @param postId the id of the post the patrols are on their way to
      * @return a list of patrol ids
      */
-    patruljerPåVej(postId: number): number[] {
+    patrolsOnTheirWay(postId: number): number[] {
         return this.db.allPatrolIds()
             .filter((patrolId) => this.canPaltrolBeCheckedIn(patrolId, postId));
     }
@@ -149,11 +145,12 @@ export class DatabaseWrapper implements Database {
      */
     private nextPostId(postId: number, detour: boolean): number {
         //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
-        const post = this.db.postInfo(postId + 1);
-        if(!detour && post !== undefined && post.detour) {
-            return postId + 2;
+        const post = this.db.postInfo(postId);
+        if(detour && post.detour !== undefined) {
+            return post.detour;
+        } else {
+            return post.next_post;
         }
-        return postId + 1;
     }
 
     /**

@@ -27,12 +27,10 @@ export interface Patrol {
 export interface Post {
     id: number;
     name: string;
-    team: number;
-    detour: boolean;
     open: boolean;
+    next_post: number;
+    detour?: number;
     lastUpdate: Date;
-    // startTime: Date;
-    // endTime: Date;
 }
 
 export interface Database {
@@ -50,7 +48,7 @@ export interface Database {
     checkin(checkin: Checkin): number;
 
     /**
-     * Create new patrl
+     * Create new patrol
      *
      * @param name the name of the new patrol
      * @returns the new patrol id
