@@ -56,8 +56,8 @@ export class Pages {
         const postId = Number.parseInt(request.url.searchParams.get("id"));
         let post = this.db.postInfo(postId);
         return this.response(POST, {
-            patrolsOnPost: this.patrolsData(this.db.patruljerPåPost(postId)),
-            patrolsOnTheirWay: this.patrolsData(this.db.patruljerPåVej(postId)),
+            patrolsOnPost: this.patrolsData(this.db.patrolsAtPost(postId)),
+            patrolsOnTheirWay: this.patrolsData(this.db.patrolsOnTheirWay(postId)),
             patrolsCheckedOut: this.patrolsData(this.db.patrolsCheckedOut(postId)),
             post: post,
             checkins: this.db.checkinsAtPost(postId).reverse(),
@@ -110,9 +110,9 @@ export class Pages {
             postId = Number.parseInt(postIdStr);
             selection = params.get("selection");
             if(selection === "patrolsOnTheirWay") {
-                patrolIds = this.db.patruljerPåVej(postId);
+                patrolIds = this.db.patrolsOnTheirWay(postId);
             } else if(selection === "patrolsOnPost") {
-                patrolIds = this.db.patruljerPåPost(postId);
+                patrolIds = this.db.patrolsAtPost(postId);
             } else if(selection === "patrolsCheckedOut") {
                 patrolIds = this.db.patrolsCheckedOut(postId);
             }
@@ -193,8 +193,8 @@ export class Pages {
             .map((postId) => {
                 let base = this.db.postInfo(postId);
                 return {
-                    patrolsOnPost: this.db.patruljerPåPost(postId).length,
-                    patrolsOnTheirWay: this.db.patruljerPåVej(postId).length,
+                    patrolsOnPost: this.db.patrolsAtPost(postId).length,
+                    patrolsOnTheirWay: this.db.patrolsOnTheirWay(postId).length,
                     patrolsCheckedOut: this.db.patrolsCheckedOut(postId).length,
                     ...base
                 };

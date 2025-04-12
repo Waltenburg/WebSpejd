@@ -2,7 +2,7 @@ import 'source-map-support/register';
 
 import * as http from 'http'
 import * as users from "./users";
-import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
+import { JsonDatabase, DatabaseWrapper, Checkin, CheckinType } from "./database";
 import * as responses from "./response";
 import * as pages from "./pages";
 import * as router from "./request";
@@ -28,7 +28,7 @@ class Server {
      * @param db the database
      */
     constructor(address: string, port: number, assets: string, db: DatabaseWrapper) {
-        this.db = db;
+        this.db = new DatabaseWrapper(db);
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false);
@@ -152,16 +152,19 @@ class Server {
         if(post === undefined) {
             return responses.not_found(`post ${user.postId} not found`);
         }
-        const nextPost = this.db.postInfo(user.postId + 1);
-        const isLastPost = nextPost === undefined;
-        const omvejÅben = !isLastPost && !post.detour && nextPost?.detour && nextPost?.open;
+
+        let detourOpen = false;
+        if(post.detour !== undefined) {
+            const detour = this.db.postInfo(post.detour);
+            detourOpen = detour.open;
+        }
 
         return responses.ok("", {
             "data": JSON.stringify({
-                "påPost": this.db.patruljerPåPost(user.postId),
-                "påVej": this.db.patruljerPåVej(user.postId),
+                "påPost": this.db.patrolsAtPost(user.postId),
+                "påVej": this.db.patrolsOnTheirWay(user.postId),
                 "post": post.name,
-                "omvejÅben": omvejÅben,
+                "omvejÅben": detourOpen,
             })
         });
     }
@@ -352,7 +355,7 @@ async function main(): Promise<void> {
     //In SQLite the first post is 1, in JSON it is 0
     //This is changed in the database wrapper field firstPostId
     const db = new sqliteDB(database, inMemory, resetDatabase);
-    const server = new Server(address, port, assets, new DatabaseWrapper(db));
+    const server = new Server(address, port, assets, db);
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
