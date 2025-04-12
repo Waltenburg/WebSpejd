@@ -31,4 +31,10 @@ export class Api implements Routing {
         return responses.ok();
     }
 
+    changePost = async (request: Request): Promise<Response> => {
+        const postChange = JSON.parse(request.body);
+        this.db.changePost(postChange["postId"], postChange["change"]);
+        return responses.ok()
+    }
+
 }

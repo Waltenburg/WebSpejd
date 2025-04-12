@@ -33,6 +33,14 @@ export interface Post {
     lastUpdate: Date;
 }
 
+/** Change to a post */
+export interface PostChange {
+    name?: string;
+    open?: boolean;
+    next_post?: number;
+    detour?: number;
+}
+
 export interface Database {
     /**
      * Find the latest checkin of the specified patrol.
@@ -99,13 +107,14 @@ export interface Database {
      */
     postInfo(postId: number): Post | undefined;
 
+
     /**
-     * Change status of post.
+     * Change information about a post
      *
      * @param postId the id of the post to change
-     * @param open `true` if the post should be open, `false` otherwise
+     * @param change the new information about the post
      */
-    changePostStatus(postId: number, open: boolean): void;
+    changePost(postId: number, change: PostChange): void;
 
     /**
      * Get all ids of posts.

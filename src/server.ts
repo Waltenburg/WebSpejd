@@ -248,7 +248,7 @@ class Server {
         const postId = Number.parseInt(params.get("post"));
         const newStatus = statusParam === "open";
 
-        this.db.changePostStatus(postId, newStatus);
+        this.db.changePost(postId, {open: newStatus});
         return responses.redirect(`/master/post?id=${postId}`);
     }
 

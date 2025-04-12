@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
+import { Checkin, CheckinType, Database, Patrol, Post, PostChange } from "./generic";
 
 /** Database storing everything in a json file. */
 export class JsonDatabase implements Database {
@@ -109,12 +109,19 @@ export class JsonDatabase implements Database {
             .find((post) => post.id == postId);
     }
 
-    changePostStatus(postId: number, open: boolean): void {
+    changePost(postId: number, change: PostChange): void {
         let post = this.postInfo(postId);
         if(post === undefined) {
             return;
         }
-        post.open = open;
+        post = {
+            id: post.id,
+            name: change.name || post.name,
+            open: change.open || post.open,
+            next_post: change.next_post || post.next_post,
+            detour: change.detour || post.detour,
+            lastUpdate: post.lastUpdate,
+        };
         this.updatePost(postId);
     }
 
@@ -183,7 +190,7 @@ export class JsonDatabase implements Database {
     authenticate(password: string): number | undefined {
         const user = this.data.users.find((user) => user.password === password);
         const postId = user?.postId;
-        
+
         if(postId === -1) {
             return Infinity;
         }

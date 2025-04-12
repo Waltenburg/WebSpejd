@@ -1,4 +1,4 @@
-import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
+import { Checkin, CheckinType, Database, Patrol, Post, PostChange } from "./generic";
 
 export class DatabaseWrapper implements Database {
     private db: Database;
@@ -8,24 +8,13 @@ export class DatabaseWrapper implements Database {
     }
 
     /**
-     * Add initial data to database.
-     */
-    private initialize(): void {
-        const isInitialized = this.db.allCheckinIds().length !== 0;
-        if(isInitialized) {
-            return;
-        }
-        this.sendAllPatruljerTowardsFirstPost();
-    }
-
-    /**
      * Change detour from open to closed or closed to open.
      *
      * @param postId the id of the post to change
      * @returns `true` if status changed, `false` otherwise
      */
     changeDetourStatus(postId: number, open: boolean): boolean {
-        this.db.changePostStatus(postId, open);
+        this.db.changePost(postId, {open: open});
         return true;
     }
 
@@ -182,7 +171,7 @@ export class DatabaseWrapper implements Database {
 
         // Set all posts to open
         this.db.allPostIds().forEach((postId) => {
-            this.db.changePostStatus(postId, true);
+            this.db.changePost(postId, {open: true});
         });
 
         // Remove "udgået" status from all patrols
@@ -247,12 +236,12 @@ export class DatabaseWrapper implements Database {
         return this.db.allPatrolIds();
     }
 
-    changePostStatus(postId: number, open: boolean): void {
-        this.db.changePostStatus(postId, open);
-    }
-
     createPost(post: Post): void {
         this.db.createPost(post);
+    }
+
+    changePost(postId: number, change: PostChange) {
+        this.db.changePost(postId, change);
     }
 
     postInfo(postId: number): Post | undefined {
