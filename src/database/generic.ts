@@ -33,17 +33,19 @@ export interface Post {
     lastUpdate: Date;
 }
 
-// export interface Route{
-//     id: number;
-//     fromLocation: number;
-//     toLocation: number;
-// }
-
 /** Information about a user as it is stored in the database */
 export interface User{
     id: number;
     postId: number;
     password: string;
+}
+
+/** Change to a post */
+export interface PostChange {
+    name?: string;
+    open?: boolean;
+    next_post?: number;
+    detour?: number;
 }
 
 export interface Database {
@@ -112,13 +114,14 @@ export interface Database {
      */
     postInfo(postId: number): Post | undefined;
 
+
     /**
-     * Change status of post.
+     * Change information about a post
      *
      * @param postId the id of the post to change
-     * @param open `true` if the post should be open, `false` otherwise
+     * @param change the new information about the post
      */
-    changePostStatus(postId: number, open: boolean): void;
+    changePost(postId: number, change: PostChange): void;
 
     /**
      * Get all ids of posts.

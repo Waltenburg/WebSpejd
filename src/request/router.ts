@@ -256,7 +256,7 @@ export class Router {
 }
 
 type Response = responses.Response;
-type RouteFunction = (request?: Request) => Promise<Response>;
+type RouteFunction = (request: Request) => Promise<Response>;
 
 interface SubRoutes {
     userType: UserType;
