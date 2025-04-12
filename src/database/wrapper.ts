@@ -187,13 +187,20 @@ export class DatabaseWrapper implements Database {
      * @returns the location of the patrol
      */
     locationOfPatrol(patrolId: number): PatrolLocation {
-        if(this.db.patrolInfo(patrolId).udgået) {
+        const patrol = this.db.patrolInfo(patrolId);
+        if(patrol.udgået) {
             return {
                 type: PatrolLocationType.Udgået,
                 postId: -1,
             };
         }
         let latestCheckin = this.latestCheckinOfPatrol(patrolId);
+        if(latestCheckin === undefined) {
+            return {
+                type: PatrolLocationType.GoingToLocation,
+                postId: 0
+            }
+        }
         if(latestCheckin.type === CheckinType.CheckIn) {
             return {
                 type: PatrolLocationType.OnLocation,
