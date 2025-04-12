@@ -3,7 +3,7 @@ body, html {
 }
 
 .login-background {
-    background-image: url(../images/bg-login.jpg);
+    background-image: url(/assets/images/bg-login.jpg);
     width: 100vw;
     height: 100vh;
     background-position: center;
