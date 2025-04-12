@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 
+import * as fs from "node:fs";
 import * as http from 'http'
 import * as users from "./users";
 import { DatabaseWrapper, SqliteDatabase, Checkin, CheckinType, Database } from "./database";
@@ -7,7 +8,6 @@ import * as responses from "./response";
 import * as pages from "./pages";
 import * as router from "./request";
 import { UserType, Request } from './request';
-import { Command } from 'commander';
 import { inspect } from 'util';
 import { Api } from './endpoints/api';
 
@@ -47,8 +47,9 @@ class Server {
                 responses.send(connection, responses.server_error());
             }
         })
-            .listen(port, address, () => {
-                console.log(`Server is now listening at http://${address}:${port}`);
+            .listen({
+                host: address,
+                port: port,
             });
     }
 
@@ -297,63 +298,22 @@ class Server {
 
 }
 
-/**
- * Read command line arguments to get address and port.
- * @return binding address and port
- */
-const readArguments = (): Command => {
-    let command = new Command()
-        .option(
-            "-a, --address <address>",
-            "Address the server is hosted on",
-            "127.0.0.1"
-        )
-        .option(
-            "-p, --port <port>",
-            "Port the server is listening on",
-            "3000"
-        )
-        .option(
-            "--assets <assets>",
-            "Assets file directory",
-            `assets`
-        )
-        .option(
-            "--db, --database <file>",
-            "File to store data in",
-            "data/database.db"
-        )
-        .option(
-            "--databaseInMemory", //Boolean flag
-            "Whether to save the database or keep it in memory",
-        )
-        .option(
-            "--resetDatabase", //Boolean flag
-            "Whether to start all patrols at first post"
-        );
-    command.parse();
-    return command;
-};
-
-
 async function main(): Promise<void> {
-    const command = readArguments();
-    const options = command.opts();
-    const port = Number.parseInt(options["port"]);
-    const address = options["address"]
-    const database = options["database"]
-    const assets = options["assets"]
-    const inMemory = options["databaseInMemory"] === true;
-    const resetDatabase = options["resetDatabase"] === true;
+    let config = JSON.parse(fs.readFileSync("config.json", "utf-8"));
+
+    const address = config["address"];
+    const port = Number.parseInt(config["port"]) || null;
+    const database = config["database"] || "data/database.json";
+    const assets = config["assets"] || "assets";
+    const inMemory = false;
+    const resetDatabase = false;
 
     console.log(`Starting server with options: ${inspect(
         {
             address: address,
             port: port,
             database: database,
-            assets: assets,
-            inMemory: inMemory,
-            resetDatabase: resetDatabase
+            assets: assets
         },
         { colors: true, depth: null })}`);
 

@@ -1,0 +1,6 @@
+{
+    "address": null,
+    "port": null,
+    "database": "data/database.json",
+    "assets": "assets"
+}
