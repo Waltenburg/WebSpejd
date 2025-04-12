@@ -1,42 +1,51 @@
-body,
-html {
-    height: 100%;
+body, html {
+    margin: 0;
 }
 
-.bg {
+.login-background {
     background-image: url(../images/bg-login.jpg);
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     z-index: -10;
+    position: absolute;
 }
 
-h1 {
-    text-align: center;
-    font-size: 100px;
-    font-family: Verdana, Geneva, Tahoma, sans-serifS;
-    opacity: 100%;
-}
+.login-box {
+    width: max(40vw, 700px);
+    height: fit-content;
 
-h2 {
-    text-align: center;
+    margin: 0;
+    padding-bottom: 2em;
+    display: block;
+
+    background-color: #000000;
+    opacity: 90%;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    color: white;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.login-box h2 {
+    text-align: center;
     font-size: 3em;
-    opacity: 100%;
 }
 
 p {
     text-align: left;
     margin-left: 5%;
     margin-bottom: 5px;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     font-size: 2.5em;
-    opacity: 100%;
-    color: white;
 }
 
-button {
+.login-box button {
     opacity: 100%;
     font-size: 2.5em;
     width: 90%;
@@ -45,12 +54,10 @@ button {
     margin-top: 1em;
 }
 
-input {
+.login-box input {
     opacity: 100%;
     width: 90%;
-    height: 50px;
     margin: auto;
     display: block;
     font-size: 2em;
-    /* text-align: center; */
 }
