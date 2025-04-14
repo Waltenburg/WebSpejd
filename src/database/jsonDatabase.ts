@@ -79,7 +79,7 @@ export class JsonDatabase implements Database {
     }
 
     changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.patrolInfo(patrolId).udgået = udgået;
+        this.data.patrols[patrolId].udgået = udgået;
     }
 
     changePatrol(patrolId: number, info: Patrol): void {

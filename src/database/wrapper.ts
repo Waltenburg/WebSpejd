@@ -43,9 +43,13 @@ export class DatabaseWrapper implements Database {
      * @return `true` if the patrol can be checked out, `false` otherwise
      */
     canPatruljeBeCheckedUd(patrolId: number, postId: number, detour: boolean): boolean {
+        const post = this.db.postInfo(postId);
+        if(post === undefined) {
+            return false;
+        }
+
         const lastCheckin = this.latestCheckinOfPatrol(patrolId);
         const patrolInfo = this.db.patrolInfo(patrolId);
-        const post = this.db.postInfo(postId);
         const hasDetour = post.detour !== undefined;
 
         return lastCheckin !== undefined
@@ -89,16 +93,19 @@ export class DatabaseWrapper implements Database {
      */
     patrolsAtPost(postId: number): number[] {
         let checkins = this.db.checkinsAtPost(postId);
+
         let patrolsCheckedOut = checkins
             .filter((checkin) => checkin.type !== CheckinType.CheckIn)
             .map((checkin) => checkin.patrolId);
+
         let patrolsAtPost = checkins
             .filter((checkin) => {
                 return checkin.type === CheckinType.CheckIn
                     && !patrolsCheckedOut.includes(checkin.patrolId)
             })
             .map((checkin) => checkin.patrolId)
-            .filter((patrolId) => !this.db.patrolInfo(patrolId).udgået);
+            .filter((patrolId) => !(this.db.patrolInfo(patrolId)?.udgået || true));
+
         return patrolsAtPost;
     }
 
@@ -133,8 +140,10 @@ export class DatabaseWrapper implements Database {
      * @returns the id of the next post
      */
     private nextPostId(postId: number, detour: boolean): number {
-        //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
         const post = this.db.postInfo(postId);
+        if(post === undefined) {
+            return -1;
+        }
         if(detour && post.detour !== undefined) {
             return post.detour;
         } else {
@@ -188,6 +197,12 @@ export class DatabaseWrapper implements Database {
      */
     locationOfPatrol(patrolId: number): PatrolLocation {
         const patrol = this.db.patrolInfo(patrolId);
+        if(patrol === undefined) {
+            return {
+                type: PatrolLocationType.Unknown,
+                postId: -1,
+            };
+        }
         if(patrol.udgået) {
             return {
                 type: PatrolLocationType.Udgået,
@@ -303,5 +318,5 @@ export interface PatrolLocation {
 }
 
 export enum PatrolLocationType {
-    OnLocation, GoingToLocation, Udgået
+    OnLocation, GoingToLocation, Udgået, Unknown
 }

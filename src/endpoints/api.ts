@@ -17,22 +17,22 @@ export class Api implements Routing {
     }
 
     createPatrol = async (request: Request): Promise<Response> => {
-        const name = request.query["name"];
-        if(name === undefined) {
-            return responses.bad_request("missing name parameter");
+        const name = request.getParam("name");
+        if(name === null) {
+            return responses.bad_request("Missing parameter: name");
         }
         this.db.createPatrol(name);
         return responses.ok();
     }
 
     createPost = async (request: Request): Promise<Response> => {
-        const post = JSON.parse(request.body);
+        const post = JSON.parse(await request.body());
         this.db.createPost(post);
         return responses.ok();
     }
 
     changePost = async (request: Request): Promise<Response> => {
-        const postChange = JSON.parse(request.body);
+        const postChange = JSON.parse(await request.body());
         this.db.changePost(postChange["postId"], postChange["change"]);
         return responses.ok()
     }

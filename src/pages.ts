@@ -53,7 +53,11 @@ export class Pages {
     }
 
     post = async (request: Request): Promise<Response> => {
-        const postId = Number.parseInt(request.url.searchParams.get("id"));
+        const postId = request.getParamAsNumber("id");
+        if(postId === null) {
+            return responses.server_error("Missing parameter");
+        }
+
         let post = this.db.postInfo(postId);
         return this.response(POST, {
             patrolsOnPost: this.patrolsData(this.db.patrolsAtPost(postId)),
@@ -129,7 +133,11 @@ export class Pages {
     }
 
     patrol = async (request: Request): Promise<Response> => {
-        const patrolId = Number.parseInt(request.url.searchParams.get("id"));
+        const patrolId = request.getParamAsNumber("id");
+        if(patrolId === null) {
+            return responses.server_error("Missing parameter");
+        }
+
         return this.response(PATROL, {
             patrol: this.db.patrolInfo(patrolId),
             checkins: this.db.latestCheckinsOfPatrol(patrolId, 100),
@@ -178,27 +186,31 @@ export class Pages {
             })
             .sort((a, b) => {
                 if(sortBy === "time") {
-                    return a.lastCheckin.time.getTime()
-                        - b.lastCheckin.time.getTime();
+                    return (a.lastCheckin?.time.getTime() || 0)
+                        - (b.lastCheckin?.time.getTime() || 0);
                 }
                 if(sortBy === "post") {
                     return a.location.postId - b.location.postId;
                 }
-                return a.id - b.id;
+                return (a.id || 0) - (b.id || 0);
             })
     }
 
     private postsData = (): postDataToMaster[] => {
-         return this.db.allPostIds()
-            .map((postId) => {
-                let base = this.db.postInfo(postId);
-                return {
-                    patrolsOnPost: this.db.patrolsAtPost(postId).length,
-                    patrolsOnTheirWay: this.db.patrolsOnTheirWay(postId).length,
-                    patrolsCheckedOut: this.db.patrolsCheckedOut(postId).length,
-                    ...base
-                };
+        const result = [];
+        for(var postId of this.db.allPostIds()) {
+            const post = this.db.postInfo(postId);
+            if(post === undefined){
+                continue;
+            }
+            result.push({
+                patrolsOnPost: this.db.patrolsAtPost(post.id).length,
+                patrolsOnTheirWay: this.db.patrolsOnTheirWay(post.id).length,
+                patrolsCheckedOut: this.db.patrolsCheckedOut(post.id).length,
+                ...post
             });
+        }
+        return result;
     }
     /**
      * Render template.
@@ -225,6 +237,9 @@ export class Pages {
 
     formatPatrolLocation = (location: PatrolLocation): string => {
         const post = this.db.postInfo(location.postId);
+        if(post === undefined) {
+            return "Ukendt lokation";
+        }
         if(location.type === PatrolLocationType.GoingToLocation) {
             return `Går mod ${post.detour ? post.name : `post ${post.name}`}`;
             // return `Går mod ${post.name}`;
@@ -237,6 +252,9 @@ export class Pages {
 
     formatCheckinLocation = (checkin: Checkin): string => {
         const post = this.db.postInfo(checkin.postId);
+        if(post === undefined) {
+            return "Ukendt lokation";
+        }
         return post.detour ? post.name : `Post ${post.name}`;
     }
 }
@@ -261,7 +279,11 @@ function formatTime(value: Date | undefined) {
     return `${hour}:${minute}:${second}`;
 }
 
-function patrolsUrl(sortBy: string =undefined, postId: string = undefined, selection: string = undefined): string {
+function patrolsUrl(
+    sortBy: string | undefined = undefined,
+    postId: string | undefined = undefined,
+    selection: string | undefined = undefined
+): string {
     return createUrlPath("/master/patrols", {
         sortBy: sortBy,
         postId: postId,

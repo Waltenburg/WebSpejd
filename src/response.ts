@@ -1,7 +1,5 @@
 import * as fs from "fs/promises";
 import * as http from 'http'
-import {files} from "./files";
-import * as pages from "./pages";
 
 export interface Response {
     status_code: number;
@@ -22,7 +20,7 @@ export function ok(content?: any, headers?: {[key: string]: any}): Response {
 export async function file(path: string): Promise<Response> {
     try{
         const content = await fs.readFile(path);
-        const mimeType = files.determineContentType(path);
+        const mimeType = determineContentType(path);
         return {
             status_code: 200,
             content: content,
@@ -86,6 +84,50 @@ export function response_code(status_code: number, content?: any): Response {
         status_code: status_code,
         content: content
     }
+}
+
+export function set_header(response: Response, key: string, value: string) {
+    if(response.headers === undefined) {
+        response.headers = {};
+    }
+    response.headers[key] = value;
+}
+
+export enum MIME {
+    html = "text/html",
+    json = 'application/JSON',
+    css = "text/css",
+    jpg = "image/jpg",
+    png = "image/png",
+    ico = "image/x-icon",
+    mp3 = "audio/mpeg",
+    javascript = "application/javascript",
+    any = "*/*",
+}
+
+/**
+ * Guess mimetype of file based on extension.
+ * @param path the path to get mimetype of
+ * @return the mimetype based on the path
+ */
+export const determineContentType = (path: string): MIME => {
+    let split = path.split(".")
+    let extension = split[split.length - 1].toLowerCase()
+
+    const extensionsToMimeTypes: { [extension: string]: MIME } = {
+        "css": MIME.css,
+        "html": MIME.html,
+        "ico": MIME.ico,
+        "jpg": MIME.jpg,
+        "json": MIME.json,
+        "js": MIME.javascript,
+        "mp3": MIME.mp3,
+        "png": MIME.png,
+    };
+    if (extension in extensionsToMimeTypes) {
+        return extensionsToMimeTypes[extension];
+    }
+    return MIME.any;
 }
 
 /**

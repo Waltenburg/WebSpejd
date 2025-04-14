@@ -31,7 +31,7 @@ class Server {
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false);
-        this.router = this.createRouter(address, port, assets, this.users);
+        this.router = this.createRouter(assets, this.users);
 
         const numberOfPosts = db.allPostIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
@@ -52,8 +52,8 @@ class Server {
             });
     }
 
-    private createRouter(address: string, port: number, assets: string, users: users.UserCache): router.Router {
-        return new router.Router(address, port, users)
+    private createRouter(assets: string, users: users.UserCache): router.Router {
+        return new router.Router(users)
             .assetDir("/assets", assets)
             .assetDir("/js", `${__dirname}/clientFiles`)
             .file("/", `${assets}/html/home.html`)
@@ -111,41 +111,37 @@ class Server {
 
     logout = async (_request: Request): Promise<Response> => {
         let response = responses.redirect("/");
-        response.headers["Set-Cookie"] =  "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        responses.set_header(
+            response,
+            "Set-Cookie",
+            "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        );
         return response;
     }
 
     /**
      * Get updated information about post.
      */
-    postUpdate = async (req: Request): Promise<Response> => {
-        const user = req.user;
+    postUpdate = async (request: Request): Promise<Response> => {
+        const user = this.users.userFromRequest(request);
 
-        const userLastUpdate = parseInt(req.headers['last-update'] as string)
         const post = this.db.postInfo(user.postId);
         if(post === undefined) {
             return responses.not_found();
         }
 
-        //Der er kommet ny update siden sidst klienten spurgte
-        const postLastUpdate = post.lastUpdate.getTime();
-        if(true){
-        //if(userLastUpdate < postLastUpdate){
-            let response = await this.postData(req);
-            if(response.headers) {
-                response.headers.update = "true";
-            }
-            return response;
-        } else{
-            return responses.ok(null, { "update": "false" });
+        let response = await this.postData(request);
+        if(response.headers) {
+            response.headers.update = "true";
         }
+        return response;
     }
 
     /**
      * Get information about post.
      */
-    postData = async (req: Request): Promise<Response> => {
-        const user = req.user;
+    postData = async (request: Request): Promise<Response> => {
+        const user = this.users.userFromRequest(request);
 
         const post = this.db.postInfo(user.postId);
         if(post === undefined) {
@@ -155,7 +151,7 @@ class Server {
         let detourOpen = false;
         if(post.detour !== undefined) {
             const detour = this.db.postInfo(post.detour);
-            detourOpen = detour.open;
+            detourOpen = detour !== undefined && detour.open;
         }
 
         return responses.ok("", {
@@ -175,7 +171,7 @@ class Server {
      * @param res the http response builder
      */
     postCheckin = async (request: Request): Promise<Response> => {
-        const user = request.user;
+        const user = this.users.userFromRequest(request);
 
         let patrolId: number;
         let melding: string;
@@ -243,27 +239,33 @@ class Server {
     }
 
     postStatus = async(request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const statusParam = params.get("status");
-        const postId = Number.parseInt(params.get("post"));
+        const statusParam = request.getParam("status");
         const newStatus = statusParam === "open";
+        const postId = request.getParamAsNumber("post");
+        if(postId === null) {
+            return responses.server_error("Missing parameter");
+        }
 
         this.db.changePost(postId, {open: newStatus});
         return responses.redirect(`/master/post?id=${postId}`);
     }
 
     patrolStatus = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const patrolId = Number.parseInt(params.get("patrolId"));
-        const status = params.get("status");
+        const patrolId = request.getParamAsNumber("patrolId");
+        const status = request.getParam("status");
+        if(patrolId === null || status === null) {
+            return responses.server_error("Missing parameter");
+        }
         const isOut = status === "out";
         this.db.changePatrolStatus(patrolId, isOut);
         return responses.redirect(`/master/patrol?id=${patrolId}`);
     }
 
     deleteCheckin = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const checkinId = Number.parseInt(params.get("id"));
+        const checkinId = request.getParamAsNumber("id");
+        if(checkinId === null) {
+            return responses.server_error();
+        }
         this.db.deleteCheckin(checkinId);
         return responses.ok();
     }
@@ -271,15 +273,20 @@ class Server {
     mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
         const timeToUndo = 1000 * 20; // 20 seconds
 
-        const params = request.url.searchParams;
-        const checkinId = Number.parseInt(params.get("id"));
-        // const postIdRequest = this.db.authenticate(request.headers['id'])
-        const postIdRequest = this.users.userFromIdentifier(request.headers['id']).postId;
-        const checkin = this.db.checkinById(checkinId);
-        const postIdCheckin = checkin?.postId;
+        const checkinId = request.getParamAsNumber("id");
+        if(checkinId === null) {
+            return responses.server_error("Missing parameter: id");
+        }
 
-        const requestAndCheckinMatch = postIdCheckin == postIdRequest && postIdCheckin != null;
-        const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
+        const checkin = this.db.checkinById(checkinId);
+        if(checkin === undefined) {
+            return responses.server_error("Invalid checkin id");
+        }
+
+        const postIdRequest = this.users.userFromRequest(request).postId;
+
+        const requestAndCheckinMatch = checkin.id == postIdRequest;
+        const checkinIsRecent = checkin.time.getTime() > Date.now() - timeToUndo;
 
         if(requestAndCheckinMatch && checkinIsRecent) {
             this.db.deleteCheckin(checkinId);

@@ -1,4 +1,4 @@
-import * as http from 'http';
+import { Request } from './request';
 
 export class UserCache {
     private users: { [key: string]: User };
@@ -40,8 +40,8 @@ export class UserCache {
      * @param req the request from the client
      * @returns the matching user
      */
-    userFromRequest(req: http.IncomingMessage): User {
-        const identifier = req.headers["id"] as string;
+    userFromRequest(request: Request): User {
+        const identifier = request.cookies["identifier"] || request.headers["id"];
         return this.userFromIdentifier(identifier);
     }
 
