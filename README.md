@@ -1,34 +1,30 @@
 # Webspejd: Check-in and -out system for Danish scout competition CCMR
 
-WARNING: There are, at the moment, critical errors related to manual check-in and -out from the master page.
---
-This Node JS server host a website that handles check-in and -out of scout
+This Node JS server hosts a website that handles check-in and -out of scout
 patrols for the Danish scout competition [CCMR](https://ccmr.dk/). It can be
 setup to handle any number of locations and groups as long as the groups are to
 be checked in and out of locations in a predefined order. There can be one or
 zero skippable locations between compulsory locations.
 
 ## Overview
-This project includes both Typescript source code along with the *compiled*
-JavaScript code for a Node JS server. Typescript is found within the folder
-`Development` whilst JavaScript and data is found within `Deployed`.  When
-running, the server host multiple sites:
+This project includes Typescript source code for a Node JS server found within `src/`. Data about patrols and locations is put within `data/`.
+
+When running, the server host multiple sites:
 - a login page
 - a check-in and out page for each location
 - a master page that can see which check-in and -outs for all patrols on all locations
 
 ## Dependencies
 * [NodeJS](https://nodejs.org)
+* [TypeScript](https://www.typescriptlang.org/)
 
 ## Usage
-1. Compile the project by running `npx tsc` in the root directory.
-2. Run the server `node target/server.js [hostname] [port]`
+1. Open the porject and run `npm install ` in root of project
+2. Compile the project by running `npm run build` in root of project.
+3. Run the server `npm run start`
+4. Acces server at `localhost:3000`
 These instructions are for windows only.
 [Node](https://nodejs.org) must be installed on the hosting machine. 
-
-**Tip**: Both login-page and location-pages are developed solely for phones.
-When developing or using on computer, it is therefore recommended to select a
-phone device under development options within the browser.
 
 **Tip**: To have the server accessible from the internet, use your local
 ip-adresss as hostname. Setup port forwarding on your router to route any
@@ -39,11 +35,4 @@ to check if you're behind one. If you are, a tool like
 [ngrok](https://ngrok.com/) can help you.
 
 ## Setup of data files
-At the moment, setup must be done manually by editing a few JSON files located in `data`. The files are:
-
-| File            | Information within                                                                                                                                |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loeb.JSON`     | All patrols and whether they are still active                                                                                                     |
-| `poster.JSON`   | Locations                                                                                                                                         |
-| `users.JSON`    | Login information along with passwords for each location                                                                                          |
-| `ppMatrix.JSON` | Check-in and -out times for all patrols on all locations.<br>If not present when server starts, it is created with all patrols on first location. |
+TBD
