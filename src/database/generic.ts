@@ -35,6 +35,19 @@ export interface Post {
     // endTime: Date;
 }
 
+// export interface Route{
+//     id: number;
+//     fromLocation: number;
+//     toLocation: number;
+// }
+
+/** Information about a user as it is stored in the database */
+export interface User{
+    id: number;
+    postId: number;
+    password: string;
+}
+
 export interface Database {
     /**
      * Find the latest checkin of the specified patrol.
