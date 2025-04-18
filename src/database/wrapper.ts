@@ -43,7 +43,7 @@ export class DatabaseWrapper implements Database {
         this.db.allPatrolIds().forEach((patrolId) => {
             this.db.checkin({
                 patrolId: patrolId,
-                postId: 0,
+                postId: 1,
                 type: CheckinType.CheckIn,
                 time: time,
             });

@@ -9,6 +9,7 @@ import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
 import { inspect } from 'util';
+import { sqliteDB } from './database/sqliteDB';
 
 type Response = responses.Response;
 
@@ -127,7 +128,7 @@ class Server {
         }
 
         //Der er kommet ny update siden sidst klienten spurgte
-        const postLastUpdate = post.lastUpdate.getTime();
+        // const postLastUpdate = post.lastUpdate.getTime();
         if(true){
         //if(userLastUpdate < postLastUpdate){
             let response = await this.postData(req);
@@ -135,9 +136,9 @@ class Server {
                 response.headers.update = "true";
             }
             return response;
-        } else{
+        } /* else{
             return responses.ok(null, { "update": "false" });
-        }
+        } */
     }
 
     /**
@@ -310,7 +311,7 @@ const readArguments = (): Command => {
         .option(
             "--db, --database <file>",
             "File to store data in",
-            "data/database.json"
+            "data/webspejd.db"
         )
         .option(
             "--databaseInMemory ", //Boolean flag
@@ -346,7 +347,7 @@ async function main(): Promise<void> {
         },
         { colors: true, depth: null })}`);
 
-    const db = new JsonDatabase(database, inMemory, resetDatabase);
+    const db = new sqliteDB(database)
     const server = new Server(address, port, assets, new DatabaseWrapper(db));
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
