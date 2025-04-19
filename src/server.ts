@@ -311,11 +311,9 @@ const readArguments = (): Command => {
         .option(
             "--db, --database <file>",
             "File to store data in",
-            "data/webspejd.db"
             "SQLite/webspejd.db"
         )
         .option(
-            "--databaseInMemory ", //Boolean flag
             "--databaseInMemory", //Boolean flag
             "Whether to save the database or keep it in memory",
         )
@@ -335,7 +333,6 @@ async function main(): Promise<void> {
     const address = options["address"]
     const database = options["database"]
     const assets = options["assets"]
-    const inMemory = options["DatabaseInMemory"] === true;
     const inMemory = options["databaseInMemory"] === true;
     const resetDatabase = options["resetDatabase"] === true;
 
@@ -350,7 +347,9 @@ async function main(): Promise<void> {
         },
         { colors: true, depth: null })}`);
 
-    const db = new sqliteDB(database)
+    //Be aware that different databases have different indices for the first post
+    //In SQLite the first post is 1, in JSON it is 0
+    //This is changed in the database wrapper field firstPostId
     const db = new sqliteDB(database, inMemory, resetDatabase);
     const server = new Server(address, port, assets, new DatabaseWrapper(db));
 

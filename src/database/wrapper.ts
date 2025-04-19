@@ -2,22 +2,24 @@ import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
 
 export class DatabaseWrapper implements Database {
     private db: Database;
+    /** The id of the first post. */
+    private firstPostId: number = 1;
 
     constructor(db: Database) {
         this.db = db;
-        this.initialize();
+        // this.initialize();
     }
 
     /**
      * Add initial data to database.
      */
-    private initialize(): void {
-        const isInitialized = this.db.allCheckinIds().length !== 0;
-        if(isInitialized) {
-            return;
-        }
-        this.sendAllPatruljerTowardsFirstPost();
-    }
+    // private initialize(): void {
+    //     const isInitialized = this.db.allCheckinIds().length !== 0;
+    //     if(isInitialized) {
+    //         return;
+    //     }
+    //     this.sendAllPatruljerTowardsFirstPost();
+    // }
 
     /**
      * Change detour from open to closed or closed to open.
@@ -32,22 +34,6 @@ export class DatabaseWrapper implements Database {
         }
         this.db.changePostStatus(postId, open);
         return true;
-    }
-
-    /**
-     * Check all patrols in at post 0.
-     */
-    sendAllPatruljerTowardsFirstPost() {
-        console.log("Sending all patrols to first post");
-        let time = new Date();
-        this.db.allPatrolIds().forEach((patrolId) => {
-            this.db.checkin({
-                patrolId: patrolId,
-                postId: 1,
-                type: CheckinType.CheckIn,
-                time: time,
-            });
-        });
     }
 
     /**
@@ -81,7 +67,7 @@ export class DatabaseWrapper implements Database {
     canPaltrolBeCheckedIn(patrolId: number, postId: number): boolean {
         const lastCheckin = this.latestCheckinOfPatrol(patrolId);
         if(lastCheckin === undefined) {
-            return postId === 0;
+            return postId === this.firstPostId;
         }
 
         const patrolIsOnDetour = lastCheckin.type == CheckinType.Detour;
@@ -266,6 +252,9 @@ export class DatabaseWrapper implements Database {
         this.db.deleteCheckin(checkinId);
     }
 
+    /**Delete all checkins from the database.
+     * Equivalent to sending all patrols to the first post.
+     */
     deleteAllCheckins(): void {
         this.db.allCheckinIds().forEach(id => {
             this.deleteCheckin(id);
