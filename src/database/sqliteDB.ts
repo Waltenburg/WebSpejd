@@ -1,55 +1,78 @@
 import SQLite from 'better-sqlite3';
 import { CheckinType, Checkin, Database, Patrol, Post, User} from "./generic";
 import fs from 'fs';
+import { Database as SQLiteDB} from 'better-sqlite3';
+
+/** Same as `Checkin` except that it has `timeStr: string` instead of `time: Date`*/
+interface DatabaseCheckin {
+    id: number;
+    patrolId: number;
+    postId: number;
+    type: CheckinType;
+    timeStr: string; // String representation of the time in UTC
+}
 
 export class sqliteDB implements Database {
-    private readonly datafile: string;
+    private readonly dbPath: string;
     private db: SQLite.Database;
 
-    constructor(datafile: string) {
-        this.datafile = datafile;
+    private timeZoneOffset: number; // Timezone offset in minutes
 
-        // // Delete the database file if it exists
-        // if (fs.existsSync(this.datafile)) {
-        //     fs.unlinkSync(this.datafile);
-        // }
-        // this.initialize();
-
-        this.db = new SQLite(this.datafile/*, { verbose: console.log } */);
-    }
-
-    /**
-     * Add initial data to database.
+    /** Creates a new SQLite database wrapper.
+     * @param dbPath the path to the SQLite database file. Value `:memory:` for in-memory database.
+     * @param resetCheckins if `true`, all checkins will be deleted from the database
      */
-    private initialize(): void {
-        //Create the database file
-        this.db = new SQLite(this.datafile/*, { verbose: console.log } */);
-        //Create the tables
-        this.db.exec(fs.readFileSync("src/database/dbSchema.sql", "utf8"));
+    constructor(dbPath: string, tempoary: boolean, resetCheckins: boolean = false) {
+        this.dbPath = dbPath;
+        this.timeZoneOffset = new Date().getTimezoneOffset(); // Get the timezone offset in minutes
+        
+        // Temporary database
+        if(tempoary) {
+            const dbDisk = new SQLite(dbPath, { fileMustExist: true });
+            dbDisk.pragma('journal_mode = DELETE');
+            const buffer = dbDisk.serialize();
+            dbDisk.close();
 
-        const patrols = ['Elg', 'Rådyr', 'Hare', 'Fasan', 'Kylling', 'And'];
-        const posts = ['Start', 'Post1', 'Omvej1', 'Post3', 'Omvej2', 'Post5'];
-        const isDetour = [0, 0, 1, 0, 1, 0];
-        const isOpen = [1, 1, 1, 1, 1, 1];
-        const isActive = [1, 1, 1, 1, 1, 1];
-        const passwords = posts;
+            // @ts-expect-error
+            this.db = SQLite(buffer);
 
-        //Populate patrols
-        for (let i = 0; i < patrols.length; i++) {
-            this.db.prepare("INSERT INTO patrol (name) VALUES (?)").run(patrols[i]);
         }
-        //Populate posts
-        for (let i = 0; i < posts.length; i++) {
-            this.db.prepare("INSERT INTO post (name, detour , open) VALUES (?, ?, ?)").run(posts[i], isDetour[i], isOpen[i]);
+        else{
+            this.db = new SQLite(dbPath);
         }
-        //Populate users
-        for (let i = 0; i < posts.length; i++) {
-            this.db.prepare("INSERT INTO user (postId, password) VALUES (?, ?)").run(i + 1, passwords[i]);
+
+        this.db.pragma('journal_mode = WAL');
+        this.db.pragma('foreign_keys = ON');
+
+        // Reset checkins if requested
+        if(resetCheckins) {
+            this.db.prepare("DELETE FROM checkin").run();
         }
-        //Add master password
-        this.db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("master_password", "lukmigind");
+    }
+    /** Converts from local `Date()` object to UTC time ISO string ready to be stored in DB */
+    private toDataBaseTimeString(date: Date): string {
+        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
+        return utcDate.toISOString();
     }
 
+    /** Converts  UTC time ISO string t0 local `Date()` object */
+    private toLocalDateObject(date: string): Date {
+        const localDate = new Date(new Date(date).getTime() - this.timeZoneOffset * 60 * 1000);
+        return localDate;
+    }
+
+    /** Converts from checkin as stored in DB to checkin as used in the rest of the program */
+    private databaseCheckinToCheckin(dbCheckin: DatabaseCheckin[]): Checkin[] {
+        return dbCheckin.map((checkin) => {
+            return {
+                id: checkin.id,
+                patrolId: checkin.patrolId,
+                postId: checkin.postId,
+                type: checkin.type,
+                time: this.toLocalDateObject(checkin.timeStr),
+            };
+        });
+    }
 
     /**
      * Find the latest checkin of the specified patrol. 'f'
@@ -57,11 +80,8 @@ export class sqliteDB implements Database {
      * @return the latest checkin of the patrol or `null` if none exist
      */
     latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[]{
-        const checkins = this.db.prepare("SELECT * FROM checkin WHERE patrolId = ? ORDER BY time DESC LIMIT ?").all(patrol, amount) as Checkin[];
-        checkins.forEach((checkin) => {
-            checkin.time = new Date(checkin.time);
-        });
-        return checkins;
+        const checkins = this.db.prepare("SELECT * FROM checkin WHERE patrolId = ? ORDER BY timeStr DESC LIMIT ?").all(patrol, amount) as DatabaseCheckin[];
+        return this.databaseCheckinToCheckin(checkins);
     }
 
     /** Check patrol in or out of post.
@@ -69,8 +89,10 @@ export class sqliteDB implements Database {
      * @returns the id of the checkin
     */
     checkin(checkin: Checkin): number{
-        this.db.prepare("INSERT INTO checkin (patrolId, postId, type) VALUES (?, ?, ?)").run(checkin.patrolId, checkin.postId, checkin.type);
-        const id = (this.db.prepare("SELECT last_insert_rowid() as id").get() as Checkin).id;
+        this.db.prepare("INSERT INTO checkin (patrolId, postId, type, timeStr) VALUES (?, ?, ?, ?)")
+        .run(checkin.patrolId, checkin.postId, checkin.type, this.toDataBaseTimeString(checkin.time));
+
+        const id = (this.db.prepare("SELECT last_insert_rowid() as id").get() as DatabaseCheckin).id;
         return id;
     }
 
@@ -138,11 +160,8 @@ export class sqliteDB implements Database {
      * @returns the checkins at the post
      */
     checkinsAtPost(postId: number): Checkin[]{
-        const checkins = this.db.prepare("SELECT * FROM checkin WHERE postId = ?").all(postId) as Checkin[];
-        checkins.forEach((checkin) => {
-            checkin.time = new Date(checkin.time);
-        });
-        return checkins;
+        const checkins = this.db.prepare("SELECT * FROM checkin WHERE postId = ?").all(postId) as DatabaseCheckin[];
+        return this.databaseCheckinToCheckin(checkins);
     }
 
     /**
@@ -152,7 +171,11 @@ export class sqliteDB implements Database {
      * @returns the checkin with the id or `undefined` if checkin does not exist
      */
     checkinById(checkinId: number): Checkin | undefined{
-        return this.db.prepare("SELECT * FROM checkin WHERE id = ?").get(checkinId) as Checkin | undefined;
+        const dbCheckin = this.db.prepare("SELECT * FROM checkin WHERE id = ?").get(checkinId) as DatabaseCheckin | undefined;
+        if(dbCheckin == undefined) {
+            return undefined;
+        }
+        return this.databaseCheckinToCheckin([dbCheckin])[0];
     }
 
     /**
@@ -171,11 +194,8 @@ export class sqliteDB implements Database {
      * @returns the last x checkins
      */
     lastCheckins(amount: number): Checkin[]{
-        const checkins = this.db.prepare("SELECT * FROM checkin ORDER BY time DESC LIMIT ?").all(amount) as Checkin[];
-        checkins.forEach((checkin) => {
-            checkin.time = new Date(checkin.time);
-        });
-        return checkins;
+        const checkins = this.db.prepare("SELECT * FROM checkin ORDER BY timeStr DESC LIMIT ?").all(amount) as DatabaseCheckin[];
+        return this.databaseCheckinToCheckin(checkins);
     }
 
     /**

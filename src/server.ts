@@ -312,9 +312,11 @@ const readArguments = (): Command => {
             "--db, --database <file>",
             "File to store data in",
             "data/webspejd.db"
+            "SQLite/webspejd.db"
         )
         .option(
             "--databaseInMemory ", //Boolean flag
+            "--databaseInMemory", //Boolean flag
             "Whether to save the database or keep it in memory",
         )
         .option(
@@ -334,6 +336,7 @@ async function main(): Promise<void> {
     const database = options["database"]
     const assets = options["assets"]
     const inMemory = options["DatabaseInMemory"] === true;
+    const inMemory = options["databaseInMemory"] === true;
     const resetDatabase = options["resetDatabase"] === true;
 
     console.log(`Starting server with options: ${inspect(
@@ -348,6 +351,7 @@ async function main(): Promise<void> {
         { colors: true, depth: null })}`);
 
     const db = new sqliteDB(database)
+    const db = new sqliteDB(database, inMemory, resetDatabase);
     const server = new Server(address, port, assets, new DatabaseWrapper(db));
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
