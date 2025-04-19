@@ -36,7 +36,7 @@ CREATE TABLE checkin (
   patrolId INTEGER NOT NULL,
   postId INTEGER NOT NULL,
   type INTEGER NOT NULL,
-  time INTEGER DEFAULT (datetime('now')) NOT NULL,
+  timeStr INTEGER DEFAULT (datetime('now')) NOT NULL,
   --target_location_id INTEGER NOT NULL,
   FOREIGN KEY (patrolId) REFERENCES patrol(id),
   FOREIGN KEY (postId) REFERENCES post(id)

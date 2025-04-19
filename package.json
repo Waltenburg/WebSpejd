@@ -24,13 +24,14 @@
         "start:ts": "ts-node src/server.ts",
         "build": "npx tsc --project tsconfig.deployed.json && cp -r assets target",
         "build:watch": "npx tsc --project tsconfig.deployed.json --watch && cp -r assets target",
-        "build:test": "npm run clean:test && npx tsc --project tsconfig.test.json && cp -r test_data test",
+        "generateDatabase": "ts-node SQLite/generateDB.ts",
         "clean": "rimraf --glob target",
-        "clean:test": "rimraf --glob test",
         "cleanAll": "npm run clean && npm run clean:test",
         "test": "mocha",
-        "test:watch": "mocha --watch",
-        "testAfterBuild": "npm run build:test && npm run test"
+        "testAfterBuild": "npm run build:test && npm run test",
+        "clean:test": "rimraf --glob test",
+        "build:test": "npm run clean:test && npx tsc --project tsconfig.test.json && cp -r test_data test",
+        "test:watch": "mocha --watch"
     },
     "files": [
         "target/"
