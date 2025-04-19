@@ -27,8 +27,7 @@ class Server {
      * @param db the database
      */
     constructor(address: string, port: number, assets: string, db: DatabaseWrapper) {
-        this.db = new DatabaseWrapper(db);
-        //this.db.initialize();
+        this.db = db;
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false);
