@@ -285,7 +285,7 @@ class Server {
 
         const postIdRequest = this.users.userFromRequest(request).postId;
 
-        const requestAndCheckinMatch = checkin.id == postIdRequest;
+        const requestAndCheckinMatch = checkin.postId === postIdRequest;
         const checkinIsRecent = checkin.time.getTime() > Date.now() - timeToUndo;
 
         if(requestAndCheckinMatch && checkinIsRecent) {
