@@ -12,18 +12,16 @@ export class Api implements Routing {
 
     routes = (): Routes => {
         return new Routes()
-            // .post("/patrol/create", UserType.Master, this.createPatrol)
-            .post("/post/create", UserType.Master, this.createPost);
+            .post("/patrol/create", UserType.Master, this.createPatrol)
+            .post("/post/create", UserType.Master, this.createPost)
+            .post("/post/change", UserType.Master, this.changePost);
     }
 
-    // createPatrol = async (request: Request): Promise<Response> => {
-    //     const name = request.getParam("name");
-    //     if(name === null) {
-    //         return responses.bad_request("Missing parameter: name");
-    //     }
-    //     this.db.createPatrol(name);
-    //     return responses.ok();
-    // }
+    createPatrol = async (request: Request): Promise<Response> => {
+        const patrol = JSON.parse(await request.body());
+        this.db.createPatrol(patrol);
+        return responses.ok();
+    }
 
     createPost = async (request: Request): Promise<Response> => {
         const post = JSON.parse(await request.body());
@@ -34,7 +32,13 @@ export class Api implements Routing {
     changePost = async (request: Request): Promise<Response> => {
         const postChange = JSON.parse(await request.body());
         this.db.changePost(postChange["postId"], postChange["change"]);
-        return responses.ok()
+        return responses.ok();
+    }
+
+    deletePost = async (request: Request): Promise<Response> => {
+        const body = JSON.parse(await request.body());
+        this.db.deletePost(body["postId"]);
+        return responses.ok();
     }
 
 }

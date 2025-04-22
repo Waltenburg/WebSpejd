@@ -102,7 +102,17 @@ export class SqliteDatabase implements Database {
         return this.db.prepare("SELECT * FROM patrol WHERE id = ?").get(patrolId) as Patrol | undefined;
     }
 
-    changePatrol(patrolId: number, patrol: Patrol): void {
+    changePatrol(patrolId: number, patrol: PatrolChange): void {
+        this.db
+            .prepare(`
+                UPDATE patrol
+                SET
+                    name = coalesce(?, name),
+                    udgået = coalesce(?, udgået),
+                WHERE
+                    id = ?
+            `)
+            .run(patrol.name, patrol.udgået, patrolId);
     }
 
     /**
@@ -112,7 +122,9 @@ export class SqliteDatabase implements Database {
      * @param udgået `true` if the patrol id "udgået", `false` otherwise
      */
     changePatrolStatus(patrolId: number, udgået: boolean): void{
-        this.db.prepare("UPDATE patrol SET udgået = ? WHERE id = ?").run(udgået, patrolId);
+        this.db
+            .prepare("UPDATE patrol SET udgået = ? WHERE id = ?")
+            .run(udgået ? 1 : 0, patrolId);
     }
 
     /**
@@ -137,21 +149,27 @@ export class SqliteDatabase implements Database {
     createPost(post: Post): void {
         this.db
             .prepare("INSERT INTO post (name, open, next_post, detour) VALUES (?, ?, ?, ?)")
-            .run(post.name, post.open, post.next_post, post.detour);
+            .run(post.name, post.open ? 1 : 0, post.next_post, post.detour);
     }
 
     changePost(postId: number, change: PostChange): void {
-        // TOOD
+        this.db
+            .prepare(`
+                UPDATE post
+                SET
+                    name = coalesce(?, name),
+                    open = coalesce(?, open),
+                    next_post = coalesce(?, next_post),
+                    detour = coalesce(?, detour)
+                WHERE id = ?
+            `)
+            .run(change.name, change.open ? 1 : 0, change.next_post, change.detour, postId);
     }
 
-    /**
-     * Change status of post.
-     *
-     * @param postId the id of the post to change
-     * @param open `true` if the post should be open, `false` otherwise
-     */
-    changePostStatus(postId: number, open: boolean): void{
-        this.db.prepare("UPDATE post SET open = ? WHERE id = ?").run(open, postId);
+    deletePost(postId: number): void {
+        this.db
+            .prepare("DELETE FROM post where id = ?")
+            .run(postId);
     }
 
     /**
