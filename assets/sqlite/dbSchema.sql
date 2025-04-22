@@ -1,10 +1,10 @@
 -- Locations
 CREATE TABLE post (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  team TEXT,
-  detour BOOLEAN NOT NULL DEFAULT 0,
-  open BOOLEAN NOT NULL DEFAULT 1
+  open BOOLEAN NOT NULL DEFAULT 1,
+  next_post INTEGER NOT NULL,
+  detour INTEGER DEFAULT NULL
 );
 
 -- Patrols
@@ -31,7 +31,7 @@ CREATE TABLE user (
 -- );
 
 -- Check-ins (patrols checking in at locations)
-CREATE TABLE checkin ( 
+CREATE TABLE checkin (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   patrolId INTEGER NOT NULL,
   postId INTEGER NOT NULL,

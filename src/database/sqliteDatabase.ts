@@ -1,7 +1,6 @@
 import SQLite from 'better-sqlite3';
-import { CheckinType, Checkin, Database, Patrol, Post, User} from "./generic";
-import fs from 'fs';
-import { Database as SQLiteDB} from 'better-sqlite3';
+import { CheckinType, Checkin, Database, Patrol, Post, User, PostChange} from "./generic";
+import * as fs from "node:fs";
 
 /** Same as `Checkin` except that it has `timeStr: string` instead of `time: Date`*/
 interface DatabaseCheckin {
@@ -12,43 +11,35 @@ interface DatabaseCheckin {
     timeStr: string; // String representation of the time in UTC
 }
 
-export class sqliteDB implements Database {
+export class SqliteDatabase implements Database {
     private readonly dbPath: string;
     private db: SQLite.Database;
 
     private timeZoneOffset: number; // Timezone offset in minutes
 
-    /** Creates a new SQLite database wrapper.
+    /**
+     * Creates a new SQLite database wrapper.
+     *
      * @param dbPath the path to the SQLite database file. Value `:memory:` for in-memory database.
-     * @param resetCheckins if `true`, all checkins will be deleted from the database
+     * @param migrations the path to the migratons sql file
      */
-    constructor(dbPath: string, tempoary: boolean, resetCheckins: boolean = false) {
+    constructor(dbPath: string, migrations: string) {
+        const fileExists = fs.existsSync(dbPath);
+
         this.dbPath = dbPath;
         this.timeZoneOffset = new Date().getTimezoneOffset(); // Get the timezone offset in minutes
-        
-        // Temporary database
-        if(tempoary) {
-            const dbDisk = new SQLite(dbPath, { fileMustExist: true });
-            dbDisk.pragma('journal_mode = DELETE');
-            const buffer = dbDisk.serialize();
-            dbDisk.close();
-
-            // @ts-expect-error
-            this.db = SQLite(buffer);
-
-        }
-        else{
-            this.db = new SQLite(dbPath);
-        }
+        this.db = new SQLite(dbPath);
 
         this.db.pragma('journal_mode = WAL');
         this.db.pragma('foreign_keys = ON');
 
-        // Reset checkins if requested
-        if(resetCheckins) {
-            this.db.prepare("DELETE FROM checkin").run();
+        if(!fileExists) {
+            console.log("Running migration");
+            const migration = fs.readFileSync(migrations, "utf-8");
+            this.db.exec(migration);
         }
     }
+
     /** Converts from local `Date()` object to UTC time ISO string ready to be stored in DB */
     private toDataBaseTimeString(date: Date): string {
         const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
@@ -96,6 +87,12 @@ export class sqliteDB implements Database {
         return id;
     }
 
+    createPatrol(patrol: Patrol) {
+        this.db
+            .prepare("INSERT INTO patrol (id, name, udgået) VALUES (?, ?, ?)")
+            .run(patrol.id, patrol.name, patrol.udgået);
+    }
+
     /**
     * Get information about patrol.
     * @param patrolId the id of the patrol to get information about
@@ -103,6 +100,9 @@ export class sqliteDB implements Database {
     */
     patrolInfo(patrolId: number): Patrol | undefined{
         return this.db.prepare("SELECT * FROM patrol WHERE id = ?").get(patrolId) as Patrol | undefined;
+    }
+
+    changePatrol(patrolId: number, patrol: Patrol): void {
     }
 
     /**
@@ -132,6 +132,16 @@ export class sqliteDB implements Database {
      */
     postInfo(postId: number): Post | undefined{
         return this.db.prepare("SELECT * FROM post WHERE id = ?").get(postId) as Post | undefined;
+    }
+
+    createPost(post: Post): void {
+        this.db
+            .prepare("INSERT INTO post (name, open, next_post, detour) VALUES (?, ?, ?, ?)")
+            .run(post.name, post.open, post.next_post, post.detour);
+    }
+
+    changePost(postId: number, change: PostChange): void {
+        // TOOD
     }
 
     /**

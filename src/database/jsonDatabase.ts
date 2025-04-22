@@ -62,15 +62,8 @@ export class JsonDatabase implements Database {
         fs.writeFileSync(this.datafile, content);
     }
 
-    createPatrol(name: string): number {
-        const id = 1 + this.data.patrols
-            .reduce((acc, x) => Math.max(acc, x.id), 0);
-        this.data.patrols.push({
-            id,
-            name,
-            udgået: false,
-        });
-        return id;
+    createPatrol(patrol: Patrol) {
+      this.data.patrols.push(patrol);
     }
 
     patrolInfo(patrolId: number): Patrol | undefined {

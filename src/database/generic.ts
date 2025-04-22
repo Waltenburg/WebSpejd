@@ -1,5 +1,5 @@
 export enum CheckinType {
-    CheckIn, CheckOut, Detour
+    CheckIn = 0, CheckOut = 1, Detour = 2
 }
 
 /** Information about a patrol checkin or checkout. */
@@ -66,9 +66,8 @@ export interface Database {
      * Create new patrol
      *
      * @param name the name of the new patrol
-     * @returns the new patrol id
      */
-    createPatrol(name: string): number;
+    createPatrol(patrol: Patrol): void;
 
     /**
     * Get information about patrol.

@@ -12,18 +12,18 @@ export class Api implements Routing {
 
     routes = (): Routes => {
         return new Routes()
-            .post("/patrol/create", UserType.Master, this.createPatrol)
+            // .post("/patrol/create", UserType.Master, this.createPatrol)
             .post("/post/create", UserType.Master, this.createPost);
     }
 
-    createPatrol = async (request: Request): Promise<Response> => {
-        const name = request.getParam("name");
-        if(name === null) {
-            return responses.bad_request("Missing parameter: name");
-        }
-        this.db.createPatrol(name);
-        return responses.ok();
-    }
+    // createPatrol = async (request: Request): Promise<Response> => {
+    //     const name = request.getParam("name");
+    //     if(name === null) {
+    //         return responses.bad_request("Missing parameter: name");
+    //     }
+    //     this.db.createPatrol(name);
+    //     return responses.ok();
+    // }
 
     createPost = async (request: Request): Promise<Response> => {
         const post = JSON.parse(await request.body());

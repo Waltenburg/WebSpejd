@@ -90,7 +90,7 @@ export class DatabaseWrapper implements Database {
                     && !patrolsCheckedOut.includes(checkin.patrolId)
             })
             .map((checkin) => checkin.patrolId)
-            .filter((patrolId) => !(this.db.patrolInfo(patrolId)?.udgået || true));
+            .filter((patrolId) => !this.db.patrolInfo(patrolId)?.udgået);
 
         return patrolsAtPost;
     }
@@ -199,7 +199,7 @@ export class DatabaseWrapper implements Database {
         if(latestCheckin === undefined) {
             return {
                 type: PatrolLocationType.GoingToLocation,
-                postId: 0
+                postId: 1
             }
         }
         if(latestCheckin.type === CheckinType.CheckIn) {
@@ -224,8 +224,8 @@ export class DatabaseWrapper implements Database {
         return this.db.latestCheckinsOfPatrol(patrol, amount);
     }
 
-    createPatrol(name: string): number {
-        return this.db.createPatrol(name);
+    createPatrol(patrol: Patrol): void {
+        this.db.createPatrol(patrol);
     }
 
     patrolInfo(patrolId: number): Patrol | undefined {
