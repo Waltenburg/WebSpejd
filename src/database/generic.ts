@@ -23,6 +23,11 @@ export interface Patrol {
     udgået: boolean;
 }
 
+export interface PatrolChange {
+    name?: string;
+    udgået?: boolean;
+}
+
 /** Information about a post. */
 export interface Post {
     id: number;
@@ -90,7 +95,7 @@ export interface Database {
      * @param patrolId the id of the patrol to change
      * @param patrol the new patrol info
      */
-    changePatrol(patrolId: number, patrol: Patrol): void;
+    changePatrol(patrolId: number, patrol: PatrolChange): void;
 
     /**
      * Get list of all patrol ids.
@@ -121,6 +126,13 @@ export interface Database {
      * @param change the new information about the post
      */
     changePost(postId: number, change: PostChange): void;
+
+    /**
+     * Delete post from database
+     *
+     * @param postId the id of the post to delete
+     */
+    deletePost(postId: number): void;
 
     /**
      * Get all ids of posts.

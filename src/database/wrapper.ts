@@ -1,4 +1,4 @@
-import { Checkin, CheckinType, Database, Patrol, Post, PostChange } from "./generic";
+import { Checkin, CheckinType, Database, Patrol, PatrolChange, Post, PostChange } from "./generic";
 
 export class DatabaseWrapper implements Database {
     private db: Database;
@@ -236,7 +236,7 @@ export class DatabaseWrapper implements Database {
         this.db.changePatrolStatus(patrolId, udgået);
     }
 
-    changePatrol(patrolId: number, patrol: Patrol): void {
+    changePatrol(patrolId: number, patrol: PatrolChange): void {
         this.db.changePatrol(patrolId, patrol);
     }
 
@@ -250,6 +250,10 @@ export class DatabaseWrapper implements Database {
 
     changePost(postId: number, change: PostChange) {
         this.db.changePost(postId, change);
+    }
+
+    deletePost(postId: number): void {
+        this.db.deletePost(postId);
     }
 
     postInfo(postId: number): Post | undefined {
