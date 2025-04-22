@@ -1,5 +1,5 @@
 import SQLite from 'better-sqlite3';
-import { CheckinType, Checkin, Database, Patrol, Post, User, PostChange} from "./generic";
+import { CheckinType, Checkin, Database, Patrol, Post, User, PostChange, PatrolChange} from "./generic";
 import * as fs from "node:fs";
 
 /** Same as `Checkin` except that it has `timeStr: string` instead of `time: Date`*/
