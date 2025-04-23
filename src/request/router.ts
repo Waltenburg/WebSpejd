@@ -41,6 +41,16 @@ export class Routes {
         return this;
     }
 
+    get(path: string, userType: UserType, func: RouteFunction): Routes {
+        this.routes.push({
+            httpMethod: HttpMethod.Get,
+            userType: userType,
+            path: path,
+            func: func
+        });
+        return this;
+    }
+
     post(path: string, userType: UserType, func: RouteFunction): Routes {
         this.routes.push({
             httpMethod: HttpMethod.Post,

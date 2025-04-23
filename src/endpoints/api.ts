@@ -15,9 +15,17 @@ export class Api implements Routing {
             .post("/patrol/create", UserType.Master, this.createPatrol)
             .post("/patrol/change", UserType.Master, this.changePatrol)
             .post("/patrol/delete", UserType.Master, this.deletePatrol)
+            .get("/patrol/list", UserType.Master, this.listPatrols)
             .post("/post/create", UserType.Master, this.createPost)
             .post("/post/change", UserType.Master, this.changePost)
-            .post("/post/delete", UserType.Master, this.deletePost);
+            .post("/post/delete", UserType.Master, this.deletePost)
+            .get("/post/list", UserType.Master, this.listPosts);
+    }
+
+    listPatrols = async (_request: Request): Promise<Response> => {
+        const patrols = this.db.allPatrolIds()
+            .map((patrolId) => this.db.patrolInfo(patrolId));
+        return responses.json(patrols);
     }
 
     createPatrol = async (request: Request): Promise<Response> => {
@@ -36,6 +44,12 @@ export class Api implements Routing {
         const body = JSON.parse(await request.body());
         this.db.deletePatrol(body["patrolId"]);
         return responses.ok();
+    }
+
+    listPosts = async (_request: Request): Promise<Response> => {
+        const posts = this.db.allPostIds()
+            .map((postId) => this.db.postInfo(postId));
+        return responses.json(posts);
     }
 
     createPost = async (request: Request): Promise<Response> => {

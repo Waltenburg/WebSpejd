@@ -17,6 +17,16 @@ export function ok(content?: any, headers?: {[key: string]: any}): Response {
     }
 }
 
+export function json(content: any): Response {
+    return {
+        status_code: 200,
+        content: JSON.stringify(content),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    };
+}
+
 export async function file(path: string): Promise<Response> {
     try{
         const content = await fs.readFile(path);
