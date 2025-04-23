@@ -171,7 +171,7 @@ export class DatabaseWrapper implements Database {
 
         // Remove "udgået" status from all patrols
         this.db.allPatrolIds().forEach((patrolId) => {
-            this.db.changePatrolStatus(patrolId, false);
+            this.db.changePatrol(patrolId, { udgået: false });
         });
     }
 
@@ -232,16 +232,16 @@ export class DatabaseWrapper implements Database {
         return this.db.patrolInfo(patrolId);
     }
 
-    changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.db.changePatrolStatus(patrolId, udgået);
-    }
-
     changePatrol(patrolId: number, patrol: PatrolChange): void {
         this.db.changePatrol(patrolId, patrol);
     }
 
     allPatrolIds(): number[] {
         return this.db.allPatrolIds();
+    }
+
+    deletePatrol(patrolId: number): void {
+        this.db.deletePatrol(patrolId);
     }
 
     createPost(post: Post): void {

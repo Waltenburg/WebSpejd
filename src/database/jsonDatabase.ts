@@ -71,10 +71,6 @@ export class JsonDatabase implements Database {
             .find((patrol) => patrol.id === patrolId);
     }
 
-    changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.data.patrols[patrolId].udgået = udgået;
-    }
-
     changePatrol(patrolId: number, info: PatrolChange): void {
         let patrolInfo = this.patrolInfo(patrolId);
         patrolInfo = { ...patrolInfo, ...info };
@@ -88,6 +84,11 @@ export class JsonDatabase implements Database {
         let checkins = this.data.checkins
             .filter((checkin) => checkin.patrolId === patrol);
         return takeLast(checkins, amount);
+    }
+
+    deletePatrol(patrolId: number): void {
+        this.data.patrols = this.data.patrols
+            .filter((patrol) => patrolId !== patrol.id);
     }
 
     createPost(post: Post): void {

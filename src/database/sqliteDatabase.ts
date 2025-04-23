@@ -116,18 +116,6 @@ export class SqliteDatabase implements Database {
     }
 
     /**
-     * Change udgået status of patrol.
-     *
-     * @param patrolId the id of the patrol to change
-     * @param udgået `true` if the patrol id "udgået", `false` otherwise
-     */
-    changePatrolStatus(patrolId: number, udgået: boolean): void{
-        this.db
-            .prepare("UPDATE patrol SET udgået = ? WHERE id = ?")
-            .run(udgået ? 1 : 0, patrolId);
-    }
-
-    /**
      * Get list of all patrol ids.
      *
      * @returns a list of all patrol ids
@@ -135,6 +123,12 @@ export class SqliteDatabase implements Database {
     allPatrolIds(): number[]{
         const rows = this.db.prepare("SELECT id FROM patrol").all() as { id: number }[];
         return rows.map((row) => row.id);
+    }
+
+    deletePatrol(patrolId: number): void {
+        this.db
+            .prepare("DELETE FROM patrol where id = ?")
+            .run(patrolId);
     }
 
     /**

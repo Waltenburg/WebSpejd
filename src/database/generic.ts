@@ -82,20 +82,19 @@ export interface Database {
     patrolInfo(patrolId: number): Patrol | undefined;
 
     /**
-     * Change udgået status of patrol.
-     *
-     * @param patrolId the id of the patrol to change
-     * @param udgået `true` if the patrol id "udgået", `false` otherwise
-     */
-    changePatrolStatus(patrolId: number, udgået: boolean): void;
-
-    /**
      * Change information about patrol
      *
      * @param patrolId the id of the patrol to change
      * @param patrol the new patrol info
      */
     changePatrol(patrolId: number, patrol: PatrolChange): void;
+
+    /**
+     * Delete patrol from database
+     *
+     * @param patrolId the id of the patrol to delete
+     */
+    deletePatrol(patrolId: number): void;
 
     /**
      * Get list of all patrol ids.

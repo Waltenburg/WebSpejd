@@ -257,7 +257,7 @@ class Server {
             return responses.server_error("Missing parameter");
         }
         const isOut = status === "out";
-        this.db.changePatrolStatus(patrolId, isOut);
+        this.db.changePatrol(patrolId, { udgået: isOut, });
         return responses.redirect(`/master/patrol?id=${patrolId}`);
     }
 
