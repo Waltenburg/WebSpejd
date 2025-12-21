@@ -28,14 +28,16 @@ export class Pages {
                 noCache: !cache
             }
         );
-        this.env.addFilter("checkinName", checkinTypeToString);
-        this.env.addFilter("clock", formatTime);
-        this.env.addFilter("formatPatrolLocation", this.formatPatrolLocation);
-        this.env.addFilter("formatCheckinLocation", this.formatCheckinLocation);
+        this.env.addFilter("checkinName", safeFilter(checkinTypeToString));
+        this.env.addFilter("clock", safeFilter(formatTime));
+        this.env.addFilter("formatPatrolLocation", safeFilter(this.formatPatrolLocation));
+        this.env.addFilter("formatCheckinLocation", safeFilter(this.formatCheckinLocation));
         this.env.addGlobal("patrolsUrl", patrolsUrl);
 
         this.db = db;
     }
+
+
 
     master = async(): Promise<Response> => {
         return this.response(MAIN, {
@@ -241,6 +243,17 @@ export class Pages {
     }
 }
 
+function safeFilter<T>(filterFunc: (item: T) => string, defaultError: string = "Ukendt"): (item: T) => string {
+    return (item: T): string => {
+        try {
+            return filterFunc(item);
+        } catch(e) {
+            console.error(e);
+            return defaultError;
+        }
+    };
+}
+
 function checkinTypeToString(value: number): string {
     if(value === 0) {
         return "Check ind";
@@ -252,6 +265,9 @@ function checkinTypeToString(value: number): string {
 }
 
 function formatTime(value: Date) {
+    if(!(value instanceof Date)) {
+        return "Tid ukendt";
+    }
     let hour = value.getHours().toString().padStart(2, '0');
     let minute = value.getMinutes().toString().padStart(2, '0');
     let second = value.getSeconds().toString().padStart(2, '0');

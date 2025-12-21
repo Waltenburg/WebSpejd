@@ -194,6 +194,11 @@ export class DatabaseWrapper implements Database {
             };
         }
         let latestCheckin = this.latestCheckinOfPatrol(patrolId);
+        if(latestCheckin == null)
+            return {
+                type: PatrolLocationType.GoingToLocation,
+                postId: this.firstPostId,
+            };
         if(latestCheckin.type === CheckinType.CheckIn) {
             return {
                 type: PatrolLocationType.OnLocation,
