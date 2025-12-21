@@ -135,3 +135,5 @@ Deployed/data/ppMatrix.json
 *.txt
 *.db-wal
 *.db-shm
+SQLite/webspejd.db
+SQLite/data.csv
