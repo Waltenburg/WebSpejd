@@ -42,7 +42,7 @@ export class Pages {
     master = async(): Promise<Response> => {
         return this.response(MAIN, {
             posts: this.postsData(),
-            checkins: this.db.lastCheckins(10),
+            checkins: this.db.lastUpdates(10),
             patrols: this.patrolsData(),
             graph: this.graphData(),
         });
@@ -56,13 +56,13 @@ export class Pages {
 
     post = async (request: Request): Promise<Response> => {
         const postId = Number.parseInt(request.url.searchParams.get("id"));
-        let post = this.db.postInfo(postId);
+        let post = this.db.locationInfo(postId);
         return this.response(POST, {
-            patrolsOnPost: this.patrolsData(this.db.patruljerPåPost(postId)),
-            patrolsOnTheirWay: this.patrolsData(this.db.patruljerPåVej(postId)),
+            patrolsOnPost: this.patrolsData(this.db.patrolsOnLocation(postId)),
+            patrolsOnTheirWay: this.patrolsData(this.db.patrolsTowardsLocation(postId)),
             patrolsCheckedOut: this.patrolsData(this.db.patrolsCheckedOut(postId)),
             post: post,
-            checkins: this.db.checkinsAtPost(postId).reverse(),
+            checkins: this.db.updatesAtLocation(postId).reverse(),
         });
     }
 
@@ -72,7 +72,7 @@ export class Pages {
         const postId = params.get("postId");
         return this.response(CHECKIN, {
             patrols: this.db.allPatrolIds().map((patrolId) => this.db.patrolInfo(patrolId)),
-            posts: this.db.allPostIds().map((postId) => this.db.postInfo(postId)),
+            posts: this.db.allLocationIds().map((postId) => this.db.locationInfo(postId)),
             selectedPatrol: patrolId,
             selectedPost: postId,
         });
@@ -84,16 +84,16 @@ export class Pages {
 
         let patrolId = params.get("patrolId");
         if(patrolId != undefined) {
-            checkins = this.db.latestCheckinsOfPatrol(Number.parseInt(patrolId), 100);
+            checkins = this.db.latestUpdatesOfPatrol(Number.parseInt(patrolId), 100);
         }
 
         let postId = params.get("postId");
         if(postId != undefined) {
-            checkins = this.db.checkinsAtPost(Number.parseInt(postId)).reverse();
+            checkins = this.db.updatesAtLocation(Number.parseInt(postId)).reverse();
         }
 
         if(checkins === undefined){
-            checkins = this.db.lastCheckins(20);
+            checkins = this.db.lastUpdates(20);
         }
 
         return this.response(CHECKINS, {
@@ -112,9 +112,9 @@ export class Pages {
             postId = Number.parseInt(postIdStr);
             selection = params.get("selection");
             if(selection === "patrolsOnTheirWay") {
-                patrolIds = this.db.patruljerPåVej(postId);
+                patrolIds = this.db.patrolsTowardsLocation(postId);
             } else if(selection === "patrolsOnPost") {
-                patrolIds = this.db.patruljerPåPost(postId);
+                patrolIds = this.db.patrolsOnLocation(postId);
             } else if(selection === "patrolsCheckedOut") {
                 patrolIds = this.db.patrolsCheckedOut(postId);
             }
@@ -134,7 +134,7 @@ export class Pages {
         const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
             patrol: this.db.patrolInfo(patrolId),
-            checkins: this.db.latestCheckinsOfPatrol(patrolId, 100),
+            checkins: this.db.latestUpdatesOfPatrol(patrolId, 100),
             location: this.db.locationOfPatrol(patrolId),
         });
     }
@@ -146,10 +146,10 @@ export class Pages {
     }
 
     private graphData = (): any => {
-        const amountOfPosts = this.db.allPostIds().length;
+        const amountOfPosts = this.db.allLocationIds().length;
         const patrols = this.db.allPatrolIds()
             .map((patrolId) => {
-                const postIds = this.db.latestCheckinsOfPatrol(patrolId, 1000)
+                const postIds = this.db.latestUpdatesOfPatrol(patrolId, 1000)
                     .filter((checkin) => checkin.type === CheckinType.CheckIn)
                     .map((checkin) => checkin.postId);
                 let posts = Array(amountOfPosts - 1).fill(false);
@@ -171,7 +171,7 @@ export class Pages {
         return patrolIds
             .map((patrolId) => {
                 let patrol = this.db.patrolInfo(patrolId);
-                let lastCheckin = this.db.latestCheckinOfPatrol(patrolId);
+                let lastCheckin = this.db.latestUpdateOfPatrol(patrolId);
                 return {
                     lastCheckin: lastCheckin,
                     location: this.db.locationOfPatrol(patrolId),
@@ -184,19 +184,19 @@ export class Pages {
                         - b.lastCheckin.time.getTime();
                 }
                 if(sortBy === "post") {
-                    return a.location.postId - b.location.postId;
+                    return a.location.locationId - b.location.locationId;
                 }
                 return a.id - b.id;
             })
     }
 
     private postsData = (): postDataToMaster[] => {
-         return this.db.allPostIds()
+         return this.db.allLocationIds()
             .map((postId) => {
-                let base = this.db.postInfo(postId);
+                let base = this.db.locationInfo(postId);
                 return {
-                    patrolsOnPost: this.db.patruljerPåPost(postId).length,
-                    patrolsOnTheirWay: this.db.patruljerPåVej(postId).length,
+                    patrolsOnPost: this.db.patrolsOnLocation(postId).length,
+                    patrolsOnTheirWay: this.db.patrolsTowardsLocation(postId).length,
                     patrolsCheckedOut: this.db.patrolsCheckedOut(postId).length,
                     ...base
                 };
@@ -226,7 +226,7 @@ export class Pages {
     }
 
     formatPatrolLocation = (location: PatrolLocation): string => {
-        const post = this.db.postInfo(location.postId);
+        const post = this.db.locationInfo(location.locationId);
         if(location.type === PatrolLocationType.GoingToLocation) {
             return `Går mod ${post.detour ? post.name : `post ${post.name}`}`;
             // return `Går mod ${post.name}`;
@@ -238,17 +238,18 @@ export class Pages {
     }
 
     formatCheckinLocation = (checkin: PatrolUpdate): string => {
-        const post = this.db.postInfo(checkin.postId);
+        const post = this.db.locationInfo(checkin.postId);
         return post.detour ? post.name : `Post ${post.name}`;
     }
 }
 
-function safeFilter<T>(filterFunc: (item: T) => string, defaultError: string = "Ukendt"): (item: T) => string {
+function safeFilter<T>(filterFunc: (item: T) => string, defaultError: string = "Ukendt", log: boolean = false): (item: T) => string {
     return (item: T): string => {
         try {
             return filterFunc(item);
         } catch(e) {
-            console.error(e);
+            if(log)
+                console.error(e);
             return defaultError;
         }
     };

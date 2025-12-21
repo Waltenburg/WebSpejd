@@ -33,7 +33,7 @@ class Server {
         this.pages = new pages.Pages(`${assets}/html`, this.db, false);
         this.router = this.createRouter(address, port, assets, this.users);
 
-        const numberOfPosts = db.allPostIds().length;
+        const numberOfPosts = db.allLocationIds().length;
         const numberOfPatrols = db.allPatrolIds().length;
         const numberOfUsers = db.userIds().length;
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
@@ -121,7 +121,7 @@ class Server {
         const user = req.user;
 
         const userLastUpdate = parseInt(req.headers['last-update'] as string)
-        const post = this.db.postInfo(user.postId);
+        const post = this.db.locationInfo(user.postId);
         if(post === undefined) {
             return responses.not_found();
         }
@@ -146,18 +146,18 @@ class Server {
     postData = async (req: Request): Promise<Response> => {
         const user = req.user;
 
-        const post = this.db.postInfo(user.postId);
+        const post = this.db.locationInfo(user.postId);
         if(post === undefined) {
             return responses.not_found(`post ${user.postId} not found`);
         }
-        const nextPost = this.db.postInfo(user.postId + 1);
+        const nextPost = this.db.locationInfo(user.postId + 1);
         const isLastPost = nextPost === undefined;
         const omvejÅben = !isLastPost && !post.detour && nextPost?.detour && nextPost?.open;
 
         return responses.ok("", {
             "data": JSON.stringify({
-                "påPost": this.db.patruljerPåPost(user.postId),
-                "påVej": this.db.patruljerPåVej(user.postId),
+                "påPost": this.db.patrolsOnLocation(user.postId),
+                "påVej": this.db.patrolsTowardsLocation(user.postId),
                 "post": post.name,
                 "omvejÅben": omvejÅben,
             })
@@ -199,11 +199,11 @@ class Server {
                     : CheckinType.CheckOut
         };
 
-        if(!this.db.isCheckinValid(checkin)) {
+        if(!this.db.isPatrolUpdateValid(checkin)) {
             return responses.response_code(400);
         }
 
-        const checkinID = this.db.checkin(checkin);
+        const checkinID = this.db.updatePatrol(checkin);
 
         //Send id back to client
         return responses.ok("", {
@@ -233,7 +233,7 @@ class Server {
                     : CheckinType.CheckOut
         };
 
-        this.db.checkin(checkin);
+        this.db.updatePatrol(checkin);
 
         return responses.redirect("/master");
     }
@@ -244,7 +244,7 @@ class Server {
         const postId = Number.parseInt(params.get("post"));
         const newStatus = statusParam === "open";
 
-        this.db.changePostStatus(postId, newStatus);
+        this.db.changeLocationStatus(postId, newStatus);
         return responses.redirect(`/master/post?id=${postId}`);
     }
 
@@ -260,7 +260,7 @@ class Server {
     deleteCheckin = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
-        this.db.deleteCheckin(checkinId);
+        this.db.deleteUpdate(checkinId);
         return responses.ok();
     }
 
@@ -271,14 +271,14 @@ class Server {
         const checkinId = Number.parseInt(params.get("id"));
         // const postIdRequest = this.db.authenticate(request.headers['id'])
         const postIdRequest = this.users.userFromIdentifier(request.headers['id']).postId;
-        const checkin = this.db.checkinById(checkinId);
+        const checkin = this.db.updateById(checkinId);
         const postIdCheckin = checkin?.postId;
 
         const requestAndCheckinMatch = postIdCheckin == postIdRequest && postIdCheckin != null;
         const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
 
         if(requestAndCheckinMatch && checkinIsRecent) {
-            this.db.deleteCheckin(checkinId);
+            this.db.deleteUpdate(checkinId);
             return responses.ok();
         }
         return responses.forbidden();
