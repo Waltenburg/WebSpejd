@@ -1,9 +1,9 @@
 export enum CheckinType {
-    CheckIn, CheckOut, Detour
+    CheckIn, CheckOut
 }
 
 /** Information about a patrol checkin or checkout. */
-export interface Checkin {
+export interface PatrolUpdate {
     /** Id of the checkin. */
     id?: number;
     /** The id of the patrol that checked in. */
@@ -24,7 +24,7 @@ export interface Patrol {
 }
 
 /** Information about a post. */
-export interface Post {
+export interface Location {
     id: number;
     name: string;
     team: number;
@@ -54,13 +54,13 @@ export interface Database {
      * @param patrol the patrol to get the latest checkin of
      * @return the latest checkin of the patrol or `null` if none exist
      */
-    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[];
+    latestCheckinsOfPatrol(patrol: number, amount: number): PatrolUpdate[];
 
     /** Check patrol in or out of post.
      * @param checkin the checkin to add to the database
      * @returns the id of the checkin
     */
-    checkin(checkin: Checkin): number;
+    checkin(checkin: PatrolUpdate): number;
 
     /**
     * Get information about patrol.
@@ -89,7 +89,7 @@ export interface Database {
      * @param postId the id of the post
      * @return information about the post
      */
-    postInfo(postId: number): Post | undefined;
+    postInfo(postId: number): Location | undefined;
 
     /**
      * Change status of post.
@@ -111,7 +111,7 @@ export interface Database {
      * @param postId the id of the post
      * @returns the checkins at the post
      */
-    checkinsAtPost(postId: number): Checkin[];
+    checkinsAtPost(postId: number): PatrolUpdate[];
 
     /**
      * Get checkin by id.
@@ -119,7 +119,7 @@ export interface Database {
      * @param checkinId the id of the checkin
      * @returns the checkin with the id or `undefined` if checkin does not exist
      */
-    checkinById(checkinId: number): Checkin | undefined
+    checkinById(checkinId: number): PatrolUpdate | undefined
 
     /**
      * Delete checkin from database.
@@ -134,7 +134,7 @@ export interface Database {
      * @param amount the amount of checkins to get
      * @returns the last x checkins
      */
-    lastCheckins(amount: number): Checkin[];
+    lastCheckins(amount: number): PatrolUpdate[];
 
     /**
      * Get all ids of checkins.

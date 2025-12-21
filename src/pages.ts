@@ -3,7 +3,7 @@ import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
 import { Request } from "./request";
-import { Checkin, Post } from "./database/generic";
+import { PatrolUpdate, Location } from "./database/generic";
 
 type Response = responses.Response;
 
@@ -237,7 +237,7 @@ export class Pages {
         }
     }
 
-    formatCheckinLocation = (checkin: Checkin): string => {
+    formatCheckinLocation = (checkin: PatrolUpdate): string => {
         const post = this.db.postInfo(checkin.postId);
         return post.detour ? post.name : `Post ${post.name}`;
     }
@@ -296,7 +296,7 @@ function createUrlPath(base: string, params: { [key: string]: string | undefined
     return path;
 }
 
-export interface postDataToMaster extends Post{
+export interface postDataToMaster extends Location{
     patrolsOnPost: number;
     patrolsOnTheirWay: number;
     patrolsCheckedOut: number;

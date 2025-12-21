@@ -1,4 +1,4 @@
-import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
+import { PatrolUpdate, CheckinType, Database, Patrol, Location } from "./generic";
 
 export class DatabaseWrapper implements Database {
     private db: Database;
@@ -79,7 +79,7 @@ export class DatabaseWrapper implements Database {
             && !patrolInfo.udgået;
     }
 
-    latestCheckinOfPatrol(patrolId: number): Checkin | undefined {
+    latestCheckinOfPatrol(patrolId: number): PatrolUpdate | undefined {
         return this.db.latestCheckinsOfPatrol(patrolId, 1)[0];
     }
 
@@ -148,7 +148,7 @@ export class DatabaseWrapper implements Database {
      * @param checkin the checkin to verify
      * @returns `true` if checkin is valid, `false` otherwise
      */
-    isCheckinValid(checkin: Checkin): boolean {
+    isCheckinValid(checkin: PatrolUpdate): boolean {
         if(checkin.type === CheckinType.CheckIn) {
             return this.canPaltrolBeCheckedIn(checkin.patrolId, checkin.postId);
         } else {
@@ -213,11 +213,11 @@ export class DatabaseWrapper implements Database {
         };
     }
 
-    checkin(checkin: Checkin): number {
+    checkin(checkin: PatrolUpdate): number {
         return this.db.checkin(checkin);
     }
 
-    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {
+    latestCheckinsOfPatrol(patrol: number, amount: number): PatrolUpdate[] {
         return this.db.latestCheckinsOfPatrol(patrol, amount);
     }
 
@@ -237,7 +237,7 @@ export class DatabaseWrapper implements Database {
         this.db.changePostStatus(postId, open);
     }
 
-    postInfo(postId: number): Post | undefined {
+    postInfo(postId: number): Location | undefined {
         return this.db.postInfo(postId);
     }
 
@@ -245,11 +245,11 @@ export class DatabaseWrapper implements Database {
         return this.db.allPostIds();
     }
 
-    checkinsAtPost(postId: number): Checkin[] {
+    checkinsAtPost(postId: number): PatrolUpdate[] {
         return this.db.checkinsAtPost(postId);
     }
 
-    checkinById(checkinId: number): Checkin | undefined {
+    checkinById(checkinId: number): PatrolUpdate | undefined {
         return this.db.checkinById(checkinId);
     }
 
@@ -266,7 +266,7 @@ export class DatabaseWrapper implements Database {
         });
     }
 
-    lastCheckins(amount: number): Checkin[] {
+    lastCheckins(amount: number): PatrolUpdate[] {
         return this.db.lastCheckins(amount);
     }
 

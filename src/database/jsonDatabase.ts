@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { Checkin, CheckinType, Database, Patrol, Post } from "./generic";
+import { PatrolUpdate, CheckinType, Database, Patrol, Location } from "./generic";
 
 /** Database storing everything in a json file. */
 export class JsonDatabase implements Database {
@@ -75,13 +75,13 @@ export class JsonDatabase implements Database {
         return this.data.patrols.map((patrol) => patrol.id);
     }
 
-    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[] {
+    latestCheckinsOfPatrol(patrol: number, amount: number): PatrolUpdate[] {
         let checkins = this.data.checkins
             .filter((checkin) => checkin.patrolId === patrol);
         return takeLast(checkins, amount);
     }
 
-    postInfo(postId: number): Post | undefined {
+    postInfo(postId: number): Location | undefined {
         return this.data.posts
             .find((post) => post.id == postId);
     }
@@ -100,12 +100,12 @@ export class JsonDatabase implements Database {
             .map((post) => post.id);
     }
 
-    checkinsAtPost(postId: number): Checkin[] {
+    checkinsAtPost(postId: number): PatrolUpdate[] {
         return this.data.checkins
             .filter((checkin) => checkin.postId === postId)
     }
 
-    checkin(checkin: Checkin): number {
+    checkin(checkin: PatrolUpdate): number {
         const id = checkin.id || this.checkinCounter++
         this.data.checkins.push({
             id: id,
@@ -115,7 +115,7 @@ export class JsonDatabase implements Database {
         return id
     }
 
-    checkinById(checkinId: number): Checkin | undefined {
+    checkinById(checkinId: number): PatrolUpdate | undefined {
         return this.data.checkins
             .find((checkin) => checkin.id === checkinId);
     }
@@ -130,7 +130,7 @@ export class JsonDatabase implements Database {
         this.updatePost(checkin.postId);
     }
 
-    lastCheckins(amount: number): Checkin[] {
+    lastCheckins(amount: number): PatrolUpdate[] {
         return takeLast(this.data.checkins, amount);
     }
 
@@ -178,7 +178,7 @@ export class JsonDatabase implements Database {
 interface Internal {
     patrols: Patrol[];
     checkins: StoredCheckin[];
-    posts: Post[];
+    posts: Location[];
     users: User[];
 }
 

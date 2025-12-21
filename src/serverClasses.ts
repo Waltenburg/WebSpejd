@@ -34,7 +34,7 @@ export namespace serverClasses{
             this.udgåedePatruljer[pNum] = false
         }
     }
-    export class Post{
+    export class Location{
         navn: string
         beskrivelse: string
         erOmvej: boolean
@@ -47,10 +47,10 @@ export namespace serverClasses{
             this.omvejÅben = obj.omvejÅben
         }
 
-        static createArray(obj: any): Post[]{
-            let arr: Post[] = []
+        static createArray(obj: any): Location[]{
+            let arr: Location[] = []
             obj.forEach((element: any) => {
-                arr.push(new Post(element))
+                arr.push(new Location(element))
             });
             return arr
         }
@@ -58,7 +58,7 @@ export namespace serverClasses{
         toString(){
             return "Post: " + this.navn + " - " + this.beskrivelse + "     Omvej: " + this.erOmvej.toString() + "     Omvej åben: " + this.erOmvej.toString()
         }
-        static getPostStatus(poster: Post[], ppMatrix: string[][], loeb: Loeb): number[] {
+        static getPostStatus(poster: Location[], ppMatrix: string[][], loeb: Loeb): number[] {
             let status: number[] = []
             for (let i = 0; i < poster.length; i++) {
                 let exclusiveBefore = true

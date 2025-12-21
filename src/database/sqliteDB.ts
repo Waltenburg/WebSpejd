@@ -1,5 +1,5 @@
 import SQLite from 'better-sqlite3';
-import { CheckinType, Checkin, Database, Patrol, Post, User} from "./generic";
+import { CheckinType, PatrolUpdate, Database, Patrol, Location, User} from "./generic";
 import fs from 'fs';
 import { Database as SQLiteDB} from 'better-sqlite3';
 
@@ -62,7 +62,7 @@ export class sqliteDB implements Database {
     }
 
     /** Converts from checkin as stored in DB to checkin as used in the rest of the program */
-    private databaseCheckinToCheckin(dbCheckin: DatabaseCheckin[]): Checkin[] {
+    private databaseCheckinToCheckin(dbCheckin: DatabaseCheckin[]): PatrolUpdate[] {
         return dbCheckin.map((checkin) => {
             return {
                 id: checkin.id,
@@ -79,7 +79,7 @@ export class sqliteDB implements Database {
      * @param patrol the patrol to get the latest checkin of
      * @return the latest checkin of the patrol or `null` if none exist
      */
-    latestCheckinsOfPatrol(patrol: number, amount: number): Checkin[]{
+    latestCheckinsOfPatrol(patrol: number, amount: number): PatrolUpdate[]{
         const checkins = this.db.prepare("SELECT * FROM checkin WHERE patrolId = ? ORDER BY timeStr DESC LIMIT ?").all(patrol, amount) as DatabaseCheckin[];
         return this.databaseCheckinToCheckin(checkins);
     }
@@ -88,7 +88,7 @@ export class sqliteDB implements Database {
      * @param checkin the checkin to add to the database
      * @returns the id of the checkin
     */
-    checkin(checkin: Checkin): number{
+    checkin(checkin: PatrolUpdate): number{
         this.db.prepare("INSERT INTO checkin (patrolId, postId, type, timeStr) VALUES (?, ?, ?, ?)")
         .run(checkin.patrolId, checkin.postId, checkin.type, this.toDataBaseTimeString(checkin.time));
 
@@ -130,8 +130,8 @@ export class sqliteDB implements Database {
      * @param postId the id of the post
      * @return information about the post
      */
-    postInfo(postId: number): Post | undefined{
-        return this.db.prepare("SELECT * FROM post WHERE id = ?").get(postId) as Post | undefined;
+    postInfo(postId: number): Location | undefined{
+        return this.db.prepare("SELECT * FROM post WHERE id = ?").get(postId) as Location | undefined;
     }
 
     /**
@@ -159,7 +159,7 @@ export class sqliteDB implements Database {
      * @param postId the id of the post
      * @returns the checkins at the post
      */
-    checkinsAtPost(postId: number): Checkin[]{
+    checkinsAtPost(postId: number): PatrolUpdate[]{
         const checkins = this.db.prepare("SELECT * FROM checkin WHERE postId = ?").all(postId) as DatabaseCheckin[];
         return this.databaseCheckinToCheckin(checkins);
     }
@@ -170,7 +170,7 @@ export class sqliteDB implements Database {
      * @param checkinId the id of the checkin
      * @returns the checkin with the id or `undefined` if checkin does not exist
      */
-    checkinById(checkinId: number): Checkin | undefined{
+    checkinById(checkinId: number): PatrolUpdate | undefined{
         const dbCheckin = this.db.prepare("SELECT * FROM checkin WHERE id = ?").get(checkinId) as DatabaseCheckin | undefined;
         if(dbCheckin == undefined) {
             return undefined;
@@ -193,7 +193,7 @@ export class sqliteDB implements Database {
      * @param amount the amount of checkins to get
      * @returns the last x checkins
      */
-    lastCheckins(amount: number): Checkin[]{
+    lastCheckins(amount: number): PatrolUpdate[]{
         const checkins = this.db.prepare("SELECT * FROM checkin ORDER BY timeStr DESC LIMIT ?").all(amount) as DatabaseCheckin[];
         return this.databaseCheckinToCheckin(checkins);
     }
