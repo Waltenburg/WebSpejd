@@ -1,296 +1,264 @@
-import { PatrolUpdate, CheckinType, Database, Patrol, Location } from "./generic";
+// import { PatrolUpdate, PatrolUpdateType, Database, Patrol, Location } from "./generic";
 
-export class DatabaseWrapper implements Database {
-    private db: Database;
-    /** The id of the first post. */
-    private firstPostId: number = 1;
+// export class DatabaseWrapper implements Database {
+//     private db: Database;
+//     /** The id of the first post. */
+//     private firstPostId: number = 1;
 
-    constructor(db: Database) {
-        this.db = db;
-        // this.initialize();
-    }
+//     constructor(db: Database) {
+//         this.db = db;
+//         // this.initialize();
+//     }
 
-    /**
-     * Add initial data to database.
-     */
-    // private initialize(): void {
-    //     const isInitialized = this.db.allCheckinIds().length !== 0;
-    //     if(isInitialized) {
-    //         return;
-    //     }
-    //     this.sendAllPatruljerTowardsFirstPost();
-    // }
+//     /**
+//      * Add initial data to database.
+//      */
+//     // private initialize(): void {
+//     //     const isInitialized = this.db.allCheckinIds().length !== 0;
+//     //     if(isInitialized) {
+//     //         return;
+//     //     }
+//     //     this.sendAllPatruljerTowardsFirstPost();
+//     // }
 
-    /**
-     * Change detour from open to closed or closed to open.
-     *
-     * @param postId the id of the post to change
-     * @returns `true` if status changed, `false` otherwise
-     */
-    changeDetourStatus(postId: number, open: boolean): boolean {
-        let post = this.db.postInfo(postId);
-        if (!post?.detour || post.open === open) {
-            return false;
-        }
-        this.db.changePostStatus(postId, open);
-        return true;
-    }
+//     /**
+//      * Verifies that a patrol can be checkout out of a post.
+//      *
+//      * @param patrolId the id of the patrol to check out
+//      * @param postId the id of the post to check out of
+//      * @param detour `true` if the patrol is sent on a detour, `false` otherwise
+//      * @return `true` if the patrol can be checked out, `false` otherwise
+//      */
 
-    /**
-     * Verifies that a patrol can be checkout out of a post.
-     *
-     * @param patrolId the id of the patrol to check out
-     * @param postId the id of the post to check out of
-     * @param detour `true` if the patrol is sent on a detour, `false` otherwise
-     * @return `true` if the patrol can be checked out, `false` otherwise
-     */
-    canPatruljeBeCheckedUd(patrolId: number, postId: number, detour: boolean): boolean {
-        const lastCheckin = this.latestCheckinOfPatrol(patrolId);
-        const patrolInfo = this.db.patrolInfo(patrolId);
-        const nextPostIsDetour = this.db.postInfo(postId + 1)?.detour || false;
+//     /** Verify whether an update is valid. It is only meant to be used on updates made by locations and NOT the master */
+//     isPatrolUpdateValid(newUpdate: PatrolUpdate): boolean {
+//         const lastUpdate = this.latestUpdateOfPatrol(newUpdate.patrolId);
+//         const patrolInfo = this.db.patrolInfo(newUpdate.patrolId);
+        
+//         // If there is no previous updates, the patrol can go to any post
+//         if(lastUpdate === undefined)
+//             return true;
 
-        return lastCheckin !== undefined
-            && patrolInfo !== undefined
-            && lastCheckin.postId === postId
-            && lastCheckin.type === CheckinType.CheckIn
-            && !patrolInfo.udgået
-            && (detour ? nextPostIsDetour : true);
-    }
+//         if(patrolInfo === undefined || patrolInfo?.udgået)
+//             return false;
 
-    /**
-     * Check if a patrol can be checked in at a post.
-     *
-     * @param patrolId the id of the patrol
-     * @param postId the id of the post
-     * @return `true` if the patrol can be checked in, `false` otherwise
-     */
-    canPaltrolBeCheckedIn(patrolId: number, postId: number): boolean {
-        const lastCheckin = this.latestCheckinOfPatrol(patrolId);
-        if(lastCheckin === undefined) {
-            return postId === this.firstPostId;
-        }
+//         // The patrol must be at the same location as the update
+//         if(lastUpdate.currentLocationId !== newUpdate.currentLocationId)
+//             return false;
 
-        const patrolIsOnDetour = lastCheckin.type == CheckinType.Detour;
-        const patrolInfo = this.db.patrolInfo(patrolId);
 
-        return patrolInfo !== undefined
-            && lastCheckin.type !== CheckinType.CheckIn
-            && this.nextPostId(lastCheckin.postId, patrolIsOnDetour) === postId
-            && !patrolInfo.udgået;
-    }
+//         // Check-in
+//         if(newUpdate.currentLocationId === newUpdate.targetLocationId){
+//             const locationIsOpen = this.db.locationInfo(newUpdate.currentLocationId)?.open;
+//             const patrolIsGoingToThisLocation = lastUpdate.targetLocationId == newUpdate.currentLocationId
+//             return locationIsOpen && patrolIsGoingToThisLocation;
+//         }
+//         // Check-out
+//         else{
+//             const routeIsAvailable = this.db.isRouteAvailable(newUpdate.currentLocationId, newUpdate.targetLocationId);
+//             return routeIsAvailable;
+//         }
+//     }
 
-    latestCheckinOfPatrol(patrolId: number): PatrolUpdate | undefined {
-        return this.db.latestCheckinsOfPatrol(patrolId, 1)[0];
-    }
+//     latestUpdateOfPatrol(patrolId: number): PatrolUpdate | undefined {
+//         return this.db.latestUpdatesOfPatrol(patrolId, 1)[0];
+//     }
 
-    /**
-     * Get list of patrols at a post.
-     * @param postId the id of the post
-     * @returns the patrol ids of the patrols at the post
-     */
-    patruljerPåPost(postId: number): number[] {
-        let checkins = this.db.checkinsAtPost(postId);
-        let patrolsCheckedOut = checkins
-            .filter((checkin) => checkin.type !== CheckinType.CheckIn)
-            .map((checkin) => checkin.patrolId);
-        let patrolsAtPost = checkins
-            .filter((checkin) => {
-                return checkin.type === CheckinType.CheckIn
-                    && !patrolsCheckedOut.includes(checkin.patrolId)
-            })
-            .map((checkin) => checkin.patrolId)
-            .filter((patrolId) => !this.db.patrolInfo(patrolId).udgået);
-        return patrolsAtPost;
-    }
+//     /**
+//      * Get list of patrols at a post.
+//      * @param locationID the id of the post
+//      * @returns the patrol ids of the patrols at the post. Patrols most recently checked in at are first.
+//      */
+//     patrolsOnLocation(locationID: number): number[] {
+//         let updates = this.db.updatesAtLocation(locationID);
+//         let patrolsAtLocation = updates
+//             .filter((update) => update.targetLocationId == locationID)
+//             .map(update => update.patrolId)
+//             .filter((patrolId) => !this.db.patrolInfo(patrolId).udgået);
 
-    /**
-     * Get patrols on detour from post.
-     *
-     * @param postId the id of the post the patrol is on detour from.
-     * @return a list of patrol ids
-     */
-    patruljerPåVej(postId: number): number[] {
-        return this.db.allPatrolIds()
-            .filter((patrolId) => this.canPaltrolBeCheckedIn(patrolId, postId));
-    }
+//         // Remove duplicates
+//         return Array.from(new Set(patrolsAtLocation));
+//     }
 
-    /**
-     * Get ids of patrols that are checked out of a post.
-     *
-     *
-     * @param postId the id of the post the patrols have leaved
-     * @returns a list of patrol ids
-     */
-    patrolsCheckedOut(postId: number): number[] {
-        return this.db.checkinsAtPost(postId)
-            .filter((checkin) => checkin.type !== CheckinType.CheckIn)
-            .map((checkin) => checkin.patrolId);
-    }
+//     /**
+//      * Get patrols on detour from post.
+//      *
+//      * @param postId the id of the post the patrol is on detour from.
+//      * @return a list of patrol ids
+//      */
+//     patrolsTowardsLocation(locationID: number): number[] {
+//         let updates = this.db.updatesAtLocation(locationID);
+//         let patrolsTowardsLocation = updates
+//             .filter((update) => update.targetLocationId == locationID)
+//             .map(update => update.patrolId)
+//             .filter((patrolId) => !this.db.patrolInfo(patrolId).udgået);
 
-    /**
-     * Get id id of next post
-     * @param postId the id of current post
-     * @param detour `true` if allowed to include detours, `false` otherwise
-     * @returns the id of the next post
-     */
-    private nextPostId(postId: number, detour: boolean): number {
-        //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
-        const post = this.db.postInfo(postId + 1);
-        if(!detour && post !== undefined && post.detour) {
-            return postId + 2;
-        }
-        return postId + 1;
-    }
+//         // Remove duplicates
+//         return Array.from(new Set(patrolsTowardsLocation));
+//     }
 
-    /**
-     * Verify a checkin is valid.
-     *
-     * @param checkin the checkin to verify
-     * @returns `true` if checkin is valid, `false` otherwise
-     */
-    isCheckinValid(checkin: PatrolUpdate): boolean {
-        if(checkin.type === CheckinType.CheckIn) {
-            return this.canPaltrolBeCheckedIn(checkin.patrolId, checkin.postId);
-        } else {
-            const detour = checkin.type === CheckinType.Detour;
-            return this.canPatruljeBeCheckedUd(checkin.patrolId, checkin.postId, detour);
-        }
-    }
+//     /**
+//      * Get ids of patrols that are checked out of a post.
+//      *
+//      *
+//      * @param postId the id of the post the patrols have leaved
+//      * @returns a list of patrol ids
+//      */
+//     patrolsCheckedOut(postId: number): number[] {
+//         return this.db.updatesAtLocation(postId)
+//             .filter((checkin) => checkin.type !== PatrolUpdateType.CheckIn)
+//             .map((checkin) => checkin.patrolId);
+//     }
 
-    /**
-     * Reset database.
-     * * Remove all checkins
-     * * Set all posts to open
-     * * Remove "udgået" status from all patrols
-     */
-    reset() {
-        // Remove all checkins
-        this.db.allCheckinIds().forEach((checkinId) => {
-            this.db.deleteCheckin(checkinId);
-        });
+//     /**
+//      * Get id id of next post
+//      * @param postId the id of current post
+//      * @param detour `true` if allowed to include detours, `false` otherwise
+//      * @returns the id of the next post
+//      */
+//     private nextPostId(postId: number, detour: boolean): number {
+//         //Alt efter om patruljen skal på omvej og om den næste post er en omvej, er den næste post jo noget forskelligt
+//         const post = this.db.locationInfo(postId + 1);
+//         if(!detour && post !== undefined && post.detour) {
+//             return postId + 2;
+//         }
+//         return postId + 1;
+//     }
 
-        // Set all posts to open
-        this.db.allPostIds().forEach((postId) => {
-            this.db.changePostStatus(postId, true);
-        });
+//     /**
+//      * Reset database.
+//      * * Remove all checkins
+//      * * Set all posts to open
+//      * * Remove "udgået" status from all patrols
+//      */
+//     reset() {
+//         // Remove all checkins
+//         this.db.allPatrolUpdatesIds().forEach((checkinId) => {
+//             this.db.deleteUpdate(checkinId);
+//         });
 
-        // Remove "udgået" status from all patrols
-        this.db.allPatrolIds().forEach((patrolId) => {
-            this.db.changePatrolStatus(patrolId, false);
-        });
-    }
+//         // Set all posts to open
+//         this.db.allLocationIds().forEach((postId) => {
+//             this.db.changeLocationStatus(postId, true);
+//         });
 
-    /**
-     * Get current location of patrol.
-     * 
-     * @param patrolId the id of the patrol
-     * @returns the location of the patrol
-     */
-    locationOfPatrol(patrolId: number): PatrolLocation {
-        if(this.db.patrolInfo(patrolId).udgået) {
-            return {
-                type: PatrolLocationType.Udgået,
-                postId: -1,
-            };
-        }
-        let latestCheckin = this.latestCheckinOfPatrol(patrolId);
-        if(latestCheckin == null)
-            return {
-                type: PatrolLocationType.GoingToLocation,
-                postId: this.firstPostId,
-            };
-        if(latestCheckin.type === CheckinType.CheckIn) {
-            return {
-                type: PatrolLocationType.OnLocation,
-                postId: latestCheckin.postId
-            };
-        }
-        let isDetour = latestCheckin.type === CheckinType.Detour;
-        let nextPostId = this.nextPostId(latestCheckin.postId, isDetour);
-        return {
-            type: PatrolLocationType.GoingToLocation,
-            postId: nextPostId
-        };
-    }
+//         // Remove "udgået" status from all patrols
+//         this.db.allPatrolIds().forEach((patrolId) => {
+//             this.db.changePatrolStatus(patrolId, false);
+//         });
+//     }
 
-    checkin(checkin: PatrolUpdate): number {
-        return this.db.checkin(checkin);
-    }
+//     /**
+//      * Get current location of patrol.
+//      * 
+//      * @param patrolId the id of the patrol
+//      * @returns the location of the patrol
+//      */
+//     locationOfPatrol(patrolId: number): PatrolLocation {
+//         if(this.db.patrolInfo(patrolId).udgået) {
+//             return {
+//                 type: PatrolLocationType.Udgået,
+//                 locationId: -1,
+//             };
+//         }
+//         let latestCheckin = this.latestUpdateOfPatrol(patrolId);
+//         if(latestCheckin == null)
+//             return {
+//                 type: PatrolLocationType.GoingToLocation,
+//                 locationId: this.firstPostId,
+//             };
+//         if(latestCheckin.type === PatrolUpdateType.CheckIn) {
+//             return {
+//                 type: PatrolLocationType.OnLocation,
+//                 locationId: latestCheckin.postId
+//             };
+//         }
+//         let isDetour = latestCheckin.type === PatrolUpdateType.Detour;
+//         let nextPostId = this.nextPostId(latestCheckin.postId, isDetour);
+//         return {
+//             type: PatrolLocationType.GoingToLocation,
+//             locationId: nextPostId
+//         };
+//     }
 
-    latestCheckinsOfPatrol(patrol: number, amount: number): PatrolUpdate[] {
-        return this.db.latestCheckinsOfPatrol(patrol, amount);
-    }
+//     updatePatrol(checkin: PatrolUpdate): number {
+//         return this.db.updatePatrol(checkin);
+//     }
 
-    patrolInfo(patrolId: number): Patrol | undefined {
-        return this.db.patrolInfo(patrolId);
-    }
+//     latestUpdatesOfPatrol(patrol: number, amount: number): PatrolUpdate[] {
+//         return this.db.latestUpdatesOfPatrol(patrol, amount);
+//     }
 
-    changePatrolStatus(patrolId: number, udgået: boolean): void {
-        this.db.changePatrolStatus(patrolId, udgået);
-    }
+//     patrolInfo(patrolId: number): Patrol | undefined {
+//         return this.db.patrolInfo(patrolId);
+//     }
 
-    allPatrolIds(): number[] {
-        return this.db.allPatrolIds();
-    }
+//     changePatrolStatus(patrolId: number, udgået: boolean): void {
+//         this.db.changePatrolStatus(patrolId, udgået);
+//     }
 
-    changePostStatus(postId: number, open: boolean): void {
-        this.db.changePostStatus(postId, open);
-    }
+//     allPatrolIds(): number[] {
+//         return this.db.allPatrolIds();
+//     }
 
-    postInfo(postId: number): Location | undefined {
-        return this.db.postInfo(postId);
-    }
+//     changeLocationStatus(postId: number, open: boolean): void {
+//         this.db.changeLocationStatus(postId, open);
+//     }
 
-    allPostIds(): number[] {
-        return this.db.allPostIds();
-    }
+//     locationInfo(postId: number): Location | undefined {
+//         return this.db.locationInfo(postId);
+//     }
 
-    checkinsAtPost(postId: number): PatrolUpdate[] {
-        return this.db.checkinsAtPost(postId);
-    }
+//     allLocationIds(): number[] {
+//         return this.db.allLocationIds();
+//     }
 
-    checkinById(checkinId: number): PatrolUpdate | undefined {
-        return this.db.checkinById(checkinId);
-    }
+//     updatesAtLocation(postId: number): PatrolUpdate[] {
+//         return this.db.updatesAtLocation(postId);
+//     }
 
-    deleteCheckin(checkinId: number): void {
-        this.db.deleteCheckin(checkinId);
-    }
+//     updateById(checkinId: number): PatrolUpdate | undefined {
+//         return this.db.updateById(checkinId);
+//     }
 
-    /**Delete all checkins from the database.
-     * Equivalent to sending all patrols to the first post.
-     */
-    deleteAllCheckins(): void {
-        this.db.allCheckinIds().forEach(id => {
-            this.deleteCheckin(id);
-        });
-    }
+//     deleteUpdate(checkinId: number): void {
+//         this.db.deleteUpdate(checkinId);
+//     }
 
-    lastCheckins(amount: number): PatrolUpdate[] {
-        return this.db.lastCheckins(amount);
-    }
+//     /**Delete all checkins from the database.
+//      * Equivalent to sending all patrols to the first post.
+//      */
+//     deleteAllCheckins(): void {
+//         this.db.allPatrolUpdatesIds().forEach(id => {
+//             this.deleteUpdate(id);
+//         });
+//     }
 
-    allCheckinIds(): number[] {
-        return this.db.allCheckinIds();
-    }
+//     lastUpdates(amount: number): PatrolUpdate[] {
+//         return this.db.lastUpdates(amount);
+//     }
 
-    authenticate(password: string): number | undefined {
-        return this.db.authenticate(password);
-    }
+//     allPatrolUpdatesIds(): number[] {
+//         return this.db.allPatrolUpdatesIds();
+//     }
 
-    userIds(): number[] {
-        return this.db.userIds();
-    }
+//     authenticate(password: string): number | undefined {
+//         return this.db.authenticate(password);
+//     }
 
-}
+//     userIds(): number[] {
+//         return this.db.userIds();
+//     }
 
-export interface PatrolLocation {
-    /** Is the patrol on a location or going to a location. */
-    type: PatrolLocationType,
-    /** Id of the post thåe patrol is going to or on */
-    postId: number,
-}
+// }
 
-export enum PatrolLocationType {
-    OnLocation, GoingToLocation, Udgået
-}
+// export interface PatrolLocation {
+//     /** Is the patrol on a location or going to a location. */
+//     type: PatrolLocationType,
+//     /** Id of the location the patrol is going to or on */
+//     locationId: number,
+// }
+
+// export enum PatrolLocationType {
+//     OnLocation, GoingToLocation, Udgået
+// }
