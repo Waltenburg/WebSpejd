@@ -1,4 +1,4 @@
-import { ServiceBase} from "./database";
+import { ServiceBase, PATROL_TABLE, PATROL_UPDATE_TABLE, LOCATION_TABLE, ROUTE_TABLE} from "./database";
 import { PatrolUpdate } from "./types";
 
 /** Information about a patrol checkin or checkout.\
@@ -27,13 +27,48 @@ export class UpdateService extends ServiceBase {
     }
 
     /**
+     * Validates a `PatrolUpdate`.
+     * @param newUpdate `PatrolUpdate` object to validate
+     * @param opts options for validation as a dictionary.
+     *  - `skipRouteValidation`: if true, skips the route validation check
+     * @returns `true` if the `PatrolUpdate` is valid, `false` otherwise
+     */
+    isPatrolUpdateValid(newUpdate: PatrolUpdate, opts?: {skipRouteValidation?: boolean}): boolean {
+        const patrolExists = this.prepare(`SELECT 1 FROM ${PATROL_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.patrolId) != undefined;
+        const currentLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.currentLocationId) != undefined;
+        const targetLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.targetLocationId) != undefined;
+        const routeIsValid = this.prepare(`SELECT 1 FROM ${ROUTE_TABLE.TABLE_NAME} WHERE (${ROUTE_TABLE.FROM_LOCATION_ID} = ? AND ${ROUTE_TABLE.TO_LOCATION_ID} = ?)`).get(newUpdate.currentLocationId, newUpdate.targetLocationId) != undefined;
+
+        if (!patrolExists || !currentLocationExists || !targetLocationExists) {
+            console.error("Invalid patrol update: patrol or location does not exist");
+            return false;
+        }
+        if (opts?.skipRouteValidation ? false : !routeIsValid) {
+            console.error("Invalid patrol update: no valid route between locations");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Find the latest `PatrolUpdates` of the specified patrol.
      * @param patrol the patrol to get the latest `PatrolUpdates` of
+     * @param amount the number of `PatrolUpdates` to get
      * @return the latest `PatrolUpdates` of the patrol or `null` if none exist
      */
     latestUpdatesOfPatrol(patrol: number, amount: number): PatrolUpdate[]{
         const patrolUpdates = this.prepare("SELECT * FROM PatrolUpdates WHERE patrolId = ? ORDER BY timeStr DESC LIMIT ?").all(patrol, amount) as DatabasePatrolUpdate[];
         return this.convertFromDBPatrolUpdate(patrolUpdates);
+    }
+
+    /**
+     * Get the latest `PatrolUpdate` of the specified patrol.
+     * @param patrol patrolId the patrol to get the latest `PatrolUpdate` of
+     * @returns A `PatrolUpdate` object representing the latest update of the patrol or `null` if no updates exist or the patrol does not exist
+     */
+    latestUpdateOfPatrol(patrol: number): PatrolUpdate | null{
+        return this.latestUpdatesOfPatrol(patrol, 1)[0] || null;
     }
 
     /** Check patrol in or out of post.
