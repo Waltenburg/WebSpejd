@@ -56,10 +56,10 @@ export class UserCache {
 
 export class User {
     /** Id of the post the user is connected to. */
-    postId: number;
+    locationId: number;
 
     constructor(postId: number) {
-        this.postId = postId;
+        this.locationId = postId;
     }
 
     /**
@@ -69,7 +69,7 @@ export class User {
      * @returns `true` if the user is a master user, `false` otherwise
      */
     isMasterUser(): boolean {
-        return this.postId === Infinity;
+        return this.locationId === Infinity;
     }
 
     /**
@@ -79,6 +79,6 @@ export class User {
      * @return `true` if the user is a post user, `false` otherwise
      */
     isPostUser(): boolean {
-        return this.postId >= 0 && this.postId !== Infinity;
+        return this.locationId >= 0 && this.locationId !== Infinity;
     }
 }
