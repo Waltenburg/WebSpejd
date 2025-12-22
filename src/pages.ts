@@ -154,23 +154,25 @@ export class Pages {
         });
     }
 
+    // TODO: Update this to use new location route system
     private graphData = (): any => {
-        const amountOfPosts = this.db.allLocationIds().length;
-        const patrols = this.db.allPatrolIds()
-            .map((patrolId) => {
-                const postIds = this.db.latestUpdatesOfPatrol(patrolId, 1000)
-                    .filter((checkin) => checkin.type === CheckinType.CheckIn)
-                    .map((checkin) => checkin.postId);
-                let posts = Array(amountOfPosts - 1).fill(false);
-                for(let postId of postIds) {
-                    if(postId === amountOfPosts) {
-                        continue;
-                    }
-                    posts[postId] = true;
-                }
-                return { posts: posts, amount: Math.max(...postIds) };
-            });
-        return patrols;
+        // const amountOfPosts = this.locationService.allLocationIds().length;
+        // const patrols = this.patrolService.allPatrolIds()
+        //     .map((patrolId) => {
+        //         const postIds = this.updateService.latestUpdatesOfPatrol(patrolId, 1000)
+        //             .filter((checkin) => checkin.type === CheckinType.CheckIn)
+        //             .map((checkin) => checkin.postId);
+        //         let posts = Array(amountOfPosts - 1).fill(false);
+        //         for(let postId of postIds) {
+        //             if(postId === amountOfPosts) {
+        //                 continue;
+        //             }
+        //             posts[postId] = true;
+        //         }
+        //         return { posts: posts, amount: Math.max(...postIds) };
+        //     });
+        // return patrols;
+        return {};
     }
 
     private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
