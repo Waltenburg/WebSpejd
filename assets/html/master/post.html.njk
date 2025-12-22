@@ -3,7 +3,7 @@
 
 {% block body %}
     <h1>Post {{post.id}}: {{post.name}}</h1>
-    <a class="button" href="/master/checkin?postId={{post.id}}">Check ind</a>
+    <a class="button" href="/master/checkin?locationId={{post.id}}">Check ind</a>
     {% if post.detour %}
         {% if post.open %}
             <a class="button"
@@ -15,13 +15,13 @@
     {% endif %}
 
     <h2>Går mod post</h2>
-    {{ utils.patrols(patrolsOnTheirWay, postId=post.id, selection="patrolsOnTheirWay") }}
+    {{ utils.patrols(patrolsOnTheirWay, locationId=post.id, selection="patrolsOnTheirWay") }}
     <h2>På post</h2>
-    {{ utils.patrols(patrolsOnPost, postId=post.id, selection="patrolsOnPost") }}
+    {{ utils.patrols(patrolsOnPost, locationId=post.id, selection="patrolsOnPost") }}
     <h2>Har forladt post</h2>
-    {{ utils.patrols(patrolsCheckedOut, postId=post.id, selection="patrolsCheckedOut") }}
+    {{ utils.patrols(patrolsCheckedOut, locationId=post.id, selection="patrolsCheckedOut") }}
     <h2>Checkins</h2>
-    <div hx-get="/master/checkins?postId={{post.id}}" hx-trigger="every 5s">
+    <div hx-get="/master/checkins?locationId={{post.id}}" hx-trigger="every 5s">
         {{ utils.checkins(checkins) }}
     </div>
 

@@ -54,6 +54,6 @@ export interface PatrolUpdate {
 /** Information about a user as it is stored in the database */
 export interface User{
     id: number;
-    postId: number;
+    locationId: number;
     password: string;
 }

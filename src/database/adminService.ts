@@ -17,10 +17,10 @@ export class AdminService extends ServiceBase {
 
         // Check if the password is a post password
         const user = this.prepare("SELECT * FROM user WHERE password = ?").get(password) as User | undefined;
-        if(user?.postId == undefined) {
+        if(user?.locationId == undefined) {
             return undefined;
         }
-        return user.postId;
+        return user.locationId;
     }
 
     /**

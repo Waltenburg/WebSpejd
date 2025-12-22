@@ -27,7 +27,7 @@ const createDatabaseFromCSV = (csvPath: string, dbPath: string, schemaPath: stri
 
     const addPatrolStmt = db.prepare('INSERT INTO patrol (name) VALUES (?)');
     const addPostStmt = db.prepare('INSERT INTO post (name, detour, team, open) VALUES (?, ?, ?, ?)');
-    const addUserStmt = db.prepare('INSERT INTO user (postId, password) VALUES (?, ?)');
+    const addUserStmt = db.prepare('INSERT INTO user (locationId, password) VALUES (?, ?)');
     const addSettingStmt = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
 
     rows.forEach(row => {
@@ -44,9 +44,9 @@ const createDatabaseFromCSV = (csvPath: string, dbPath: string, schemaPath: stri
             addPatrolStmt.run(patrolName);
         if(postName !== ''){
             addPostStmt.run(postName, detour, team, open);
-            //Get postId from the last insert
-            const postId = (db.prepare('SELECT last_insert_rowid() as id').get() as { id: number }).id;
-            addUserStmt.run(postId, password);
+            //Get locationId from the last insert
+            const locationId = (db.prepare('SELECT last_insert_rowid() as id').get() as { id: number }).id;
+            addUserStmt.run(locationId, password);
         }
         if(settingKey !== '' && settingValue !== ''){
             addSettingStmt.run(settingKey, settingValue);

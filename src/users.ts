@@ -11,11 +11,11 @@ export class UserCache {
      * Add user to cache.
      *
      * @param identifier the identifier of the user
-     * @param postId the id of the post the user is authorized to adminster
+     * @param locationId the id of the post the user is authorized to adminster
      * @returns the user object
      */
-    addUser(identifier: string, postId: number): User {
-        const user = new User(postId);
+    addUser(identifier: string, locationId: number): User {
+        const user = new User(locationId);
         this.users[identifier] = user;
         return user;
     }
@@ -58,8 +58,8 @@ export class User {
     /** Id of the post the user is connected to. */
     locationId: number;
 
-    constructor(postId: number) {
-        this.locationId = postId;
+    constructor(locationId: number) {
+        this.locationId = locationId;
     }
 
     /**

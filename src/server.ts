@@ -113,11 +113,11 @@ class Server {
     login = async (req: Request): Promise<Response> => {
         const password = req.headers['password'];
         const identifier = req.headers['id'];
-        const postId = this.adminService.authenticate(password);
-        if(postId === undefined) {
+        const locationId = this.adminService.authenticate(password);
+        if(locationId === undefined) {
             return responses.unauthorized();
         }
-        const user = this.users.addUser(identifier, postId);
+        const user = this.users.addUser(identifier, locationId);
         return responses.ok(null, {
             "isMaster": user.isMasterUser()
         });
@@ -271,11 +271,11 @@ class Server {
     postStatus = async(request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const statusParam = params.get("status");
-        const postId = Number.parseInt(params.get("post"));
+        const locationId = Number.parseInt(params.get("post"));
         const newStatus = statusParam === "open";
 
-        this.locationService.changeLocationStatus(postId, newStatus);
-        return responses.redirect(`/master/post?id=${postId}`);
+        this.locationService.changeLocationStatus(locationId, newStatus);
+        return responses.redirect(`/master/post?id=${locationId}`);
     }
 
 

@@ -64,26 +64,26 @@ export class Pages {
     }
 
     post = async (request: Request): Promise<Response> => {
-        const postId = Number.parseInt(request.url.searchParams.get("id"));
-        let post = this.locationService.locationInfo(postId);
+        const locationId = Number.parseInt(request.url.searchParams.get("id"));
+        let post = this.locationService.locationInfo(locationId);
         return this.response(POST, {
-            patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(postId)),
-            patrolsOnTheirWay: this.patrolsData(this.locationService.patrolsTowardsLocation(postId)),
-            patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(postId)),
+            patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(locationId)),
+            patrolsOnTheirWay: this.patrolsData(this.locationService.patrolsTowardsLocation(locationId)),
+            patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(locationId)),
             post: post,
-            checkins: this.updateService.updatesAtLocation(postId).reverse(),
+            checkins: this.updateService.updatesAtLocation(locationId).reverse(),
         });
     }
 
     checkin = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const patrolId = params.get("patrolId");
-        const postId = params.get("postId");
+        const locationId = params.get("locationId");
         return this.response(CHECKIN, {
             patrols: this.patrolService.allPatrolIds().map((patrolId) => this.patrolService.patrolInfo(patrolId)),
-            posts: this.locationService.allLocationIds().map((postId) => this.locationService.locationInfo(postId)),
+            posts: this.locationService.allLocationIds().map((locationId) => this.locationService.locationInfo(locationId)),
             selectedPatrol: patrolId,
-            selectedPost: postId,
+            selectedPost: locationId,
         });
     }
 
@@ -96,9 +96,9 @@ export class Pages {
             checkins = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 100);
         }
 
-        let postId = params.get("postId");
-        if(postId != undefined) {
-            checkins = this.updateService.updatesAtLocation(Number.parseInt(postId)).reverse();
+        let locationId = params.get("locationId");
+        if(locationId != undefined) {
+            checkins = this.updateService.updatesAtLocation(Number.parseInt(locationId)).reverse();
         }
 
         if(checkins === undefined){
@@ -112,20 +112,20 @@ export class Pages {
 
     patrols = async (request: Request): Promise<Response> => {
         let patrolIds = undefined;
-        let postId = undefined;
+        let locationId = undefined;
         let selection = undefined
         const params = request.url.searchParams;
 
-        const postIdStr = params.get("postId");
+        const postIdStr = params.get("locationId");
         if(postIdStr != undefined) {
-            postId = Number.parseInt(postIdStr);
+            locationId = Number.parseInt(postIdStr);
             selection = params.get("selection");
             if(selection === "patrolsOnTheirWay") {
-                patrolIds = this.locationService.patrolsTowardsLocation(postId);
+                patrolIds = this.locationService.patrolsTowardsLocation(locationId);
             } else if(selection === "patrolsOnPost") {
-                patrolIds = this.locationService.patrolsOnLocation(postId);
+                patrolIds = this.locationService.patrolsOnLocation(locationId);
             } else if(selection === "patrolsCheckedOut") {
-                patrolIds = this.locationService.patrolsCheckedOutFromLocation(postId);
+                patrolIds = this.locationService.patrolsCheckedOutFromLocation(locationId);
             }
         }
 
@@ -134,7 +134,7 @@ export class Pages {
         return this.response(PATROLS, {
             patrols: this.patrolsData(patrolIds, sortBy),
             sortBy: sortBy,
-            postId: postId,
+            locationId: locationId,
             selection: selection,
         });
     }
@@ -161,13 +161,13 @@ export class Pages {
         //     .map((patrolId) => {
         //         const postIds = this.updateService.latestUpdatesOfPatrol(patrolId, 1000)
         //             .filter((checkin) => checkin.type === CheckinType.CheckIn)
-        //             .map((checkin) => checkin.postId);
+        //             .map((checkin) => checkin.locationId);
         //         let posts = Array(amountOfPosts - 1).fill(false);
-        //         for(let postId of postIds) {
-        //             if(postId === amountOfPosts) {
+        //         for(let locationId of postIds) {
+        //             if(locationId === amountOfPosts) {
         //                 continue;
         //             }
-        //             posts[postId] = true;
+        //             posts[locationId] = true;
         //         }
         //         return { posts: posts, amount: Math.max(...postIds) };
         //     });
@@ -203,12 +203,12 @@ export class Pages {
 
     private locationData = (): postDataToMaster[] => {
          return this.locationService.allLocationIds()
-            .map((postId) => {
-                let base = this.locationService.locationInfo(postId);
+            .map((locationId) => {
+                let base = this.locationService.locationInfo(locationId);
                 return {
-                    patrolsOnPost: this.locationService.patrolsOnLocation(postId).length,
-                    patrolsOnTheirWay: this.locationService.patrolsTowardsLocation(postId).length,
-                    patrolsCheckedOut: this.locationService.patrolsCheckedOutFromLocation(postId).length,
+                    patrolsOnPost: this.locationService.patrolsOnLocation(locationId).length,
+                    patrolsOnTheirWay: this.locationService.patrolsTowardsLocation(locationId).length,
+                    patrolsCheckedOut: this.locationService.patrolsCheckedOutFromLocation(locationId).length,
                     ...base
                 };
             });
@@ -287,10 +287,10 @@ function formatTime(value: Date) {
     return `${hour}:${minute}:${second}`;
 }
 
-function patrolsUrl(sortBy: string =undefined, postId: string = undefined, selection: string = undefined): string {
+function patrolsUrl(sortBy: string =undefined, locationId: string = undefined, selection: string = undefined): string {
     return createUrlPath("/master/patrols", {
         sortBy: sortBy,
-        postId: postId,
+        locationId: locationId,
         selection: selection,
     });
 }
