@@ -1,9 +1,8 @@
-import { CheckinType, DatabaseWrapper } from "./database";
-import { PatrolLocation, PatrolLocationType } from "./database/wrapper";
 import * as responses from "./response";
 import nunjucks from "nunjucks";
 import { Request } from "./request";
-import { PatrolUpdate, Location } from "./database/generic";
+import { Database, LocationService, PatrolService, UpdateService } from "./databaseBarrel";
+import { PatrolLocation, PatrolUpdateType, PatrolLocationType, PatrolUpdate, Location } from "./database/types";
 
 type Response = responses.Response;
 
@@ -17,10 +16,17 @@ export const PATROLS: string = "master/patrols.html.njk";
 export const PATROL: string = "master/patrol.html.njk";
 
 export class Pages {
-    private db: DatabaseWrapper;
+    private db: Database;
+    private locationService: LocationService;
+    private patrolService: PatrolService;
+    private updateService: UpdateService;
+
     private env: nunjucks.Environment;
 
-    constructor(templateDir: string, db: DatabaseWrapper, cache: boolean) {
+
+    constructor(templateDir: string, db: Database, cache: boolean,
+        locationService: LocationService, patrolService: PatrolService, updateService: UpdateService 
+    ) {
         this.env = new nunjucks.Environment(
             new nunjucks.FileSystemLoader(templateDir),
             {
@@ -35,14 +41,17 @@ export class Pages {
         this.env.addGlobal("patrolsUrl", patrolsUrl);
 
         this.db = db;
+        this.locationService = locationService;
+        this.patrolService = patrolService;
+        this.updateService = updateService;
     }
 
 
 
     master = async(): Promise<Response> => {
         return this.response(MAIN, {
-            posts: this.postsData(),
-            checkins: this.db.lastUpdates(10),
+            posts: this.locationData(),
+            checkins: this.updateService.lastUpdates(10),
             patrols: this.patrolsData(),
             graph: this.graphData(),
         });
@@ -50,19 +59,19 @@ export class Pages {
 
     posts = async (): Promise<Response> => {
         return this.response(POSTS, {
-            posts: this.postsData(),
+            posts: this.locationData(),
         });
     }
 
     post = async (request: Request): Promise<Response> => {
         const postId = Number.parseInt(request.url.searchParams.get("id"));
-        let post = this.db.locationInfo(postId);
+        let post = this.locationService.locationInfo(postId);
         return this.response(POST, {
-            patrolsOnPost: this.patrolsData(this.db.patrolsOnLocation(postId)),
-            patrolsOnTheirWay: this.patrolsData(this.db.patrolsTowardsLocation(postId)),
-            patrolsCheckedOut: this.patrolsData(this.db.patrolsCheckedOut(postId)),
+            patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(postId)),
+            patrolsOnTheirWay: this.patrolsData(this.locationService.patrolsTowardsLocation(postId)),
+            patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(postId)),
             post: post,
-            checkins: this.db.updatesAtLocation(postId).reverse(),
+            checkins: this.updateService.updatesAtLocation(postId).reverse(),
         });
     }
 
@@ -71,8 +80,8 @@ export class Pages {
         const patrolId = params.get("patrolId");
         const postId = params.get("postId");
         return this.response(CHECKIN, {
-            patrols: this.db.allPatrolIds().map((patrolId) => this.db.patrolInfo(patrolId)),
-            posts: this.db.allLocationIds().map((postId) => this.db.locationInfo(postId)),
+            patrols: this.patrolService.allPatrolIds().map((patrolId) => this.patrolService.patrolInfo(patrolId)),
+            posts: this.locationService.allLocationIds().map((postId) => this.locationService.locationInfo(postId)),
             selectedPatrol: patrolId,
             selectedPost: postId,
         });
@@ -84,16 +93,16 @@ export class Pages {
 
         let patrolId = params.get("patrolId");
         if(patrolId != undefined) {
-            checkins = this.db.latestUpdatesOfPatrol(Number.parseInt(patrolId), 100);
+            checkins = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 100);
         }
 
         let postId = params.get("postId");
         if(postId != undefined) {
-            checkins = this.db.updatesAtLocation(Number.parseInt(postId)).reverse();
+            checkins = this.updateService.updatesAtLocation(Number.parseInt(postId)).reverse();
         }
 
         if(checkins === undefined){
-            checkins = this.db.lastUpdates(20);
+            checkins = this.updateService.lastUpdates(20);
         }
 
         return this.response(CHECKINS, {
@@ -112,11 +121,11 @@ export class Pages {
             postId = Number.parseInt(postIdStr);
             selection = params.get("selection");
             if(selection === "patrolsOnTheirWay") {
-                patrolIds = this.db.patrolsTowardsLocation(postId);
+                patrolIds = this.locationService.patrolsTowardsLocation(postId);
             } else if(selection === "patrolsOnPost") {
-                patrolIds = this.db.patrolsOnLocation(postId);
+                patrolIds = this.locationService.patrolsOnLocation(postId);
             } else if(selection === "patrolsCheckedOut") {
-                patrolIds = this.db.patrolsCheckedOut(postId);
+                patrolIds = this.locationService.patrolsCheckedOutFromLocation(postId);
             }
         }
 
@@ -133,9 +142,9 @@ export class Pages {
     patrol = async (request: Request): Promise<Response> => {
         const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
-            patrol: this.db.patrolInfo(patrolId),
-            checkins: this.db.latestUpdatesOfPatrol(patrolId, 100),
-            location: this.db.locationOfPatrol(patrolId),
+            patrol: this.patrolService.patrolInfo(patrolId),
+            checkins: this.updateService.latestUpdatesOfPatrol(patrolId, 100),
+            location: this.patrolService.locationOfPatrol(patrolId),
         });
     }
 
@@ -166,15 +175,15 @@ export class Pages {
 
     private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
         if(patrolIds === undefined) {
-            patrolIds = this.db.allPatrolIds();
+            patrolIds = this.patrolService.allPatrolIds();
         }
         return patrolIds
             .map((patrolId) => {
-                let patrol = this.db.patrolInfo(patrolId);
-                let lastCheckin = this.db.latestUpdateOfPatrol(patrolId);
+                let patrol = this.patrolService.patrolInfo(patrolId);
+                let lastCheckin = this.updateService.latestUpdateOfPatrol(patrolId);
                 return {
                     lastCheckin: lastCheckin,
-                    location: this.db.locationOfPatrol(patrolId),
+                    location: this.patrolService.locationOfPatrol(patrolId),
                     ...patrol
                 };
             })
@@ -190,14 +199,14 @@ export class Pages {
             })
     }
 
-    private postsData = (): postDataToMaster[] => {
-         return this.db.allLocationIds()
+    private locationData = (): postDataToMaster[] => {
+         return this.locationService.allLocationIds()
             .map((postId) => {
-                let base = this.db.locationInfo(postId);
+                let base = this.locationService.locationInfo(postId);
                 return {
-                    patrolsOnPost: this.db.patrolsOnLocation(postId).length,
-                    patrolsOnTheirWay: this.db.patrolsTowardsLocation(postId).length,
-                    patrolsCheckedOut: this.db.patrolsCheckedOut(postId).length,
+                    patrolsOnPost: this.locationService.patrolsOnLocation(postId).length,
+                    patrolsOnTheirWay: this.locationService.patrolsTowardsLocation(postId).length,
+                    patrolsCheckedOut: this.locationService.patrolsCheckedOutFromLocation(postId).length,
                     ...base
                 };
             });
@@ -225,21 +234,22 @@ export class Pages {
         return responses.ok(this.render(filename, data));
     }
 
+
     formatPatrolLocation = (location: PatrolLocation): string => {
-        const post = this.db.locationInfo(location.locationId);
+        const locationInfo = this.locationService.locationInfo(location.locationId);
         if(location.type === PatrolLocationType.GoingToLocation) {
-            return `Går mod ${post.detour ? post.name : `post ${post.name}`}`;
+            return `Går mod ${locationInfo.name}`;
             // return `Går mod ${post.name}`;
         } else if(location.type === PatrolLocationType.OnLocation) {
-            return `På post ${post.name}`;
+            return `På post ${locationInfo.name}`;
         } else {
             return `Udgået`;
         }
     }
 
-    formatCheckinLocation = (checkin: PatrolUpdate): string => {
-        const post = this.db.locationInfo(checkin.postId);
-        return post.detour ? post.name : `Post ${post.name}`;
+    formatCheckinLocation = (patrolUpdate: PatrolUpdate): string => {
+        const location = this.locationService.locationInfo(patrolUpdate.currentLocationId);
+        return location.name;
     }
 }
 
