@@ -2,40 +2,55 @@ import 'source-map-support/register';
 
 import * as http from 'http'
 import * as users from "./users";
-import { JsonDatabase, DatabaseWrapper, Database, Checkin, CheckinType } from "./database";
 import * as responses from "./response";
 import * as pages from "./pages";
 import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
 import { inspect } from 'util';
-import { sqliteDB } from './database/sqliteDB';
+
+// Database and data types
+import { UpdateService, AdminService, PatrolService, LocationService, ServiceBase, Database} from "./databaseBarrel";
+import { PatrolUpdate, PatrolUpdateType } from './database/types';
+import { error } from 'console';
+
 
 type Response = responses.Response;
 
 class Server {
-    private db: DatabaseWrapper;
+    private db: Database;
+    private adminService: AdminService;
+    private locationService: LocationService;
+    private patrolService: PatrolService;
+    private updateService: UpdateService;
+
     private users: users.UserCache;
     private pages: pages.Pages;
     private router: router.Router;
 
     /**
      * Create new server.
-     *
-     * @param address the binding address
-     * @param port the binding port
-     * @param db the database
-     */
-    constructor(address: string, port: number, assets: string, db: DatabaseWrapper) {
+    */
+    constructor(address: string, port: number, assets: string,
+        db: Database, adminService: AdminService,
+        locationService: LocationService, patrolService: PatrolService,
+        updateService: UpdateService) {
+
         this.db = db;
+        this.adminService = adminService;
+        this.locationService = locationService;
+        this.patrolService = patrolService;
+        this.updateService = updateService;
 
         this.users = new users.UserCache();
-        this.pages = new pages.Pages(`${assets}/html`, this.db, false);
+        this.pages = new pages.Pages(`${assets}/html`, this.db, false,
+            this.locationService, this.patrolService, this.updateService
+        );
         this.router = this.createRouter(address, port, assets, this.users);
 
-        const numberOfPosts = db.allLocationIds().length;
-        const numberOfPatrols = db.allPatrolIds().length;
-        const numberOfUsers = db.userIds().length;
+        const numberOfPosts = locationService.allLocationIds().length;
+        const numberOfPatrols = patrolService.allPatrolIds().length;
+        const numberOfUsers = adminService.userIds().length;
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
@@ -64,11 +79,11 @@ class Server {
             .route("/logout", UserType.None, this.logout)
             .route("/getUpdate", UserType.Post, this.postUpdate)
             .route("/getData", UserType.Post, this.postData)
-            .route("/sendUpdate", UserType.Post, this.postCheckin)
+            .route("/sendUpdate", UserType.Post, this.makePatrolUpdate)
             .route("/deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
             .route("/master", UserType.Master, this.pages.master)
             .route("/master/checkin", UserType.Master, this.pages.checkin)
-            .route("/master/addcheckin", UserType.Master, this.masterCheckin)
+            .route("/master/addcheckin", UserType.Master, this.makeMasterPatrolUpdate)
             .route("/master/checkins", UserType.Master, this.pages.checkins)
             .route("/master/posts", UserType.Master, this.pages.posts)
             .route("/master/post", UserType.Master, this.pages.post)
@@ -98,7 +113,7 @@ class Server {
     login = async (req: Request): Promise<Response> => {
         const password = req.headers['password'];
         const identifier = req.headers['id'];
-        const postId = this.db.authenticate(password);
+        const postId = this.adminService.authenticate(password);
         if(postId === undefined) {
             return responses.unauthorized();
         }
@@ -121,7 +136,7 @@ class Server {
         const user = req.user;
 
         const userLastUpdate = parseInt(req.headers['last-update'] as string)
-        const post = this.db.locationInfo(user.postId);
+        const post = this.locationService.locationInfo(user.locationId);
         if(post === undefined) {
             return responses.not_found();
         }
@@ -140,70 +155,78 @@ class Server {
         } */
     }
 
+    // TODO: Update to work with new location routing
     /**
      * Get information about post.
      */
     postData = async (req: Request): Promise<Response> => {
         const user = req.user;
 
-        const post = this.db.locationInfo(user.postId);
+        const post = this.locationService.locationInfo(user.locationId);
         if(post === undefined) {
-            return responses.not_found(`post ${user.postId} not found`);
+            return responses.not_found(`post ${user.locationId} not found`);
         }
-        const nextPost = this.db.locationInfo(user.postId + 1);
+        const nextPost = this.locationService.locationInfo(user.locationId + 1);
         const isLastPost = nextPost === undefined;
-        const omvejÅben = !isLastPost && !post.detour && nextPost?.detour && nextPost?.open;
+        // const omvejÅben = !isLastPost && !post.detour && nextPost?.detour && nextPost?.open;
 
         return responses.ok("", {
             "data": JSON.stringify({
-                "påPost": this.db.patrolsOnLocation(user.postId),
-                "påVej": this.db.patrolsTowardsLocation(user.postId),
+                "påPost": this.locationService.patrolsOnLocation(user.locationId),
+                "påVej": this.locationService.patrolsTowardsLocation(user.locationId),
                 "post": post.name,
-                "omvejÅben": omvejÅben,
+                "omvejÅben": true, //omvejÅben,
             })
         });
     }
 
+    
+
+    tryGet<In, Out> (input: In, map: (input: In) => Out | undefined, errorHandler?: (error: Error) => void): Out | undefined {
+        try {
+            const result = map(input);
+            return result;
+        } catch (error) {
+            if (errorHandler) {
+                errorHandler(error);
+            }
+            return undefined;
+        }
+    }
+
+    // TODO: Update to work with new location routing
     /**
-     * Check patrol in or out.
+     * End point for checking in or out at a location
      *
      * @param req the http request
-     * @param res the http response builder
+     * @return Promise of a response to send to client
      */
-    postCheckin = async (request: Request): Promise<Response> => {
+    makePatrolUpdate = async (request: Request): Promise<Response> => {
         const user = request.user;
+        const update = request.headers['update'] //{PatolId}%{targetLocationID}
 
-        let patrolId: number;
-        let melding: string;
-        let postOrOmvej: string;
-        const update = request.headers['update'] //{patruljenummer}%{melding}%{post/omvej}
+        const updateVals = this.tryGet<string, number[]>(update,
+            (upd) => upd.split('%').map((str) => Number.parseInt(str)),
+            (err) => console.error("Error parsing update string:", err)
+        ) as readonly number[] | undefined;
 
-        try {
-            const split = update.split('%')
-            patrolId = Number.parseInt(split[0]);
-            melding = split[1]
-            postOrOmvej = split[2]
-        } catch(error) {
-            console.error(error);
+        if(!updateVals || updateVals.length !== 2 || updateVals.some(v => !Number.isInteger(v))) {
+            console.error("Invalid update format:", update);
             return responses.server_error();
         }
 
-        const checkin: Checkin = {
+        const checkin: PatrolUpdate = {
             time: new Date(),
-            patrolId: patrolId,
-            postId: user.postId,
-            type: melding === "ind"
-                ? CheckinType.CheckIn
-                : postOrOmvej === "omvej"
-                    ? CheckinType.Detour
-                    : CheckinType.CheckOut
+            patrolId: updateVals[0],
+            currentLocationId: user.locationId,
+            targetLocationId: updateVals[1]
         };
 
-        if(!this.db.isPatrolUpdateValid(checkin)) {
+        if(!this.updateService.isPatrolUpdateValid(checkin)) {
             return responses.response_code(400);
         }
 
-        const checkinID = this.db.updatePatrol(checkin);
+        const checkinID = this.updateService.updatePatrol(checkin);
 
         //Send id back to client
         return responses.ok("", {
@@ -212,31 +235,40 @@ class Server {
 
     }
 
-    masterCheckin = async (request: Request): Promise<Response> => {
+    // TODO: Update to work with new location routing
+    makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
-        const patrolId = params.get("patrol");
-        const postId = params.get("post");
-        const checkinType = params.get("type");
 
-        if(patrolId == undefined || postId == undefined || checkinType == undefined) {
+        const updateVals = this.tryGet<string[], number[]>([
+            'patrol',
+            'currentLocationId',
+            'targetLocationId' ],
+        (strs) => strs.map((str) => Number.parseInt(params.get(str) as string)),
+        (err) => console.error("Error parsing master patrol update parameters:", err)
+        ) as readonly number[] | undefined;
+
+        if(!updateVals || updateVals.length !== 2 || updateVals.some(v => !Number.isInteger(v))) {
+            console.error("Invalid update format in masterCheckin:", updateVals);
             return responses.server_error();
         }
 
-        const checkin: Checkin = {
+        const checkin: PatrolUpdate = {
             time: new Date(),
-            patrolId: Number.parseInt(patrolId),
-            postId: Number.parseInt(postId),
-            type: checkinType === "checkin"
-                ? CheckinType.CheckIn
-                : checkinType === "detour"
-                    ? CheckinType.Detour
-                    : CheckinType.CheckOut
+            patrolId: updateVals[0],
+            currentLocationId: updateVals[1],
+            targetLocationId: updateVals[2],
         };
 
-        this.db.updatePatrol(checkin);
+        if(!this.updateService.isPatrolUpdateValid(checkin, {skipRouteValidation: true})) {
+            console.error("Invalid patrol update in masterCheckin:", checkin);
+            return responses.response_code(400);
+        }
+
+        this.updateService.updatePatrol(checkin);
 
         return responses.redirect("/master");
     }
+
 
     postStatus = async(request: Request): Promise<Response> => {
         const params = request.url.searchParams;
@@ -244,41 +276,42 @@ class Server {
         const postId = Number.parseInt(params.get("post"));
         const newStatus = statusParam === "open";
 
-        this.db.changeLocationStatus(postId, newStatus);
+        this.locationService.changeLocationStatus(postId, newStatus);
         return responses.redirect(`/master/post?id=${postId}`);
     }
+
 
     patrolStatus = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const patrolId = Number.parseInt(params.get("patrolId"));
         const status = params.get("status");
         const isOut = status === "out";
-        this.db.changePatrolStatus(patrolId, isOut);
+        this.patrolService.changePatrolStatus(patrolId, isOut);
         return responses.redirect(`/master/patrol?id=${patrolId}`);
     }
 
+    // TODO: Update to work with new PatrolUpdate structure
     deleteCheckin = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
-        this.db.deleteUpdate(checkinId);
+        this.updateService.deleteUpdate(checkinId);
         return responses.ok();
     }
 
+    // TODO: Update to work with new PatrolUpdate structure
     mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
         const timeToUndo = 1000 * 20; // 20 seconds
 
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
-        // const postIdRequest = this.db.authenticate(request.headers['id'])
-        const postIdRequest = this.users.userFromIdentifier(request.headers['id']).postId;
-        const checkin = this.db.updateById(checkinId);
-        const postIdCheckin = checkin?.postId;
+        const checkin = this.updateService.updateById(checkinId);
+        const locationIdAtCheckin = checkin?.currentLocationId;
 
-        const requestAndCheckinMatch = postIdCheckin == postIdRequest && postIdCheckin != null;
+        const requestAndCheckinMatch = locationIdAtCheckin == request.user.locationId && locationIdAtCheckin != null;
         const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
 
         if(requestAndCheckinMatch && checkinIsRecent) {
-            this.db.deleteUpdate(checkinId);
+            this.updateService.deleteUpdate(checkinId);
             return responses.ok();
         }
         return responses.forbidden();
@@ -329,9 +362,9 @@ async function main(): Promise<void> {
     const command = readArguments();
     const options = command.opts();
     const port = Number.parseInt(options["port"]);
-    const address = options["address"]
-    const database = options["database"]
-    const assets = options["assets"]
+    const address = options["address"] as string;
+    const database = options["database"] as string;
+    const assets = options["assets"] as string;
     const inMemory = options["databaseInMemory"] === true;
     const resetDatabase = options["resetDatabase"] === true;
 
@@ -349,8 +382,15 @@ async function main(): Promise<void> {
     //Be aware that different databases have different indices for the first post
     //In SQLite the first post is 1, in JSON it is 0
     //This is changed in the database wrapper field firstPostId
-    const db = new sqliteDB(database, inMemory, resetDatabase);
-    const server = new Server(address, port, assets, new DatabaseWrapper(db));
+    const db = new Database(database, inMemory, resetDatabase);
+    const adminService = new AdminService(db);
+    const locationService = new LocationService(db);
+    const patrolService = new PatrolService(db);
+    const updateService = new UpdateService(db);
+
+    const server = new Server(address, port, assets, db,
+        adminService, locationService, patrolService, updateService
+    );
 
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));
