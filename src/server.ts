@@ -194,7 +194,6 @@ class Server {
         }
     }
 
-    // TODO: Update to work with new location routing
     /**
      * End point for checking in or out at a location
      *
@@ -235,7 +234,6 @@ class Server {
 
     }
 
-    // TODO: Update to work with new location routing
     makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
 
@@ -290,7 +288,6 @@ class Server {
         return responses.redirect(`/master/patrol?id=${patrolId}`);
     }
 
-    // TODO: Update to work with new PatrolUpdate structure
     deleteCheckin = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
