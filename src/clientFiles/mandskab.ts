@@ -39,6 +39,8 @@ namespace Client{
             lastUpdateTimeString = "0"
             getUpdateFunc()
         }
+
+        // TODO: Update to work with new routing structure
         export const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
             const pNum = parseInt(val.id.substring(1))
             const postOrOmvejAtCLickedTime = postOrOmvej
@@ -79,6 +81,7 @@ namespace Client{
             }
         }
 
+        // TODO: Update to work with new routing structure
         const confirmCheckinWithUser = (patruljeNummer: number, udEllerInd: string, postOrOmvej?: string): boolean => {
             if(udEllerInd == "ud")
                 return confirm(`Er du sikker på at du vil tjekke patrulje ${patruljeNummer} ud mod ${postOrOmvej}?`)
@@ -133,6 +136,8 @@ namespace Client{
             if(patruljerPåVej.length == 0)
                 noPatruljerPåVejText.style.display = ''
         }
+
+        // TODO: Delete this function as it is no longer needed with new routing structure
         export const postOmvejChanged = () => {
             if(postOmvejSelector.value == "0"){
                 postOrOmvej = "post"
@@ -147,6 +152,7 @@ namespace Client{
             }
         }
 
+        // TODO: Update to work with new routing structure
         const addPatruljePåPost = (patruljeNummer: number) => {
             const newElement = createPatruljeElement(patruljeNummer)
             newElement.setAttribute("onclick", "Client.Mandskab.clickedPatruljePåPost(this)")
@@ -189,12 +195,16 @@ namespace Client{
             deleteCookie("identifier")
             location.href = "/home"
         }
+
+        // TODO: Update to work with new routing structure
         class PatruljePostData{
             påPost: number[]
             påVej: number[]
             post: string
             omvejÅben: boolean
         }
+
+        // TODO: Update to work with new routing structure
         export const onLoadFunction = () => {
             listPåPost = document.getElementById("listCheckOut")
             listPåVej = document.getElementById("listCheckIn")
@@ -221,6 +231,8 @@ namespace Client{
 
             console.log("Entire page loaded")
         }
+
+        // TODO: Change to work with selecting multiple routes
         const setOmvejSelector = (omvejÅben: boolean) => {
             if(omvejÅben){
                 (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = false
