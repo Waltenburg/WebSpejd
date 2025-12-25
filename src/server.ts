@@ -11,8 +11,8 @@ import { inspect } from 'util';
 
 // Database and data types
 import { UpdateService, AdminService, PatrolService, LocationService, ServiceBase, Database} from "./databaseBarrel";
-import { PatrolUpdate, PatrolUpdateType } from './database/types';
-import { error } from 'console';
+import { PatrolUpdate } from './database/types';
+import { SETTINGS_TABLE } from './database/database';
 
 
 type Response = responses.Response;
@@ -162,20 +162,25 @@ class Server {
     postData = async (req: Request): Promise<Response> => {
         const user = req.user;
 
-        const post = this.locationService.locationInfo(user.locationId);
-        if(post === undefined) {
+        const location = this.locationService.locationInfo(user.locationId);
+        if(location === undefined)
             return responses.not_found(`post ${user.locationId} not found`);
+
+        let towardsLocation = this.locationService.patrolsTowardsLocation(user.locationId);
+
+        // if the location is the first location, include patrols that have no patrol update yet
+        if(location.id === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+            const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
+            towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
         }
-        const nextPost = this.locationService.locationInfo(user.locationId + 1);
-        const isLastPost = nextPost === undefined;
-        // const omvejÅben = !isLastPost && !post.detour && nextPost?.detour && nextPost?.open;
+
 
         return responses.ok("", {
-            "data": JSON.stringify({
-                "påPost": this.locationService.patrolsOnLocation(user.locationId),
-                "påVej": this.locationService.patrolsTowardsLocation(user.locationId),
-                "post": post.name,
-                "omvejÅben": true, //omvejÅben,
+            data: JSON.stringify({
+                onLocation: this.locationService.patrolsOnLocation(user.locationId),
+                towardsLocation: towardsLocation,
+                locationName: location.name,
+                routes: this.locationService.allRoutesFromLocation(user.locationId)
             })
         });
     }
