@@ -1,7 +1,15 @@
-import { ServiceBase } from "./database";
+import { Database, ServiceBase, SETTINGS_TABLE } from "./database";
 import { User } from "./types";
 
 export class AdminService extends ServiceBase {
+    public readonly settings: { [key: string]: string };
+    
+    constructor(db: Database) {
+        super(db);
+        this.settings = this.getAllSettings();
+    }
+    
+    
     /**
      * Get post id matching password.
      *
@@ -31,5 +39,19 @@ export class AdminService extends ServiceBase {
     userIds(): number[]{
         const rows = this.prepare("SELECT id FROM user").all() as { id: number }[];
         return rows.map((row) => row.id);
+    }
+
+    /**
+     * Get all settings as key-value pairs.
+     *
+     * @returns dictionary with all settings
+     */
+    private getAllSettings(): { [key: string]: string } {
+        const rows = this.prepare(`SELECT * FROM ${SETTINGS_TABLE.TABLE_NAME}`).all() as { key: string, value: string }[];
+        const settings: { [key: string]: string } = {};
+        rows.forEach(row => {
+            settings[row.key] = row.value;
+        });
+        return settings;
     }
 }

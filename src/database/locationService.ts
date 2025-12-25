@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase, SETTINGS_TABLE } from "./database";
 import { Location, Route } from "./types";
 
 export class LocationService extends ServiceBase {
@@ -11,7 +11,7 @@ export class LocationService extends ServiceBase {
         const rows = this.prepare(
             `SELECT lpu.patrolId
             FROM LatestPatrolUpdates lpu
-            JOIN Patrol p ON lpu.PatrolId = p.idH
+            JOIN Patrol p ON lpu.PatrolId = p.id
             WHERE lpu.currentLocationId = ?
             AND lpu.targetLocationId = lpu.currentLocationId
             AND p.udgået = 0

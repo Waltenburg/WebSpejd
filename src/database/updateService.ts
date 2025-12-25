@@ -54,11 +54,17 @@ export class UpdateService extends ServiceBase {
     /**
      * Find the latest `PatrolUpdates` of the specified patrol.
      * @param patrol the patrol to get the latest `PatrolUpdates` of
-     * @param amount the number of `PatrolUpdates` to get
+     * @param amount the number of `PatrolUpdates` to get. If set to 0, all updates will be returned.
      * @return the latest `PatrolUpdates` of the patrol or `null` if none exist
      */
     latestUpdatesOfPatrol(patrol: number, amount: number): PatrolUpdate[]{
-        const patrolUpdates = this.prepare("SELECT * FROM PatrolUpdates WHERE patrolId = ? ORDER BY timeStr DESC LIMIT ?").all(patrol, amount) as DatabasePatrolUpdate[];
+        const fetchStmt = "SELECT * FROM PatrolUpdates WHERE patrolId = ? ORDER BY timeStr DESC"; 
+        let patrolUpdates: DatabasePatrolUpdate[];
+        if (amount === 0)
+            patrolUpdates = this.prepare(fetchStmt).all(patrol) as DatabasePatrolUpdate[];
+        else 
+            patrolUpdates = this.prepare(fetchStmt + " LIMIT ?").all(patrol, amount) as DatabasePatrolUpdate[];
+        
         return this.convertFromDBPatrolUpdate(patrolUpdates);
     }
 
