@@ -101,7 +101,8 @@ export const enum PATROL_UPDATE_TABLE {
     PATROL_ID = "patrolId",
     CURRENT_LOCATION_ID = "currentLocationId",
     TARGET_LOCATION_ID = "targetLocationId",
-    TIME_STR = "timeStr"
+    TIME_STR = "timeStr",
+    LATEST_UPDATE_VIEW = "LatestPatrolUpdates"
 }
 
 export const enum LOCATION_TABLE {
@@ -138,5 +139,8 @@ export const enum USER_TABLE {
 export const enum SETTINGS_TABLE {
     TABLE_NAME = "settings",
     KEY = "key",
-    VALUE = "value"
+    VALUE = "value",
+
+    SETTING_MASTER_PASSWORD = "master_password",
+    SETTING_FIRST_LOCATION_ID = 'first_location'
 }
