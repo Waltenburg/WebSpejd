@@ -4,9 +4,10 @@
         "target": "es2020",
         "noImplicitAny": true,
         "removeComments": true,
-        "preserveConstEnums": true,
+        "preserveConstEnums": false,
         "sourceMap": true,
         "esModuleInterop": true,
+        // "strictNullChecks": true, // Should be enabled, but causes too many issues right now
     },
     "include": [ "src" ],
     "exclude": [ "node_modules" ]
