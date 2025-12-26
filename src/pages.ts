@@ -1,8 +1,9 @@
 import * as responses from "./response";
 import nunjucks from "nunjucks";
 import { Request } from "./request";
-import { Database, LocationService, PatrolService, UpdateService } from "./databaseBarrel";
-import { PatrolLocation, PatrolUpdateType, PatrolLocationType, PatrolUpdate, Location } from "./database/types";
+import { AdminService, Database, LocationService, PatrolService, UpdateService } from "./databaseBarrel";
+import { PatrolUpdate, Location } from "./database/types";
+import { SETTINGS_TABLE } from "./database/database";
 
 type Response = responses.Response;
 
@@ -20,13 +21,14 @@ export class Pages {
     private locationService: LocationService;
     private patrolService: PatrolService;
     private updateService: UpdateService;
+    private adminService: AdminService;
 
     private env: nunjucks.Environment;
 
 
     constructor(templateDir: string, db: Database, cache: boolean,
-        locationService: LocationService, patrolService: PatrolService, updateService: UpdateService 
-    ) {
+        locationService: LocationService, patrolService: PatrolService,
+        updateService: UpdateService, adminService: AdminService) {
         this.env = new nunjucks.Environment(
             new nunjucks.FileSystemLoader(templateDir),
             {
@@ -44,6 +46,7 @@ export class Pages {
         this.locationService = locationService;
         this.patrolService = patrolService;
         this.updateService = updateService;
+        this.adminService = adminService;
     }
 
 
@@ -66,9 +69,18 @@ export class Pages {
     post = async (request: Request): Promise<Response> => {
         const locationId = Number.parseInt(request.url.searchParams.get("id"));
         let post = this.locationService.locationInfo(locationId);
+
+        let patrolsOnTheirWayIDs = this.locationService.patrolsTowardsLocation(locationId);
+        
+        // if the location is the first location, include patrols that have no patrol update yet
+        if(locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+            const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
+            patrolsOnTheirWayIDs = patrolsOnTheirWayIDs.concat(patrolsWithNoUpdates);
+        }
+
         return this.response(POST, {
             patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(locationId)),
-            patrolsOnTheirWay: this.patrolsData(this.locationService.patrolsTowardsLocation(locationId)),
+            patrolsOnTheirWay: this.patrolsData(patrolsOnTheirWayIDs),
             patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(locationId)),
             post: post,
             checkins: this.updateService.updatesAtLocation(locationId).reverse(),
@@ -88,25 +100,24 @@ export class Pages {
     }
 
     checkins = async (request: Request): Promise<Response> => {
-        let checkins = undefined;
+        let patrolUpdates = undefined;
         const params = request.url.searchParams;
 
         let patrolId = params.get("patrolId");
-        if(patrolId != undefined) {
-            checkins = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 100);
-        }
-
         let locationId = params.get("locationId");
-        if(locationId != undefined) {
-            checkins = this.updateService.updatesAtLocation(Number.parseInt(locationId)).reverse();
+        if(patrolId != undefined) {
+            patrolUpdates = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 0);
+        }
+        else if(locationId != undefined) {
+            patrolUpdates = this.updateService.updatesAtLocation(Number.parseInt(locationId)).reverse();
         }
 
-        if(checkins === undefined){
-            checkins = this.updateService.lastUpdates(20);
+        if(patrolUpdates === undefined){
+            patrolUpdates = this.updateService.lastUpdates(20);
         }
 
         return this.response(CHECKINS, {
-            checkins: checkins,
+            checkins: patrolUpdates,
         });
     }
 
@@ -143,8 +154,8 @@ export class Pages {
         const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
             patrol: this.patrolService.patrolInfo(patrolId),
-            checkins: this.updateService.latestUpdatesOfPatrol(patrolId, 100),
-            location: this.patrolService.locationOfPatrol(patrolId),
+            checkins: this.updateService.latestUpdatesOfPatrol(patrolId, 0),
+            //location: this.patrolService.locationOfPatrol(patrolId),
         });
     }
 
@@ -185,7 +196,7 @@ export class Pages {
                 let lastCheckin = this.updateService.latestUpdateOfPatrol(patrolId);
                 return {
                     lastCheckin: lastCheckin,
-                    location: this.patrolService.locationOfPatrol(patrolId),
+                    //location: this.patrolService.locationOfPatrol(patrolId),
                     ...patrol
                 };
             })
@@ -195,7 +206,8 @@ export class Pages {
                         - b.lastCheckin.time.getTime();
                 }
                 if(sortBy === "post") {
-                    return a.location.locationId - b.location.locationId;
+                    return (a.lastCheckin.currentLocationId + a.lastCheckin.targetLocationId)
+                        - (b.lastCheckin.currentLocationId + b.lastCheckin.targetLocationId);
                 }
                 return a.id - b.id;
             })
@@ -237,16 +249,13 @@ export class Pages {
     }
 
 
-    formatPatrolLocation = (location: PatrolLocation): string => {
-        const locationInfo = this.locationService.locationInfo(location.locationId);
-        if(location.type === PatrolLocationType.GoingToLocation) {
-            return `Går mod ${locationInfo.name}`;
-            // return `Går mod ${post.name}`;
-        } else if(location.type === PatrolLocationType.OnLocation) {
-            return `På post ${locationInfo.name}`;
-        } else {
-            return `Udgået`;
-        }
+    formatPatrolLocation = (latestUpdate: PatrolUpdate): string => {
+        const fromLocationName = this.locationService.locationInfo(latestUpdate.currentLocationId).name;
+        const toLocationName = this.locationService.locationInfo(latestUpdate.targetLocationId).name;
+        if(fromLocationName === toLocationName)
+            return `På ${fromLocationName}`;
+        else
+            return `Mellem ${fromLocationName} og ${toLocationName}`;
     }
 
     formatCheckinLocation = (patrolUpdate: PatrolUpdate): string => {

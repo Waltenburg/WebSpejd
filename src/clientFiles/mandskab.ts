@@ -197,7 +197,7 @@ namespace Client{
         }
 
         // TODO: Update to work with new routing structure
-        class PatruljePostData{
+        interface PatruljePostData{
             påPost: number[]
             påVej: number[]
             post: string
