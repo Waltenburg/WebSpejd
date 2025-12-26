@@ -1,14 +1,12 @@
 {% macro checkins(checkins) %}
     <table cellspacing="0" cellpadding="0">
         <tr>
-            <td class="bold">Type</td>
             <td class="bold">Patrulje</td>
-            <td class="bold">Post</td>
+            <td class="bold">Melding</td>
             <td class="bold">Tidspunkt</td>
         </tr>
         {% for checkin in checkins %}
             <tr class="hover-grey">
-                <td>{{checkin.type | checkinName}}</td>
                 <td>
                     <a href="/master/patrol?id={{checkin.patrolId}}"
                        class="hover-underline">
@@ -18,7 +16,7 @@
                 <td>
                     <a href="/master/post?id={{checkin.locationId}}"
                        class="hover-underline">
-                        {{checkin | formatCheckinLocation}}
+                        {{checkin | formatPatrolLocation}}
                     </a>
                 </td>
                 <td>{{checkin.time | clock}}</td>
@@ -27,7 +25,8 @@
                         hx-confirm="Vil du slette dette checkin?"
                         hx-post="/master/deleteCheckin?id={{checkin.id}}"
                         hx-target="closest tr"
-                        hx-swap="outerHTML">Slet</button>
+                        hx-swap="outerHTML">Slet
+                    </button>
                 </td>
             </tr>
         {% endfor %}
