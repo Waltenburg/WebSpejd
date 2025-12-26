@@ -19,17 +19,6 @@
             På løbet
         {% endif %}
     </div>
-    <div>
-        Lokation:
-        {% if not patrol.udgået %}
-            <a class="hover-underline" href="/master/post?id={{location.locationId}}">
-                {{location | formatPatrolLocation}}
-            </a>
-        {% else %}
-            Udgået
-        {% endif %}
-    <div>
-
     <h2>Checkins</h2>
     <div hx-get="/master/checkins?patrolId={{patrol.id}}" hx-trigger="every 5s">
         {{ utils.checkins(checkins) }}
