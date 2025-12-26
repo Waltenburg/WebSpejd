@@ -1,7 +1,7 @@
 import * as fs from "fs/promises";
 import * as http from 'http'
 import {files} from "./files";
-import * as pages from "./pages";
+import * as pages from "./pages/pages";
 
 export interface Response {
     status_code: number;

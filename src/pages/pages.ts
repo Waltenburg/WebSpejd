@@ -1,9 +1,9 @@
-import * as responses from "./response";
+import * as responses from "../response";
 import nunjucks from "nunjucks";
-import { Request } from "./request";
-import { AdminService, Database, LocationService, PatrolService, UpdateService } from "./databaseBarrel";
-import { PatrolUpdate, Location } from "./database/types";
-import { SETTINGS_TABLE } from "./database/database";
+import { Request } from "../request";
+import { AdminService, Database, LocationService, PatrolService, UpdateService } from "../databaseBarrel";
+import { PatrolUpdate, Location } from "../database/types";
+import { SETTINGS_TABLE } from "../database/database";
 
 type Response = responses.Response;
 

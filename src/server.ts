@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import * as http from 'http'
 import * as users from "./users";
 import * as responses from "./response";
-import * as pages from "./pages";
+import * as pages from "./pages/pages";
 import * as router from "./request";
 import { UserType, Request } from './request';
 import { Command } from 'commander';
