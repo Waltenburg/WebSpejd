@@ -44,7 +44,7 @@ class Server {
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false,
-            this.locationService, this.patrolService, this.updateService
+            this.locationService, this.patrolService, this.updateService, this.adminService
         );
         this.router = this.createRouter(address, port, assets, this.users);
 
