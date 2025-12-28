@@ -1,298 +1,213 @@
+import { PatrolInfoToMandskab } from "./responseTypes";
+import { sendRequest } from "./sendHTTPRequest.js";
+// import { PatrolUpdateWithNoId } from "../database/types";
+import { Endpoints } from "../endpoints";
+import { Action, PatrolUpdateFromMandskab, MandskabData } from "./responseTypes";
+import { Location } from "../database/types";
 
-/// <reference path="sendHTTPRequest.ts"/>
-namespace Client{
-    export namespace Mandskab {
-        let postOrOmvej = "post"
-        let listPåPost: HTMLElement
-        let listPåVej: HTMLElement
-        let postOmvejSelector: HTMLInputElement
-        let undoButton: HTMLInputElement
-        
-        let patruljerPåPost: number[] = [] //De patruljer der er på posten i nummeret rækkefølge
-        let patruljeElementsPåPost: HTMLInputElement[] = [] //De tilhørende elementer 
-        
-        let noPatruljerPåPostText: HTMLParagraphElement
-        let noPatruljerPåVejText: HTMLParagraphElement
-        
-        let patruljerPåVej: number[] = [] //De patruljer der er på vej til posten i nummeret rækkefølge
-        let patruljeElementsPåVej: HTMLInputElement[]= [] //De tilhørende elementer
-        
-        let undoTime = 10 * 1000
-        let undoTimer: NodeJS.Timeout[] = []
-        let undoActions: callback[] = []
-        let timeBetweenUpdates = 2 * 1000
-        let lastUpdateTimeString = new Date().getTime().toString()
+let mandskab: Mandskab;
 
-        let showingError = false
+window.onload = () => {
+    mandskab = new Mandskab();
+}
 
-        const createPatruljeElement = (patruljeNummer: number): HTMLInputElement => {
-            let newPatrulje: HTMLInputElement = document.createElement("input")
-            newPatrulje.classList.add("patrulje")
-            newPatrulje.type = "button"
-            newPatrulje.id = "p" + patruljeNummer.toString()
-            newPatrulje.value = "#" + patruljeNummer.toString()
-            return newPatrulje
+class Mandskab {
+    listPatrolsOnLocation: HTMLElement;
+    listPatrolsTowardsLocation: HTMLElement;
+    nextLocationSelector: HTMLSelectElement;
+    undoButton: HTMLInputElement;
+    recentActionsTable: HTMLTableElement;
+    locationNameHeader: HTMLElement;
+
+    patrolsOnLocation: PatrolInfoToMandskab[] = [];
+    patrolsTowardsLocation: PatrolInfoToMandskab[] = [];
+    currentLocationId = Number.NaN;
+    recentActions = new autoEmptyingFILO<number>(20, 5 * 60 * 1000, 500, () => this.undoButton.disabled = true); //Max 20 actions, max 5 minutes old, clean every 0.5 seconds, disable undo button when empty
+
+    constructor() {
+        this.listPatrolsOnLocation = document.getElementById("listPåPost") as HTMLElement;
+        this.listPatrolsTowardsLocation = document.getElementById("listPåVej") as HTMLElement;
+        this.nextLocationSelector = document.getElementById("nextLocationSelector") as HTMLSelectElement;
+        this.undoButton = document.getElementById("undoButton") as HTMLInputElement;
+        this.recentActionsTable = document.getElementById("recentActionsTable") as HTMLTableElement;
+        this.locationNameHeader = document.getElementById("locationNameHeader") as HTMLElement;
+
+        this.reloadData();
+    }
+
+    private reloadData = (): void => {
+        const succesReciever = (status: number, headers: Headers) => {
+            const data = JSON.parse(headers.get("data") as string) as MandskabData;
+            this.patrolsOnLocation = data.patrolsOnLocation;
+            this.patrolsTowardsLocation = data.patrolsTowardsLocation;
+            this.currentLocationId = data.location.id;
+
+            this.addPatrolsToLists(this.patrolsTowardsLocation, this.patrolsOnLocation);
+            this.setNextLocationSelector(data.routesTo);
+            this.locationNameHeader.innerHTML = data.location.name;
         }
-        const checkError = (indOrUd: string, pNum: number) => {
-            alert("Kunne ikke tjekke patrulje " + pNum + " " + indOrUd +". Prøv igen...")
-            console.log("Kunne ikke tjekke patrulje " + pNum + " ud. Prøv igen...")
-            lastUpdateTimeString = "0"
-            getUpdateFunc()
+
+        const onFail = (err: number) => {
+            alert("Der skete en fejl ved hentning af patrulje data. Hvis fejlen fortsætter, kontroller internetforbindelsen eller log ind igen.");
         }
 
-        // TODO: Update to work with new routing structure
-        export const clickedPatruljePåPost = (val: HTMLInputElement, commit?:boolean) => {
-            const pNum = parseInt(val.id.substring(1))
-            const postOrOmvejAtCLickedTime = postOrOmvej
-            if(confirmCheckinWithUser(pNum, "ud", postOrOmvejAtCLickedTime)){
-                sendRequest("/sendUpdate", new Headers({
-                    "update": pNum.toString() + "%ud"+"%" + postOrOmvejAtCLickedTime,
-                }), (status, headers) => {
-                    //Checkout succesfull
-                    undoButton.disabled = false
-                    setUndoButtonTimer()
-                    removePatruljePåPost(pNum)
-                    const checkinID = Number.parseInt(headers.get("checkinID"))
-                    undoActions.push(() => {
-                        addPatruljePåPost(pNum)
-                        undoCheckin(checkinID)
-                    })
-                }, _ => checkError("ud", pNum))
+        sendRequest(Endpoints.GetData, null, succesReciever, onFail);
+    }
+    
+    private confirmWithUser = (patrolNumber: string, patrolName: string, actionType: Action, targetLocation: string) : boolean => {
+        let actionString = actionType === Action.checkinToLocation ? "checke ind på" : "checke ud fra"
+        return confirm(`Vil du ${actionString} ${targetLocation} for patrulje #${patrolNumber} (${patrolName})?`)
+    }
+    
+    public clickedPatrol = (val: HTMLInputElement, action: Action): void => {
+        const patrolID = parseInt(val.id.substring(1));
+        const patrol = this.getPatrolById(patrolID);
+        if(!patrol){
+            alert("Kunne ikke finde patrulje med ID " + patrolID);
+            return;
+        }
+        const patrolName = patrol.name;
+        const patrolNumber = patrol.number;
+        const selectedNextLocation = this.nextLocationSelector.value;
+        const targetLocationId = action === Action.checkinToLocation ? this.currentLocationId : parseInt(selectedNextLocation);
+        
+        if(this.confirmWithUser(patrolNumber, patrolName, action, selectedNextLocation)){
+            const patrolUpdate: PatrolUpdateFromMandskab = {
+                patrolId: patrolID,
+                targetLocationId: targetLocationId
             }
-        }
-
-        export const clickedPatruljePåVej = (val: HTMLInputElement, commit?:boolean) => {
-            const pNum = parseInt(val.id.substring(1))
-            if(confirmCheckinWithUser(pNum, "ind", "")){
-                sendRequest("/sendUpdate", new Headers({
-                    "update": pNum.toString() + "%ind",
-                }), (status, headers) => { //Test succesfull
-                    undoButton.disabled = false
-                    setUndoButtonTimer()
-                    removePatruljePåVej(pNum)
-                    addPatruljePåPost(pNum)
-                    const checkinID = Number.parseInt(headers.get("checkinID"))
-                    undoActions.push(() => {
-                        addPatruljeToPåVej(pNum)
-                        removePatruljePåPost(pNum)
-                        undoCheckin(checkinID)
-                    })
-                }, status => checkError("ind", pNum))
+            const header = new Headers({update: JSON.stringify(patrolUpdate)});
+            const succesReciever = (status: number, headers: Headers) => {
+                const checkinID = headers.get("checkinID");
+                if(checkinID == null){
+                    alert("Mulig fejl ved opdaternig. Kontroller at opdateringen er registreret korrekt.");
+                    this.reloadData();
+                    return;
+                }
+                this.recentActions.add(Number.parseInt(checkinID));
+                this.undoButton.disabled = false;
+                this.reloadData();
+            };
+            const onFail = (err: number) => {
+                alert("Der skete en fejl ved afsendelse af opdatering.")
+                this.reloadData();
             }
+            sendRequest(Endpoints.SendUpdate, header, succesReciever, onFail);
         }
+    }
 
-        // TODO: Update to work with new routing structure
-        const confirmCheckinWithUser = (patruljeNummer: number, udEllerInd: string, postOrOmvej?: string): boolean => {
-            if(udEllerInd == "ud")
-                return confirm(`Er du sikker på at du vil tjekke patrulje ${patruljeNummer} ud mod ${postOrOmvej}?`)
+    public undoLastAction = (): void => {
+        const lastActionId = this.recentActions.get();
+        if(lastActionId == null)
+            return;
+
+        sendRequest(`${Endpoints.DeleteCheckin}?id=${lastActionId}`, null, (status, headers) => {
+            this.reloadData();
+        }, err => {
+            alert("Der skete en fejl ved fortrydelse af opdatering.")
+            this.reloadData();
+        })
+    }
+    
+    private getPatrolById = (patrolId: number): PatrolInfoToMandskab | undefined => {
+        const onLocation = this.patrolsOnLocation.find(p => p.id === patrolId);
+        const towardsLocation = this.patrolsTowardsLocation.find(p => p.id === patrolId);
+    
+        return onLocation ?? towardsLocation;
+    }
+    
+    private addPatrolsToLists = (patrolsTowardsLocation: PatrolInfoToMandskab[], patrolsOnLocation: PatrolInfoToMandskab[]): void => {
+        this.listPatrolsOnLocation.innerHTML = "";
+        this.listPatrolsTowardsLocation.innerHTML = "";
+
+        const addPatrolToList = (patrol: PatrolInfoToMandskab, action: Action) => {
+            let newElement = document.createElement("input") as HTMLInputElement;
+            newElement.classList.add("patrulje")
+            newElement.type = "button"
+            newElement.id = "p" + patrol.id.toString()
+            newElement.value = `#${patrol.number} - ${patrol.name}`;
+        
+            // newElement.setAttribute("onclick", `Client.Mandskab2.clickedPatrol(this, ${action})`);
+            newElement.addEventListener("click", () => this.clickedPatrol(newElement, action));
+
+            if(action === Action.checkinToLocation)
+                this.listPatrolsTowardsLocation.appendChild(newElement);
             else
-                return confirm(`Er du sikker på at du vil tjekke patrulje ${patruljeNummer} ind?`)
+                this.listPatrolsOnLocation.appendChild(newElement);
+
         }
 
+        patrolsOnLocation.forEach(patrol => addPatrolToList(patrol, Action.checkoutFromLocation));
+        patrolsTowardsLocation.forEach(patrol => addPatrolToList(patrol, Action.checkinToLocation));
+    }
+    
+    private setNextLocationSelector = (routesTo: Location[]): void => {
+        const currentValue = this.nextLocationSelector.value;
 
-        const undoCheckin = (id: number) => {
-            sendRequest(`/deleteCheckin?id=${id}`, null, (status, headers) => {}, status => {
-                lastUpdateTimeString = "0"
-                getUpdateFunc()
-            })
-        }
+        this.nextLocationSelector.innerHTML = "";
+        routesTo.forEach(location => {
+            const option = document.createElement("option");
+            option.value = location.id.toString();
+            option.text = location.name;
+            this.nextLocationSelector.add(option);
+        });
 
-        const setUndoButtonTimer = () => {
-            undoTimer.push(setTimeout(() => {
-                undoActions.shift()
-                undoTimer.shift()
-                if(undoTimer.length == 0)
-                    undoButton.disabled = true
-            }, undoTime))
+        if(routesTo.find(loc => loc.id.toString() === currentValue)) {
+            this.nextLocationSelector.value = currentValue;
+        }else if(routesTo.length > 0) {
+            this.nextLocationSelector.value = routesTo[0].id.toString();
         }
+    }
+}
 
-        export const undoButtonClicked = () => {
-            undoActions.pop()()
-            clearTimeout(undoTimer.pop())
-            if(undoActions.length == 0)
-                undoButton.disabled = true 
-        }
-        const removePatruljePåPost = (patruljeNummer: number) => {
-            const i = patruljerPåPost.indexOf(patruljeNummer)
-            if(i < 0)
-                console.log("Patrulje kan ikke fjernes, den er ikke i listen")
-            else{
-                patruljeElementsPåPost[i].remove()
-                patruljeElementsPåPost.splice(i, 1)
-                patruljerPåPost.splice(i, 1)
-            }
-            if(patruljerPåPost.length == 0)
-            noPatruljerPåPostText.style.display = ''
-        }
-        const removePatruljePåVej = (patruljeNummer: number) => {
-            const i = patruljerPåVej.indexOf(patruljeNummer)
-            if(i < 0)
-                console.log("Patrulje kan ikke fjernes, den ikke er i listen")
-            else{
-                patruljeElementsPåVej[i].remove()
-                patruljeElementsPåVej.splice(i, 1)
-                patruljerPåVej.splice(i, 1)
-            }
-            if(patruljerPåVej.length == 0)
-                noPatruljerPåVejText.style.display = ''
-        }
+class autoEmptyingFILO<T> {
+    private maxSize: number;
+    private timeToLive: number; //In milliseconds
+    private arr: { v: T; timestamp: number }[] = [];
+    private autoCleanIntervalId: number;
+    private isEmptyCallback?: () => void;
 
-        // TODO: Delete this function as it is no longer needed with new routing structure
-        export const postOmvejChanged = () => {
-            if(postOmvejSelector.value == "0"){
-                postOrOmvej = "post"
-                patruljeElementsPåPost.forEach(element => {
-                    element.style.backgroundColor = "#04AA6D"
-                })
-            }else{
-                postOrOmvej = "omvej"
-                patruljeElementsPåPost.forEach(element => {
-                    element.style.backgroundColor = "#d4be19"
-                })
-            }
+    constructor(maxSize: number, timeToLive: number, autoCleanInterval = 1000, isEmptyCallback?: () => void) {
+        this.maxSize = maxSize;
+        this.timeToLive = timeToLive;
+        this.autoCleanIntervalId = window.setInterval(this.clean, autoCleanInterval);
+        this.isEmptyCallback = isEmptyCallback;
+    }
+
+    public add = (item: T): void => {
+        this.clean();
+        this.arr.push({ v: item, timestamp: Date.now() });
+    }
+
+    public get = (): T | null => {
+        this.clean();
+        if(this.arr.length == 0)
+            return null;
+        return this.arr.pop() as T;
+    }
+
+    private clean = (): void => {
+        const now = Date.now();
+
+        const overLimit = this.arr.length - this.maxSize;
+        if(overLimit > 0) {
+            this.arr.splice(0, overLimit);
         }
 
-        // TODO: Update to work with new routing structure
-        const addPatruljePåPost = (patruljeNummer: number) => {
-            const newElement = createPatruljeElement(patruljeNummer)
-            newElement.setAttribute("onclick", "Client.Mandskab.clickedPatruljePåPost(this)")
-
-            insertElement(patruljeNummer, newElement , patruljerPåPost, patruljeElementsPåPost, listPåPost)
-            postOmvejChanged()
-            noPatruljerPåPostText.style.display = 'none'
-            
-        }
-        const addPatruljeToPåVej = (patruljeNummer: number) => {
-            const newElement = createPatruljeElement(patruljeNummer)
-            newElement.setAttribute("onclick", "Client.Mandskab.clickedPatruljePåVej(this)")
-            insertElement(patruljeNummer, newElement , patruljerPåVej, patruljeElementsPåVej, listPåVej)
-            postOmvejChanged()
-            noPatruljerPåVejText.style.display = 'none'
-        }
-        const insertElement = (patruljeNummer: number, patruljeElement: HTMLInputElement, patruljeNummerArray: number[], patruljeElementArray: HTMLInputElement[], parent: HTMLElement) => {
-            if(patruljeNummerArray.length == 0){//Det er ikke nogle andre elementer
-                parent.insertBefore(patruljeElement, patruljeElementArray[0])
-                patruljeNummerArray.unshift(patruljeNummer)
-                patruljeElementArray.unshift(patruljeElement)
-            }
-            else if(patruljeNummer > patruljeNummerArray[patruljeNummerArray.length - 1]){ //Det nye element skal være bagers
-                parent.appendChild(patruljeElement)
-                patruljeNummerArray.push(patruljeNummer)
-                patruljeElementArray.push(patruljeElement)
-            }
-            else{ //Det nye element skal indsættes imellem andre elementer
-                for (let i = 0 ; i < patruljeNummerArray.length; i++) {
-                    if(patruljeNummer < patruljeNummerArray[i]){
-                        parent.insertBefore(patruljeElement, patruljeElementArray[i])
-                        patruljeNummerArray.splice(i, 0, patruljeNummer)
-                        patruljeElementArray.splice(i, 0, patruljeElement)
-                        break
-                    }
-                }
+        const oldestValidTimestamp = now - this.timeToLive;
+        let oldestValidIndex = 0;
+        for (let i = 0; i < this.arr.length; i++) {
+            const item = this.arr[i];
+            if(item.timestamp >= oldestValidTimestamp) {
+                oldestValidIndex = i;
+                break;
             }
         }
-        export const logOut = () => {
-            deleteCookie("identifier")
-            location.href = "/home"
+        if(oldestValidIndex > 0) {
+            this.arr.splice(0, oldestValidIndex);
         }
-
-        // TODO: Update to work with new routing structure
-        interface PatruljePostData{
-            påPost: number[]
-            påVej: number[]
-            post: string
-            omvejÅben: boolean
-        }
-
-        // TODO: Update to work with new routing structure
-        export const onLoadFunction = () => {
-            listPåPost = document.getElementById("listCheckOut")
-            listPåVej = document.getElementById("listCheckIn")
-            postOmvejSelector = document.getElementById("postOmvejSelector") as HTMLInputElement
-            undoButton = document.getElementById("undo") as HTMLInputElement
-            noPatruljerPåPostText = document.getElementById("ingenPåPost") as HTMLParagraphElement
-            noPatruljerPåVejText = document.getElementById("ingenPåVej") as HTMLParagraphElement
-            //Get data from server
-            sendRequest("/getData", null, (status, headers) => {
-                const data = JSON.parse(headers.get("data")) as PatruljePostData
-                data.påPost.forEach(pNum => {
-                    addPatruljePåPost(pNum)
-                });
-                data.påVej.forEach(pNum => {
-                    addPatruljeToPåVej(pNum)
-                })
-                document.getElementById("postNum").innerHTML = data.post.toString();
-                setOmvejSelector(data.omvejÅben)
-                console.log(data.omvejÅben)
-            }, () => {
-                if(confirm("Fejl. Du bliver viderestillet til login"))
-                    location.replace(window.location.origin)
-            })
-
-            console.log("Entire page loaded")
-        }
-
-        // TODO: Change to work with selecting multiple routes
-        const setOmvejSelector = (omvejÅben: boolean) => {
-            if(omvejÅben){
-                (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = false
-                document.getElementById("OmvejSelectorText").innerHTML = "Omvej"
-            }
-            else{
-                (document.getElementById("postOmvejSelector") as HTMLInputElement).disabled = true
-                document.getElementById("OmvejSelectorText").innerHTML = "Omvej (Lukket)"
-                postOmvejSelector.value = "0"
-            }
-
-            postOmvejChanged()
-        }
-        const getUpdateFunc = () => {
-            const headers = new Headers({
-                'last-update': lastUpdateTimeString
-            })
-            lastUpdateTimeString = new Date().getTime().toString()
-            sendRequest("/getUpdate", headers, (status, headers) => {
-                if(headers.get('update') == "true"){ //Update has arrived since last time client checked
-                    const data = JSON.parse(headers.get("data")) as PatruljePostData
-
-                    const updatePåPost = getDiffArr(patruljerPåPost, data.påPost)
-                    updatePåPost[0].forEach(patrulje => {
-                        removePatruljePåPost(patrulje)
-                    })
-                    updatePåPost[1].forEach(patrulje => {
-                        addPatruljePåPost(patrulje)
-                    })
-
-                    const updatePåVej = getDiffArr(patruljerPåVej, data.påVej)
-                    updatePåVej[0].forEach(patrulje => {
-                        removePatruljePåVej(patrulje)
-                    })
-                    updatePåVej[1].forEach(patrulje => {
-                        addPatruljeToPåVej(patrulje)
-                    })
-                    setOmvejSelector(data.omvejÅben)
-                }
-            }, status => {
-                clearInterval(updateInterval)
-                
-                if(!showingError)
-                    showingError = true
-                    if(confirm("Fejl ved opdatering. Log ind igen")){
-                        logOut()
-                    }
-                    else{
-                    showingError = false
-                    updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
-                }
-            })
-        }
-        let updateInterval = setInterval(getUpdateFunc, timeBetweenUpdates)
-        //Getting initial data from server
-        if(identifier == null)
-            location.href = "/home"
-
-        interface callback{
-            () : void
+        if(this.arr.length == 0 && this.isEmptyCallback != null) {
+            this.isEmptyCallback();
         }
     }
     

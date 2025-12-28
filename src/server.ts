@@ -13,6 +13,8 @@ import { inspect } from 'util';
 import { UpdateService, AdminService, PatrolService, LocationService, ServiceBase, Database} from "./databaseBarrel";
 import { PatrolUpdate } from './database/types';
 import { SETTINGS_TABLE } from './database/database';
+import { Endpoints } from './endpoints';
+import { MandskabData, PatrolUpdateFromMandskab } from './clientFiles/responseTypes';
 
 
 type Response = responses.Response;
@@ -71,28 +73,28 @@ class Server {
         return new router.Router(address, port, users)
             .assetDir("/assets", assets)
             .assetDir("/js", `${__dirname}/clientFiles`)
-            .file("/", `${assets}/html/home.html`)
-            .file("/home", `${assets}/html/home.html`)
-            .file("/plot", `${assets}/html/patruljePlot.html`)
-            .file("/mandskab", `${assets}/html/mandskab.html`)
-            .route("/login", UserType.None, this.login)
-            .route("/logout", UserType.None, this.logout)
-            .route("/getUpdate", UserType.Post, this.postUpdate)
-            .route("/getData", UserType.Post, this.postData)
-            .route("/sendUpdate", UserType.Post, this.makePatrolUpdate)
-            .route("/deleteCheckin", UserType.Post, this.mandskabDeleteCheckin)
-            .route("/master", UserType.Master, this.pages.master)
-            .route("/master/checkin", UserType.Master, this.pages.checkin)
-            .route("/master/addcheckin", UserType.Master, this.makeMasterPatrolUpdate)
-            .route("/master/checkins", UserType.Master, this.pages.checkins)
-            .route("/master/posts", UserType.Master, this.pages.posts)
-            .route("/master/post", UserType.Master, this.pages.post)
-            .route("/master/patrols", UserType.Master, this.pages.patrols)
-            .route("/master/patrol", UserType.Master, this.pages.patrol)
-            .route("/master/patrolStatus", UserType.Master, this.patrolStatus)
-            .route("/master/deleteCheckin", UserType.Master, this.deleteCheckin)
-            .route("/master/graph", UserType.Master, this.pages.graph)
-            .route("/master/postStatus", UserType.Master, this.postStatus);
+            .file(Endpoints.Home, `${assets}/html/home.html`)
+            .file(Endpoints.HomeAlias, `${assets}/html/home.html`)
+            // .file("/plot", `${assets}/html/patruljePlot.html`)
+            .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
+            .route(Endpoints.Login, UserType.None, this.login)
+            .route(Endpoints.Logout, UserType.None, this.logout)
+            .route(Endpoints.GetUpdate, UserType.Post, this.postUpdate)
+            .route(Endpoints.GetData, UserType.Post, this.locationDataForMandskab)
+            .route(Endpoints.SendUpdate, UserType.Post, this.makePatrolUpdate)
+            .route(Endpoints.DeleteCheckin, UserType.Post, this.mandskabDeleteCheckin)
+            .route(Endpoints.Master, UserType.Master, this.pages.master)
+            .route(Endpoints.MasterCheckin, UserType.Master, this.pages.checkin)
+            .route(Endpoints.MasterAddCheckin, UserType.Master, this.makeMasterPatrolUpdate)
+            .route(Endpoints.MasterCheckins, UserType.Master, this.pages.checkins)
+            .route(Endpoints.MasterPosts, UserType.Master, this.pages.posts)
+            .route(Endpoints.MasterPost, UserType.Master, this.pages.post)
+            .route(Endpoints.MasterPatrols, UserType.Master, this.pages.patrols)
+            .route(Endpoints.MasterPatrol, UserType.Master, this.pages.patrol)
+            .route(Endpoints.MasterPatrolStatus, UserType.Master, this.patrolStatus)
+            .route(Endpoints.MasterDeleteCheckin, UserType.Master, this.deleteCheckin)
+            .route(Endpoints.MasterGraph, UserType.Master, this.pages.graph)
+            .route(Endpoints.MasterPostStatus, UserType.Master, this.postStatus);
     }
 
     /**
@@ -145,7 +147,7 @@ class Server {
         // const postLastUpdate = post.lastUpdate.getTime();
         if(true){
         //if(userLastUpdate < postLastUpdate){
-            let response = await this.postData(req);
+            let response = await this.locationDataForMandskab(req);
             if(response.headers) {
                 response.headers.update = "true";
             }
@@ -159,7 +161,7 @@ class Server {
     /**
      * Get information about post.
      */
-    postData = async (req: Request): Promise<Response> => {
+    locationDataForMandskab = async (req: Request): Promise<Response> => {
         const user = req.user;
 
         const location = this.locationService.locationInfo(user.locationId);
@@ -174,14 +176,21 @@ class Server {
             towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
         }
 
+        const onLocation = this.locationService.patrolsOnLocation(user.locationId);
+        const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId);
+        const locationsFromRoutes = routesFromLocation.map(route => this.locationService.locationInfo(route.toLocationId));
+
+        const data: MandskabData = {
+            patrolsOnLocation: onLocation.map(p => this.patrolService.patrolInfo(p)),
+            patrolsTowardsLocation: towardsLocation.map(p => this.patrolService.patrolInfo(p)),
+            location: location,
+            routesTo: locationsFromRoutes,
+        };
+
+        console.log(inspect(data, { colors: true, depth: null }));
 
         return responses.ok("", {
-            data: JSON.stringify({
-                onLocation: this.locationService.patrolsOnLocation(user.locationId),
-                towardsLocation: towardsLocation,
-                locationName: location.name,
-                routes: this.locationService.allRoutesFromLocation(user.locationId)
-            })
+            data: JSON.stringify(data)
         });
     }
 
@@ -207,26 +216,25 @@ class Server {
      */
     makePatrolUpdate = async (request: Request): Promise<Response> => {
         const user = request.user;
-        const update = request.headers['update'] //{PatolId}%{targetLocationID}
+        const updateHeader = request.headers['update'] //{PatolId}%{targetLocationID}
 
-        const updateVals = this.tryGet<string, number[]>(update,
-            (upd) => upd.split('%').map((str) => Number.parseInt(str)),
+        const update = this.tryGet<string, PatrolUpdateFromMandskab>(updateHeader,
+            (upd) => JSON.parse(upd) as PatrolUpdateFromMandskab,
             (err) => console.error("Error parsing update string:", err)
-        ) as readonly number[] | undefined;
-
-        if(!updateVals || updateVals.length !== 2 || updateVals.some(v => !Number.isInteger(v))) {
-            console.error("Invalid update format:", update);
-            return responses.server_error();
-        }
+        ) as PatrolUpdateFromMandskab | undefined;
+        
+        if(!update)
+            return responses.response_code(400);
 
         const checkin: PatrolUpdate = {
             time: new Date(),
-            patrolId: updateVals[0],
+            patrolId: update.patrolId,
             currentLocationId: user.locationId,
-            targetLocationId: updateVals[1]
+            targetLocationId: update.targetLocationId
         };
 
-        if(!this.updateService.isPatrolUpdateValid(checkin)) {
+        const thisIsFirstLocation = user.locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID]);
+        if(!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
             return responses.response_code(400);
         }
 
@@ -262,7 +270,8 @@ class Server {
             targetLocationId: updateVals[2],
         };
 
-        if(!this.updateService.isPatrolUpdateValid(checkin, {skipRouteValidation: true})) {
+        // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
+        if(!this.updateService.isPatrolUpdateValid(checkin, false, false, true)) {
             console.error("Invalid patrol update in masterCheckin:", checkin);
             return responses.response_code(400);
         }

@@ -33,19 +33,37 @@ export class UpdateService extends ServiceBase {
      *  - `skipRouteValidation`: if true, skips the route validation check
      * @returns `true` if the `PatrolUpdate` is valid, `false` otherwise
      */
-    isPatrolUpdateValid(newUpdate: PatrolUpdate, opts?: {skipRouteValidation?: boolean}): boolean {
+    isPatrolUpdateValid(
+        newUpdate: PatrolUpdate, 
+        includeRouteValidation = true,
+        includeCurrentEqualsTargetCheck = true,
+        isTargetFirstLocation = false
+    ): boolean {
         const patrolExists = this.prepare(`SELECT 1 FROM ${PATROL_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.patrolId) != undefined;
         const currentLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.currentLocationId) != undefined;
         const targetLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.targetLocationId) != undefined;
-        const routeIsValid = this.prepare(`SELECT 1 FROM ${ROUTE_TABLE.TABLE_NAME} WHERE (${ROUTE_TABLE.FROM_LOCATION_ID} = ? AND ${ROUTE_TABLE.TO_LOCATION_ID} = ?)`).get(newUpdate.currentLocationId, newUpdate.targetLocationId) != undefined;
+        const routeIsValid = newUpdate.currentLocationId === newUpdate.targetLocationId || this.prepare(`SELECT 1 FROM ${ROUTE_TABLE.TABLE_NAME} WHERE (${ROUTE_TABLE.FROM_LOCATION_ID} = ? AND ${ROUTE_TABLE.TO_LOCATION_ID} = ?)`).get(newUpdate.currentLocationId, newUpdate.targetLocationId) != undefined;
+        const lastUpdate = this.latestUpdateOfPatrol(newUpdate.patrolId);
 
+        // Check that data is valid
         if (!patrolExists || !currentLocationExists || !targetLocationExists) {
             console.error("Invalid patrol update: patrol or location does not exist");
             return false;
         }
-        if (opts?.skipRouteValidation ? false : !routeIsValid) {
+        if(includeRouteValidation && !routeIsValid) {
             console.error("Invalid patrol update: no valid route between locations");
             return false;
+        }
+        if(lastUpdate) {
+            if(includeCurrentEqualsTargetCheck && lastUpdate.targetLocationId !== newUpdate.currentLocationId) {
+                console.error("Invalid patrol update: current location does not match last target location");
+                return false;
+            }
+        }else{
+            if(!isTargetFirstLocation){
+                console.error("Invalid patrol update: first update must be to a target location that is a first location");
+                return false;
+            }
         }
 
         return true;

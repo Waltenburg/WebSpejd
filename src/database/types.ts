@@ -9,8 +9,8 @@ export interface Location {
 
 export interface Route{
     id: number;
-    fromLocation: number;
-    toLocation: number;
+    fromLocationId: number;
+    toLocationId: number;
     open: boolean;
     distance?: number;
 }
@@ -33,8 +33,10 @@ export interface FullPatrolInfo extends Patrol, Pick<PatrolUpdateWithNoId, "curr
 
 /** Information about a patrol. */
 export interface Patrol {
-    /** ID of the patrol */
+    /** ID of the patrol. This is a unique identifier for the patrol. */
     id: number;
+    /** Number of the patrol. This is the number that will be displayed to users. Does not have to be unique. */
+    number: string;
     /** Name of the patrol */
     name: string;
     /** Whether the patrol is udgået. `true` if the patrol is udgået, `false` otherwise. */
