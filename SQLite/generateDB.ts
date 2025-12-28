@@ -32,7 +32,7 @@ const createDatabaseFromCSV = (csvPath: string, dbPath: string, schemaPath: stri
     const addUserStmt = db.prepare(`INSERT INTO ${USER_TABLE.TABLE_NAME} (${USER_TABLE.LOCATION_ID}, ${USER_TABLE.PASSWORD}) VALUES (?, ?)`);
     const addSettingStmt = db.prepare(`INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)`);
     const addRouteStmt = db.prepare(`INSERT INTO ${ROUTE_TABLE.TABLE_NAME} (${ROUTE_TABLE.FROM_LOCATION_ID}, ${ROUTE_TABLE.TO_LOCATION_ID}, ${ROUTE_TABLE.IS_OPEN}, ${ROUTE_TABLE.DISTANCE}) VALUES (?, ?, ?, ?)`);
-    enum columnNumer {
+    const enum columnNumer {
         patrolName,
         locationName,
         routesTo,

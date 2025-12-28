@@ -33,6 +33,7 @@ export class LocationService extends ServiceBase {
             FROM LatestPatrolUpdates lpu
             JOIN Patrol p ON lpu.PatrolId = p.id
             WHERE lpu.targetLocationId = ?
+            AND lpu.currentLocationId != lpu.targetLocationId
             AND p.udgået = 0
             ORDER BY lpu.timeStr DESC`
         ).all(locationID) as { patrolId: number }[];

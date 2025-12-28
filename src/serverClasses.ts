@@ -2,7 +2,7 @@ export namespace serverClasses{
     export interface singleParamCallback<Type> {
         (file: Type): void
     }
-    export enum MIME {
+    export const enum MIME {
         html = "text/html",
         json = 'application/JSON',
         css = "text/css",

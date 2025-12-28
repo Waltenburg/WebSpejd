@@ -9,7 +9,7 @@ export interface Request {
     cookies: { [key: string]: string };
 }
 
-export enum UserType {
+export const enum UserType {
     None, Post, Master
 }
 
