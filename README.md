@@ -1,3 +1,6 @@
+# Progres update:
+Server and client is now stable for mandskab check-ins and -outs.
+
 # Webspejd: Check-in and -out system for Danish scout competitions
 
 This Node JS server hosts a website that handles check-in and -out of scout
