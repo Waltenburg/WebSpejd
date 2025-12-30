@@ -1,9 +1,14 @@
-import { PatrolInfoToMandskab } from "./responseTypes";
+import { PatrolInfoToMandskab } from "@shared/responseTypes";
 import { sendRequest } from "./sendHTTPRequest.js";
 // import { PatrolUpdateWithNoId } from "../database/types";
-import { Endpoints } from "../endpoints";
-import { Action, PatrolUpdateFromMandskab, MandskabData } from "./responseTypes";
-import { Location } from "../database/types";
+import { Endpoints } from "@shared/endpoints";
+import { PatrolUpdateFromMandskab, MandskabData } from "@shared/responseTypes";
+import { Location } from "@shared/types";
+
+const enum Action {
+    checkinToLocation,
+    checkoutFromLocation
+}
 
 let mandskab: Mandskab;
 

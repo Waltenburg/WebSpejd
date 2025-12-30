@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "module": "es6",
+        "target": "es6",
+        "lib": ["es6", "dom"],
+        "esModuleInterop": false,
+        "rootDir": "./",
+        "outDir": "../../target/client",
+    },
+    "include": ["./**/*.ts"],
+    "references": [{ "path": "../shared" }]
+}

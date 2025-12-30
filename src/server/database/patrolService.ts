@@ -1,6 +1,6 @@
 import { PatrolNotFoundError } from "../error";
 import { PATROL_TABLE, PATROL_UPDATE_TABLE, ServiceBase } from "./database";
-import { PatrolLocationType, Patrol } from "./types";
+import { PatrolLocationType, Patrol } from "@shared/types";
 
 export class PatrolService extends ServiceBase {
     /**

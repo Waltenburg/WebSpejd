@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": false,
+        "isolatedModules": false,
+        "importsNotUsedAsValues": "remove",
+        "sourceMap": true,
+        "baseUrl": ".",
+        "paths": {"@shared/*": ["./src/shared/*"]}
+        // "strictNullChecks": true, // Should be enabled, but causes too many issues right now
+    },
+    "exclude": [ "node_modules", "**/node_modules", "**/*.spec.ts", "SQLite/**", "target/**" ],
+}

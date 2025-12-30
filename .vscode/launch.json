@@ -9,8 +9,8 @@
         "request": "launch",
         "name": "With source map",
         "skipFiles": ["<node_internals>/**"],
-        "program": "${workspaceFolder}/target/server.js", // Point to your TypeScript entry file
-        "outFiles": ["${workspaceFolder}/target/**/*.js"], // Point to your output directory
+        "program": "${workspaceFolder}/src/server/server.ts", // Point to your TypeScript entry file
+        "outFiles": ["${workspaceFolder}/target"], // Point to your output directory
         "sourceMaps": true
       }
     ]

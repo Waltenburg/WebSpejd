@@ -11,11 +11,10 @@ import { inspect } from 'util';
 
 // Database and data types
 import { UpdateService, AdminService, PatrolService, LocationService, ServiceBase, Database} from "./databaseBarrel";
-import { PatrolUpdate } from './database/types';
+import { PatrolUpdate } from '@shared/types';
 import { SETTINGS_TABLE } from './database/database';
-import { Endpoints } from './endpoints';
-import { MandskabData, PatrolUpdateFromMandskab } from './clientFiles/responseTypes';
-
+import { Endpoints } from '@shared/endpoints';
+import { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
 
 type Response = responses.Response;
 
@@ -72,7 +71,7 @@ class Server {
     private createRouter(address: string, port: number, assets: string, users: users.UserCache): router.Router {
         return new router.Router(address, port, users)
             .assetDir("/assets", assets)
-            .assetDir("/js", `${__dirname}/clientFiles`)
+            .assetDir("/js", `${__dirname}/../client`)
             .file(Endpoints.Home, `${assets}/html/home.html`)
             .file(Endpoints.HomeAlias, `${assets}/html/home.html`)
             // .file("/plot", `${assets}/html/patruljePlot.html`)

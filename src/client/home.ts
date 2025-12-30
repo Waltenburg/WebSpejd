@@ -1,4 +1,4 @@
-import { Endpoints } from "../endpoints.js";
+import { Endpoints } from "@shared/endpoints.js";
 import { getCookie, setCookie } from "./cookie.js";
 import { sendRequest } from "./sendHTTPRequest.js";
 

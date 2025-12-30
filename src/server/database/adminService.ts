@@ -1,5 +1,5 @@
 import { Database, ServiceBase, SETTINGS_TABLE } from "./database";
-import { User } from "./types";
+import { User } from "@shared/types";
 
 export class AdminService extends ServiceBase {
     public readonly settings: { [key: string]: string };

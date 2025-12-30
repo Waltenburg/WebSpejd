@@ -1,5 +1,5 @@
 import { ServiceBase, PATROL_TABLE, PATROL_UPDATE_TABLE, LOCATION_TABLE, ROUTE_TABLE} from "./database";
-import { PatrolUpdate } from "./types";
+import { PatrolUpdate } from "@shared/types";
 
 /** Information about a patrol checkin or checkout.\
  * Same as `PatrolUpdate` except that it has `timeStr: string` instead of `time: Date`*/

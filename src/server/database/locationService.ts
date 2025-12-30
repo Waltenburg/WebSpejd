@@ -1,5 +1,5 @@
 import { ServiceBase, SETTINGS_TABLE } from "./database";
-import { Location, Route } from "./types";
+import { Location, Route } from "@shared/types";
 
 export class LocationService extends ServiceBase {
      /**

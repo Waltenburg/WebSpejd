@@ -20,14 +20,10 @@
         "rimraf": "^6.0.1"
     },
     "scripts": {
-        "start": "node target/server.js --assets assets",
-        "start:ts": "ts-node src/server.ts",
-        "build.client": "npx tsc --project tsconfig.client.json",
-        "build.server": "npx tsc --project tsconfig.server.json",
-        "build.client:watch": "npx tsc --project tsconfig.client.json --watch",
-        "build.server:watch": "npx tsc --project tsconfig.server.json --watch",
-        "build": "npm run build.client && npm run build.server && cp -r assets target",
-        "build:watch": "npm run build.client:watch && npm run build.server:watch && cp -r assets target",
+        "start": "node target/server/server.js --assets assets",
+        "start:ts": "ts-node src/server/server.ts",
+        "build": "npx tsc --build && cp -r assets target",
+        "build:watch": "npx tsc --build --watch && cp -r assets target",
         "generateDatabase": "ts-node SQLite/generateDB.ts",
         "clean": "rimraf --glob target",
         "cleanAll": "npm run clean && npm run clean:test",
