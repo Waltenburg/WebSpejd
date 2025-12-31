@@ -57,7 +57,7 @@ export interface PatrolUpdateWithNoId {
 /** Information about a patrol checkin or checkout. */
 export interface PatrolUpdate extends PatrolUpdateWithNoId {
     /** Id of the checkin. */
-    id?: number;
+    id: number;
 }
 
 /** Information about a user as it is stored in the database */

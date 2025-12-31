@@ -10,11 +10,17 @@ import { Command } from 'commander';
 import { inspect } from 'util';
 
 // Database and data types
-import { UpdateService, AdminService, PatrolService, LocationService, ServiceBase, Database} from "./databaseBarrel";
-import { PatrolUpdate } from '@shared/types';
+import { UpdateService, AdminService, PatrolService, LocationService, Database} from "./databaseBarrel";
+import { PatrolUpdate, PatrolUpdateWithNoId } from '@shared/types';
 import { SETTINGS_TABLE } from './database/database';
 import { Endpoints } from '@shared/endpoints';
 import { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
+
+
+const enum SETTINGS {
+    NUMBER_OF_UPDATES_SEND_TO_CLIENT = 10,
+    MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB = 30 * 1000, // Milliseconds
+}
 
 type Response = responses.Response;
 
@@ -78,7 +84,6 @@ class Server {
             .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
-            .route(Endpoints.GetUpdate, UserType.Post, this.postUpdate)
             .route(Endpoints.GetData, UserType.Post, this.locationDataForMandskab)
             .route(Endpoints.SendUpdate, UserType.Post, this.makePatrolUpdate)
             .route(Endpoints.DeleteCheckin, UserType.Post, this.mandskabDeleteCheckin)
@@ -184,9 +189,9 @@ class Server {
             patrolsTowardsLocation: towardsLocation.map(p => this.patrolService.patrolInfo(p)),
             location: location,
             routesTo: locationsFromRoutes,
-        };
+            latestUpdates: this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
 
-        console.log(inspect(data, { colors: true, depth: null }));
+        };
 
         return responses.ok("", {
             data: JSON.stringify(data)
@@ -225,7 +230,7 @@ class Server {
         if(!update)
             return responses.response_code(400);
 
-        const checkin: PatrolUpdate = {
+        const checkin: PatrolUpdateWithNoId = {
             time: new Date(),
             patrolId: update.patrolId,
             currentLocationId: user.locationId,
@@ -262,7 +267,7 @@ class Server {
             return responses.server_error();
         }
 
-        const checkin: PatrolUpdate = {
+        const checkin: PatrolUpdateWithNoId = {
             time: new Date(),
             patrolId: updateVals[0],
             currentLocationId: updateVals[1],

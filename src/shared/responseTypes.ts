@@ -1,4 +1,4 @@
-import type { Location, Patrol } from "./types";
+import type { Location, Patrol, PatrolUpdate } from "./types";
 
 export interface PatrolInfoToMandskab extends Pick<Patrol, "id" | "number" | "name"> {}
 
@@ -7,6 +7,7 @@ export interface MandskabData {
     patrolsTowardsLocation: PatrolInfoToMandskab[];
     location: Location;
     routesTo: Location[];
+    latestUpdates: PatrolUpdate[];
 }
 
 export interface PatrolUpdateFromMandskab {

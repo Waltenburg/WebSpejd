@@ -1,5 +1,5 @@
 import { ServiceBase, PATROL_TABLE, PATROL_UPDATE_TABLE, LOCATION_TABLE, ROUTE_TABLE} from "./database";
-import { PatrolUpdate } from "@shared/types";
+import { PatrolUpdate, PatrolUpdateWithNoId } from "@shared/types";
 
 /** Information about a patrol checkin or checkout.\
  * Same as `PatrolUpdate` except that it has `timeStr: string` instead of `time: Date`*/
@@ -34,7 +34,7 @@ export class UpdateService extends ServiceBase {
      * @returns `true` if the `PatrolUpdate` is valid, `false` otherwise
      */
     isPatrolUpdateValid(
-        newUpdate: PatrolUpdate, 
+        newUpdate: PatrolUpdateWithNoId, 
         includeRouteValidation = true,
         includeCurrentEqualsTargetCheck = true,
         isTargetFirstLocation = false
@@ -99,7 +99,7 @@ export class UpdateService extends ServiceBase {
      * @param patrolUpdate the patrol update to add to the database
      * @returns the id of the patrol update
     */
-    updatePatrol(patrolUpdate: PatrolUpdate): number{
+    updatePatrol(patrolUpdate: PatrolUpdateWithNoId): number{
         this.prepare("INSERT INTO PatrolUpdates (patrolId, currentLocationId, targetLocationId) VALUES (?, ?, ?)")
         .run(patrolUpdate.patrolId, patrolUpdate.currentLocationId, patrolUpdate.targetLocationId);
 
@@ -146,8 +146,14 @@ export class UpdateService extends ServiceBase {
      * @param locationId the id of the location
      * @returns the patrol updates at the location
      */
-    updatesAtLocation(locationId: number): PatrolUpdate[]{
-        const patrolUpdates = this.prepare("SELECT * FROM PatrolUpdates WHERE currentLocationId = ? ORDER BY timeStr DESC").all(locationId) as DatabasePatrolUpdate[];
+    updatesAtLocation(locationId: number, amount?: number): PatrolUpdate[]{
+        const query = this.prepare("SELECT * FROM PatrolUpdates WHERE currentLocationId = ? ORDER BY timeStr DESC" + (amount !== undefined ? " LIMIT ?" : ""));
+        let patrolUpdates: DatabasePatrolUpdate[];
+
+        if(amount != undefined)
+            patrolUpdates = query.all(locationId, amount) as DatabasePatrolUpdate[];
+        else
+            patrolUpdates = query.all(locationId) as DatabasePatrolUpdate[];
         return this.convertFromDBPatrolUpdate(patrolUpdates);
     }
 
