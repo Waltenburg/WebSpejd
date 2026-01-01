@@ -3,17 +3,17 @@
 
 {% block body %}
     <h2>Poster</h2>
-    <div hx-get="/master/posts" hx-trigger="every 5s">
-        {{ utils.posts(posts) }}
+    <div hx-get="/master/locations" hx-trigger="every 5s">
+        {{ utils.locations(locations) }}
     </div>
     <h2>Patruljer</h2>
     {{ utils.patrols(patrols) }}
-    <h2>Graf</h2>
+    {# <h2>Graf</h2>
     <div hx-get="/master/graph", hx-trigger="every 5s">
         {{ utils.graph(graph) }}
-    </div>
-    <h2>Checkins</h2>
-    <div hx-get="/master/checkins" hx-trigger="every 5s">
-        {{ utils.checkins(checkins) }}
+    </div> #}
+    <h2>Patruljeopdateringer</h2>
+    <div hx-get="/master/patrolUpdates" hx-trigger="every 5s">
+        {{ utils.updates(updates) }}
     </div>
 {% endblock %}

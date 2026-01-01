@@ -2,43 +2,10 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Webspejd</title>
-        <style>
-            .last-update {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                font-size: 0.8em;
-                color: #666;
-            }
-        </style>
-        <script>
-            const lastUpdateTime = new Date();
-            document.addEventListener("DOMContentLoaded", () => {
-                const lastUpdateElement = document.createElement('div');
-                lastUpdateElement.className = 'last-update';
-                document.body.appendChild(lastUpdateElement);
-
-                const updateFunction = () => {
-                    fetch('/master/checkins')
-                    .then(response => response.text())
-                    .then(_ => {
-                        lastUpdateElement.textContent = `Last update: ${getTime(new Date())}`;
-                        document.getElementById("header").style.backgroundColor = "#58A2E7"
-                    }).catch(() => {
-                        lastUpdateElement.textContent = 'Error updating! Last update: ' + getTime(lastUpdateTime);
-                        document.getElementById("header").style.backgroundColor = "#cc0000"
-                    });
-                };
-
-                setInterval(updateFunction, 3100);
-                updateFunction(); // Run immediately on page load
-            });
-            const getTime = (date) => {
-            const leadingZero = (num) => num < 10 ? '0' + num : num;
-                return leadingZero(date.getHours()) + ":" + leadingZero(date.getMinutes()) + ":" + leadingZero(date.getSeconds());
-            }
-        </script>
+        <script src="/js/master/base.js" type="module"></script>
         <link rel="stylesheet" href="/assets/css/master.css">
     </head>
     <body>

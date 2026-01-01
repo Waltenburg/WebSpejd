@@ -9,10 +9,10 @@ type Response = responses.Response;
 
 export const MAIN: string = "master/main.html.njk";
 export const GRAPH: string = "master/graph.html.njk";
-export const POSTS: string = "master/posts.html.njk";
-export const POST: string = "master/post.html.njk";
-export const CHECKINS: string = "master/checkins.html.njk";
-export const CHECKIN: string = "master/checkin.html.njk";
+export const LOCATIONS: string = "master/locations.html.njk";
+export const LOCATION: string = "master/location.html.njk";
+export const PATROL_UPDATES: string = "master/patrolUpdates.html.njk";
+export const PATROL_UPDATE_PAGE: string = "master/patrolUpdate.html.njk";
 export const PATROLS: string = "master/patrols.html.njk";
 export const PATROL: string = "master/patrol.html.njk";
 
@@ -36,7 +36,6 @@ export class Pages {
                 noCache: !cache
             }
         );
-        this.env.addFilter("checkinName", safeFilter(checkinTypeToString));
         this.env.addFilter("clock", safeFilter(formatTime));
         this.env.addFilter("formatPatrolLocation", safeFilter(this.formatPatrolLocation));
         this.env.addFilter("formatCheckinLocation", safeFilter(this.formatCheckinLocation));
@@ -51,94 +50,98 @@ export class Pages {
 
 
 
-    master = async(): Promise<Response> => {
+    master = async (): Promise<Response> => {
         return this.response(MAIN, {
-            posts: this.locationData(),
-            checkins: this.updateService.lastUpdates(10),
+            locations: this.locationData(), //TODO: Change to `locations`
+            updates: this.updateService.lastUpdates(10),
             patrols: this.patrolsData(),
-            graph: this.graphData(),
+            // graph: this.graphData(),
         });
     }
 
-    posts = async (): Promise<Response> => {
-        return this.response(POSTS, {
-            posts: this.locationData(),
+    locations = async (): Promise<Response> => {
+        return this.response(LOCATIONS, {
+            locations: this.locationData(),
         });
     }
 
-    post = async (request: Request): Promise<Response> => {
+    location = async (request: Request): Promise<Response> => {
         const locationId = Number.parseInt(request.url.searchParams.get("id"));
-        let post = this.locationService.locationInfo(locationId);
+        let location = this.locationService.locationInfo(locationId);
 
         let patrolsOnTheirWayIDs = this.locationService.patrolsTowardsLocation(locationId);
-        
+
         // if the location is the first location, include patrols that have no patrol update yet
-        if(locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+        if (locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
             const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
             patrolsOnTheirWayIDs = patrolsOnTheirWayIDs.concat(patrolsWithNoUpdates);
         }
 
-        return this.response(POST, {
+        return this.response(LOCATION, {
             patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(locationId)),
             patrolsOnTheirWay: this.patrolsData(patrolsOnTheirWayIDs),
             patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(locationId)),
-            post: post,
-            checkins: this.updateService.updatesAtLocation(locationId).reverse(),
+            location: location,
+            updates: this.updateService.updatesAtLocation(locationId).reverse(),
         });
     }
 
-    checkin = async (request: Request): Promise<Response> => {
+    patrolUpdatePage = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const patrolId = params.get("patrolId");
         const locationId = params.get("locationId");
-        return this.response(CHECKIN, {
+        return this.response(PATROL_UPDATE_PAGE, {
             patrols: this.patrolService.allPatrolIds().map((patrolId) => this.patrolService.patrolInfo(patrolId)),
-            posts: this.locationService.allLocationIds().map((locationId) => this.locationService.locationInfo(locationId)),
+            locations: this.locationService.allLocationIds().map((locationId) => this.locationService.locationInfo(locationId)),
             selectedPatrol: patrolId,
             selectedPost: locationId,
         });
     }
 
-    checkins = async (request: Request): Promise<Response> => {
-        let patrolUpdates = undefined;
+    patrolUpdates = async (request: Request): Promise<Response> => {
+        let patrolUpdates: PatrolUpdate[];
         const params = request.url.searchParams;
 
         let patrolId = params.get("patrolId");
         let locationId = params.get("locationId");
-        if(patrolId != undefined) {
+        if (patrolId != undefined) {
             patrolUpdates = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 0);
         }
-        else if(locationId != undefined) {
+        else if (locationId != undefined) {
             patrolUpdates = this.updateService.updatesAtLocation(Number.parseInt(locationId)).reverse();
         }
 
-        if(patrolUpdates === undefined){
+        if (patrolUpdates === undefined) {
             patrolUpdates = this.updateService.lastUpdates(20);
         }
 
-        return this.response(CHECKINS, {
-            checkins: patrolUpdates,
+        return this.response(PATROL_UPDATES, {
+            updates: patrolUpdates,
         });
     }
 
     patrols = async (request: Request): Promise<Response> => {
-        let patrolIds = undefined;
-        let locationId = undefined;
-        let selection = undefined
         const params = request.url.searchParams;
+        const selection = params.get("selection")
+        const locationId = Number.parseInt(params.get("locationId"));
 
-        const postIdStr = params.get("locationId");
-        if(postIdStr != undefined) {
-            locationId = Number.parseInt(postIdStr);
-            selection = params.get("selection");
-            if(selection === "patrolsOnTheirWay") {
+        let patrolIds: number[];
+
+        if (selection != null && locationId != null) {
+            if (selection === "patrolsOnTheirWay") {
                 patrolIds = this.locationService.patrolsTowardsLocation(locationId);
-            } else if(selection === "patrolsOnPost") {
+
+                // if the location is the first location, include patrols that have no patrol update yet
+                if (locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+                    const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
+                    patrolIds = patrolIds.concat(patrolsWithNoUpdates);
+                }
+            } else if (selection === "patrolsOnPost") {
                 patrolIds = this.locationService.patrolsOnLocation(locationId);
-            } else if(selection === "patrolsCheckedOut") {
+            } else if (selection === "patrolsCheckedOut") {
                 patrolIds = this.locationService.patrolsCheckedOutFromLocation(locationId);
             }
-        }
+        };
 
         const sortBy = params.get("sortBy") || "id";
 
@@ -154,67 +157,40 @@ export class Pages {
         const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
             patrol: this.patrolService.patrolInfo(patrolId),
-            checkins: this.updateService.latestUpdatesOfPatrol(patrolId, 0),
+            updates: this.updateService.latestUpdatesOfPatrol(patrolId, 0),
             //location: this.patrolService.locationOfPatrol(patrolId),
         });
     }
 
-    graph = async(): Promise<Response> => {
-        return this.response(GRAPH, {
-            patrols: this.graphData()
-        });
-    }
-
-    // TODO: Update this to use new location route system
-    private graphData = (): any => {
-        // const amountOfPosts = this.locationService.allLocationIds().length;
-        // const patrols = this.patrolService.allPatrolIds()
-        //     .map((patrolId) => {
-        //         const postIds = this.updateService.latestUpdatesOfPatrol(patrolId, 1000)
-        //             .filter((checkin) => checkin.type === CheckinType.CheckIn)
-        //             .map((checkin) => checkin.locationId);
-        //         let posts = Array(amountOfPosts - 1).fill(false);
-        //         for(let locationId of postIds) {
-        //             if(locationId === amountOfPosts) {
-        //                 continue;
-        //             }
-        //             posts[locationId] = true;
-        //         }
-        //         return { posts: posts, amount: Math.max(...postIds) };
-        //     });
-        // return patrols;
-        return {};
-    }
-
     private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
-        if(patrolIds === undefined) {
+        if (patrolIds === undefined) {
             patrolIds = this.patrolService.allPatrolIds();
         }
         return patrolIds
             .map((patrolId) => {
                 let patrol = this.patrolService.patrolInfo(patrolId);
-                let lastCheckin = this.updateService.latestUpdateOfPatrol(patrolId);
+                let lastUpdate = this.updateService.latestUpdateOfPatrol(patrolId);
                 return {
-                    lastCheckin: lastCheckin,
+                    lastUpdate: lastUpdate,
                     //location: this.patrolService.locationOfPatrol(patrolId),
                     ...patrol
                 };
             })
             .sort((a, b) => {
-                if(sortBy === "time") {
-                    return a.lastCheckin.time.getTime()
-                        - b.lastCheckin.time.getTime();
+                if (sortBy === "time") {
+                    return a.lastUpdate?.time.getTime()
+                        - b.lastUpdate?.time.getTime();
                 }
-                if(sortBy === "post") {
-                    return (a.lastCheckin.currentLocationId + a.lastCheckin.targetLocationId)
-                        - (b.lastCheckin.currentLocationId + b.lastCheckin.targetLocationId);
+                if (sortBy === "location") {
+                    return (a.lastUpdate?.currentLocationId + a.lastUpdate?.targetLocationId)
+                        - (b.lastUpdate?.currentLocationId + b.lastUpdate?.targetLocationId);
                 }
                 return a.id - b.id;
             })
     }
 
-    private locationData = (): postDataToMaster[] => {
-         return this.locationService.allLocationIds()
+    private locationData = (): LocationDataToMaster[] => {
+        return this.locationService.allLocationIds()
             .map((locationId) => {
                 let base = this.locationService.locationInfo(locationId);
                 return {
@@ -250,9 +226,12 @@ export class Pages {
 
 
     formatPatrolLocation = (latestUpdate: PatrolUpdate): string => {
+        if (latestUpdate == undefined)
+            return "N/A";
+
         const fromLocationName = this.locationService.locationInfo(latestUpdate.currentLocationId).name;
         const toLocationName = this.locationService.locationInfo(latestUpdate.targetLocationId).name;
-        if(fromLocationName === toLocationName)
+        if (fromLocationName === toLocationName)
             return `På ${fromLocationName}`;
         else
             return `Mellem ${fromLocationName} og ${toLocationName}`;
@@ -268,26 +247,15 @@ function safeFilter<T>(filterFunc: (item: T) => string, defaultError: string = "
     return (item: T): string => {
         try {
             return filterFunc(item);
-        } catch(e) {
-            if(log)
+        } catch (e) {
+            if (log)
                 console.error(e);
             return defaultError;
         }
     };
 }
-
-function checkinTypeToString(value: number): string {
-    if(value === 0) {
-        return "Check ind";
-    } else if (value === 1) {
-        return "Check ud mod post";
-    } else {
-        return "Check ud mod omvej";
-    }
-}
-
 function formatTime(value: Date) {
-    if(!(value instanceof Date)) {
+    if (!(value instanceof Date)) {
         return "Tid ukendt";
     }
     let hour = value.getHours().toString().padStart(2, '0');
@@ -296,7 +264,7 @@ function formatTime(value: Date) {
     return `${hour}:${minute}:${second}`;
 }
 
-function patrolsUrl(sortBy: string =undefined, locationId: string = undefined, selection: string = undefined): string {
+function patrolsUrl(sortBy: string = undefined, locationId: string = undefined, selection: string = undefined): string {
     return createUrlPath("/master/patrols", {
         sortBy: sortBy,
         locationId: locationId,
@@ -307,9 +275,9 @@ function patrolsUrl(sortBy: string =undefined, locationId: string = undefined, s
 function createUrlPath(base: string, params: { [key: string]: string | undefined }): string {
     let path = base;
     let symbol = "?";
-    for(let key in params) {
+    for (let key in params) {
         const value = params[key];
-        if(value == undefined || value === "") {
+        if (value == undefined || value === "") {
             continue;
         }
         path = `${path}${symbol}${key}=${value}`;
@@ -318,7 +286,7 @@ function createUrlPath(base: string, params: { [key: string]: string | undefined
     return path;
 }
 
-export interface postDataToMaster extends Location{
+export interface LocationDataToMaster extends Location {
     patrolsOnPost: number;
     patrolsOnTheirWay: number;
     patrolsCheckedOut: number;

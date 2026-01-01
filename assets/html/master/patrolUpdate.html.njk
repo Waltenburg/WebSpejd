@@ -1,0 +1,65 @@
+{% extends "./base.html.njk" %}
+{% macro addOptions(options, selectedOption) %}
+    {% for location in options %}
+        <option
+            value="{{location.id}}"
+            {% if location.id == selectedOption %}selected{% endif %}
+            >{{location.name}}</option>
+    {% endfor %}
+{% endmacro %}
+
+{% block body %}
+    <h1>Lav patruljeopdatering</h1>
+    <form action=/master/addPatrolUpdate method="POST">
+        <div>
+            <label>Patrulje:</label>
+            <select name="patrol">
+                {% for patrol in patrols %}
+                    <option
+                        value="{{patrol.id}}"
+                        {% if patrol.id == selectedPatrol %}selected{% endif %}
+                        >{{patrol.id}}. {{patrol.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Type:</label>
+            <select name="type" onchange="toggle(this.value)">
+                <option value="checkin">Check ind</option>
+                <option value="checkout">Check ud</option>
+            </select>
+        </div>
+
+        <div id="singleLocation">
+            <label>Check patrulje ind på:</label>
+            <select name="singleLocation">
+                {{ addOptions(locations, selectedLocation) }}
+            </select>
+        </div>
+
+        <div id="fromLocation">
+            <label>Check patrulje ud fra:</label>
+            <select name="fromLocation">
+                {{ addOptions(locations, selectedLocation) }}
+            </select>
+        </div>
+
+        <div id="toLocation">
+            <label>Og imod:</label>
+            <select name="toLocation">
+                {{ addOptions(locations, selectedLocation) }}
+            </select>
+        </div>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+    function toggle(type) {
+        document.getElementById('singleLocation').style.display = type === 'checkout' ? 'none' : 'block';
+        document.getElementById('fromLocation').style.display = type === 'checkin' ? 'none' : 'block';
+        document.getElementById('toLocation').style.display = type === 'checkin' ? 'none' : 'block';
+    }
+    toggle('checkin');
+</script>
+{% endblock %}

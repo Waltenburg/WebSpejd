@@ -1,0 +1,30 @@
+{% extends "./base.html.njk" %}
+{% import "./utils.html.njk" as utils %}
+
+{% block body %}
+    <h1>{{location.name}}</h1>
+    <h2>Team: {{location.team}}</h2>
+    <a class="button" href="/master/updatePage?locationId={{location.id}}">Check ind</a>
+    {% if location.detour %}
+        {% if location.open %}
+            <a class="button"
+               href="/master/locationStatus?location={{location.id}}&status=close">Luk post</a>
+        {% else %}
+            <a class="button"
+               href="/master/locationStatus?location={{location.id}}&status=open">Åben post</a>
+        {% endif %}
+    {% endif %}
+
+    <h2>Går mod post</h2>
+    {{ utils.patrols(patrolsOnTheirWay, locationId=location.id, selection="patrolsOnTheirWay") }}
+    <h2>På post</h2>
+    {{ utils.patrols(patrolsOnPost, locationId=location.id, selection="patrolsOnPost") }}
+    <h2>Har forladt post</h2>
+    {{ utils.patrols(patrolsCheckedOut, locationId=location.id, selection="patrolsCheckedOut") }}
+    <h2>Patruljeopdateringer</h2>
+    <div hx-get="/master/patrolUpdates?locationId={{location.id}}" hx-trigger="every 5s">
+        {{ utils.updates(updates) }}
+    </div>
+
+
+{% endblock %}

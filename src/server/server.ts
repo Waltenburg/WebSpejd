@@ -83,23 +83,24 @@ class Server {
             // .file("/plot", `${assets}/html/patruljePlot.html`)
             .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
             .file(Endpoints.Contact, `${assets}/html/contact.html`)
+            .file('/favicon.ico', `${assets}/favicon.ico`)
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
             .route(Endpoints.GetData, UserType.Post, this.locationDataForMandskab)
             .route(Endpoints.SendUpdate, UserType.Post, this.makePatrolUpdate)
-            .route(Endpoints.DeleteCheckin, UserType.Post, this.mandskabDeleteCheckin)
+            .route(Endpoints.DeleteCheckin, UserType.Post, this.mandskabDeleteUpdate)
             .route(Endpoints.Master, UserType.Master, this.pages.master)
-            .route(Endpoints.MasterCheckin, UserType.Master, this.pages.checkin)
-            .route(Endpoints.MasterAddCheckin, UserType.Master, this.makeMasterPatrolUpdate)
-            .route(Endpoints.MasterCheckins, UserType.Master, this.pages.checkins)
-            .route(Endpoints.MasterPosts, UserType.Master, this.pages.posts)
-            .route(Endpoints.MasterPost, UserType.Master, this.pages.post)
+            .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, this.pages.patrolUpdatePage)
+            .route(Endpoints.MasterAddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
+            .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
+            .route(Endpoints.MasterPosts, UserType.Master, this.pages.locations)
+            .route(Endpoints.MasterPost, UserType.Master, this.pages.location)
             .route(Endpoints.MasterPatrols, UserType.Master, this.pages.patrols)
             .route(Endpoints.MasterPatrol, UserType.Master, this.pages.patrol)
             .route(Endpoints.MasterPatrolStatus, UserType.Master, this.patrolStatus)
-            .route(Endpoints.MasterDeleteCheckin, UserType.Master, this.deleteCheckin)
-            .route(Endpoints.MasterGraph, UserType.Master, this.pages.graph)
-            .route(Endpoints.MasterPostStatus, UserType.Master, this.postStatus);
+            .route(Endpoints.MasterDeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
+            .route(Endpoints.MasterPostStatus, UserType.Master, this.postStatus)
+            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok());
     }
 
     /**
@@ -134,32 +135,6 @@ class Server {
         let response = responses.redirect("/");
         response.headers["Set-Cookie"] =  "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         return response;
-    }
-
-    /**
-     * Get updated information about post.
-     */
-    postUpdate = async (req: Request): Promise<Response> => {
-        const user = req.user;
-
-        const userLastUpdate = parseInt(req.headers['last-update'] as string)
-        const post = this.locationService.locationInfo(user.locationId);
-        if(post === undefined) {
-            return responses.not_found();
-        }
-
-        //Der er kommet ny update siden sidst klienten spurgte
-        // const postLastUpdate = post.lastUpdate.getTime();
-        if(true){
-        //if(userLastUpdate < postLastUpdate){
-            let response = await this.locationDataForMandskab(req);
-            if(response.headers) {
-                response.headers.update = "true";
-            }
-            return response;
-        } /* else{
-            return responses.ok(null, { "update": "false" });
-        } */
     }
 
     // TODO: Update to work with new location routing
@@ -261,35 +236,40 @@ class Server {
     }
 
     makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
+        const formData = request.body.split("&").map(pair => pair.split("=")).reduce((acc, [key, value]) => {
+            acc[decodeURIComponent(key)] = decodeURIComponent(value);
+            return acc;
+        }, {} as { [key: string]: string });
 
-        const updateVals = this.tryGet<string[], number[]>([
-            'patrol',
-            'currentLocationId',
-            'targetLocationId' ],
-        (strs) => strs.map((str) => Number.parseInt(params.get(str) as string)),
-        (err) => console.error("Error parsing master patrol update parameters:", err)
-        ) as readonly number[] | undefined;
-
-        if(!updateVals || updateVals.length !== 2 || updateVals.some(v => !Number.isInteger(v))) {
-            console.error("Invalid update format in masterCheckin:", updateVals);
-            return responses.server_error();
+        let patrolUpdate: PatrolUpdateWithNoId = {
+            time: new Date(),
+            patrolId: Number.parseInt(formData['patrol']),
+            currentLocationId: 0,
+            targetLocationId: 0
         }
 
-        const checkin: PatrolUpdateWithNoId = {
-            time: new Date(),
-            patrolId: updateVals[0],
-            currentLocationId: updateVals[1],
-            targetLocationId: updateVals[2],
-        };
-
-        // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
-        if(!this.updateService.isPatrolUpdateValid(checkin, false, false, true)) {
-            console.error("Invalid patrol update in masterCheckin:", checkin);
+        const type = formData['type']; // "checkin" or "checkout"
+        if(type === 'checkin') {
+            const locationId = Number.parseInt(formData['singleLocation']);
+            patrolUpdate.currentLocationId = locationId;
+            patrolUpdate.targetLocationId = locationId;
+        } else if(type === 'checkout') {
+            const fromLocationId = Number.parseInt(formData['fromLocation']);
+            const toLocationId = Number.parseInt(formData['toLocation']);
+            patrolUpdate.currentLocationId = fromLocationId;
+            patrolUpdate.targetLocationId = toLocationId;
+        } else {
             return responses.response_code(400);
         }
 
-        this.updateService.updatePatrol(checkin);
+
+        // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
+        if(!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true)) {
+            console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
+            return responses.response_code(400);
+        }
+
+        this.updateService.updatePatrol(patrolUpdate);
 
         return responses.redirect("/master");
     }
@@ -302,7 +282,7 @@ class Server {
         const newStatus = statusParam === "open";
 
         this.locationService.changeLocationStatus(locationId, newStatus);
-        return responses.redirect(`/master/post?id=${locationId}`);
+        return responses.redirect(`${Endpoints.MasterPostStatus}?id=${locationId}`);
     }
 
 
@@ -315,15 +295,14 @@ class Server {
         return responses.redirect(`/master/patrol?id=${patrolId}`);
     }
 
-    deleteCheckin = async (request: Request): Promise<Response> => {
+    masterDeletePatrolUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
-        const checkinId = Number.parseInt(params.get("id"));
-        this.updateService.deleteUpdate(checkinId);
+        const updateId = Number.parseInt(params.get("id"));
+        this.updateService.deleteUpdate(updateId);
         return responses.ok();
     }
 
-    // TODO: Update to work with new PatrolUpdate structure
-    mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
+    mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
         const checkin = this.updateService.updateById(checkinId);
@@ -339,6 +318,10 @@ class Server {
         return responses.forbidden();
     }
 
+    masterHeartbeat = async (_request: Request): Promise<Response> => {
+        return responses.ok();
+    }
+
 }
 
 /**
@@ -350,7 +333,8 @@ const readArguments = (): Command => {
         .option(
             "-a, --address <address>",
             "Address the server is hosted on",
-            "127.0.0.1"
+            // "127.0.0.1"
+            "192.168.1.138"
         )
         .option(
             "-p, --port <port>",

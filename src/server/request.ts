@@ -3,10 +3,11 @@ import * as http from 'http'
 import * as responses from "./response";
 
 export interface Request {
-    user: User,
-    url: URL,
+    user: User;
+    url: URL;
     headers: { [key: string]: string };
     cookies: { [key: string]: string };
+    body?: string;
 }
 
 export const enum UserType {
@@ -68,7 +69,7 @@ export class Router {
      */
     async handleRequest(incoming: http.IncomingMessage): Promise<Response> {
         try {
-            let request = this.parseRequest(incoming);
+            let request = await this.parseRequest(incoming);
             let path = request.url.pathname;
 
             // Asset directories
@@ -113,46 +114,63 @@ export class Router {
             || (userType === UserType.None);
     }
 
-    /**
-     * Parse incoming http message.
-     *
-     * @param request the incoming http method
-     * @returns a new `Request` object
-     */
-    parseRequest(request: http.IncomingMessage): Request {
-        const url = new URL(`http://${this.address}:${this.port}${request.url}`);
+// ...existing code...
+/**
+ * Parse incoming http message.
+ *
+ * @param request the incoming http method
+ * @returns a new `Request` object
+ */
+async parseRequest(request: http.IncomingMessage): Promise<Request> {
+    const url = new URL(`http://${this.address}:${this.port}${request.url}`);
 
-        const headers: { [key: string]: string } = {}
-        for(let header in request.headers) {
-            headers[header.toLowerCase()] = request.headers[header] as string;
-        }
-
-        const cookies: { [key: string]: string } = {};
-        if(headers["cookie"] !== undefined) {
-            headers["cookie"]
-                .split(";")
-                .forEach((cookieString) => {
-                    const trimmed = cookieString.trim();
-                    const splitPoint = trimmed.indexOf("=");
-                    const key = trimmed.slice(0, splitPoint);
-                    const value = trimmed.slice(splitPoint+1);
-                    cookies[key] = value;
-                });
-        }
-
-        const userIdentifier = cookies["identifier"] || headers["id"];
-        const user =
-            userIdentifier === undefined
-            ? new User(-1)
-            : this.users.userFromIdentifier(userIdentifier);
-
-        return {
-            user: user,
-            url: url,
-            headers: headers,
-            cookies: cookies,
-        };
+    const headers: { [key: string]: string } = {}
+    for(let header in request.headers) {
+        headers[header.toLowerCase()] = request.headers[header] as string;
     }
+
+    const cookies: { [key: string]: string } = {};
+    if(headers["cookie"] !== undefined) {
+        headers["cookie"]
+            .split(";")
+            .forEach((cookieString) => {
+                const trimmed = cookieString.trim();
+                const splitPoint = trimmed.indexOf("=");
+                const key = trimmed.slice(0, splitPoint);
+                const value = trimmed.slice(splitPoint+1);
+                cookies[key] = value;
+            });
+    }
+
+    const userIdentifier = cookies["identifier"] || headers["id"];
+    const user =
+        userIdentifier === undefined
+        ? new User(-1)
+        : this.users.userFromIdentifier(userIdentifier);
+
+    // Get body asynchronously
+    let body: string | null = null;
+    if(request.method === "POST" || request.method === "PUT") {
+        const chunks: Buffer[] = [];
+        for await (const chunk of request) {
+            chunks.push(chunk);
+        }
+        //@ts-ignore
+        body = Buffer.concat(chunks).toString();
+    }
+
+    if(body)
+        console.log(body);
+
+    return {
+        user: user,
+        url: url,
+        headers: headers,
+        cookies: cookies,
+        body: body
+    };
+}
+// ...existing code...
 }
 
 type Response = responses.Response;

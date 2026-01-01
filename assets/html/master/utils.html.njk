@@ -1,29 +1,30 @@
-{% macro checkins(checkins) %}
+{% macro updates(updates) %}
     <table cellspacing="0" cellpadding="0">
         <tr>
             <td class="bold">Patrulje</td>
             <td class="bold">Melding</td>
             <td class="bold">Tidspunkt</td>
+            <td class="bold">Handling</td>
         </tr>
-        {% for checkin in checkins %}
+        {% for update in updates %}
             <tr class="hover-grey">
                 <td>
-                    <a href="/master/patrol?id={{checkin.patrolId}}"
+                    <a href="/master/patrol?id={{update.patrolId}}"
                        class="hover-underline">
-                        Patrulje {{checkin.patrolId}}
+                        Patrulje {{update.patrolId}}
                     </a>
                 </td>
                 <td>
-                    <a href="/master/post?id={{checkin.locationId}}"
+                    <a href="/master/location?id={{update.currentLocationId}}"
                        class="hover-underline">
-                        {{checkin | formatPatrolLocation}}
+                        {{update | formatPatrolLocation}}
                     </a>
                 </td>
-                <td>{{checkin.time | clock}}</td>
+                <td>{{update.time | clock}}</td>
                 <td>
                     <button
-                        hx-confirm="Vil du slette dette checkin?"
-                        hx-post="/master/deleteCheckin?id={{checkin.id}}"
+                        hx-confirm="Vil du slette dette update?"
+                        hx-post="/master/deletePatrolUpdate?id={{update.id}}"
                         hx-target="closest tr"
                         hx-swap="outerHTML">Slet
                     </button>
@@ -33,7 +34,7 @@
     </table>
 {% endmacro %}
 
-{% macro posts(posts) %}
+{% macro locations(locations) %}
     <table cellspacing="0" cellpadding="0">
         <tr>
             <td class="bold">Post</td>
@@ -41,17 +42,17 @@
             <td class="bold">På post</td>
             <td class="bold">Forladt post</td>
         </tr>
-        {% for post in posts %}
+        {% for location in locations %}
             <tr class="hover-grey">
                 <td>
                     {# {{post.id}}. #}
-                    <a href="/master/post?id={{post.id}}" class="hover-underline">
-                         {{post.name}}
+                    <a href="/master/location?id={{location.id}}" class="hover-underline">
+                         {{location.name}}
                     </a>
                 </td>
-                <td>På vej: {{post.patrolsOnTheirWay}}</td>
-                <td>På post: {{post.patrolsOnPost}}</td>
-                <td>Forladt post: {{post.patrolsCheckedOut}}</td>
+                <td>På vej: {{location.patrolsOnTheirWay}}</td>
+                <td>På post: {{location.patrolsOnPost}}</td>
+                <td>Forladt post: {{location.patrolsCheckedOut}}</td>
             </tr>
         {% endfor %}
     </table>
@@ -76,7 +77,7 @@
                     </td>
                     <td>
                         <a class="bold clickable"
-                           hx-get="{{ patrolsUrl("post", locationId, selection) }}"
+                           hx-get="{{ patrolsUrl("location", locationId, selection) }}"
                            hx-trigger="click"
                            hx-target="closest .patrols"
                            hx-swap="outerHTML">Lokation</button>
@@ -99,45 +100,19 @@
                             </a>
                         </td>
                         <td>
-                            {% if patrol.location.locationId >= 0 %}
-                                <a href="/master/post?id={{patrol.location.locationId}}"
+                            {% if patrol.lastUpdate %}
+                                <a href="/master/location?id={{patrol.lastUpdate.targetLocationId}}"
                                    class="hover-underline">
-                                    {{patrol.location | formatPatrolLocation}}
+                                    {{patrol.lastUpdate | formatPatrolLocation}}
                                 </a>
                             {% else %}
-                                {{patrol.location | formatPatrolLocation}}
+                                {{patrol.lastUpdate | formatPatrolLocation}}
                             {% endif %}
                         </td>
-                        <td>{{patrol.lastCheckin.time | clock}}</td>
+                        <td>{{patrol.lastUpdate.time | clock}}</td>
                     </tr>
                 {% endfor %}
             </table>
         {% endif %}
     </div>
-{% endmacro %}
-
-{% macro graph(patrols) %}
-{% set height = 3 + (patrols | length) * 2%}
-{% set posts = patrols[0].posts | length %}
-<svg viewBox="0 0 100 {{height}}">
-    <style>
-        text {
-            font: bold 1px sans-serif;
-        }
-    </style>
-
-    {% for patrol in patrols %}
-        {% set y = 1 + (loop.index - 1) * 2%}
-        {% set linex = ((patrol.amount) / posts) * 95.5 + 3 %}
-        <text x="1%" y="{{y + 0.3}}">{{loop.index}}</text>
-        <line x1="3%" y1="{{y}}" x2="{{linex}}%" y2="{{y}}" stroke="lightgreen" stroke-width="0.4" />
-        <line x1="{{linex}}%" y1="{{y}}" x2="98.5%" y2="{{y}}" stroke="lightgrey" stroke-width="0.4" />
-        {% for post in patrol.posts %}
-            {% set x = ((loop.index - 1) / posts) * 95.5 + 3 %}
-            {% set color = "lightgreen" if post else "lightgrey" %}
-            <circle cx="{{x}}%" cy="{{y}}" r="0.5" fill="{{color}}" stroke-width="0.1" stroke="white" />
-        {% endfor %}
-        <text x="98.5%" y="{{y}}.3">🏁</text>
-    {% endfor %}
-</svg>
 {% endmacro %}

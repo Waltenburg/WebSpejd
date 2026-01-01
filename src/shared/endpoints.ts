@@ -54,13 +54,6 @@ export const enum Endpoints {
     Logout = "/logout",
 
     /**
-     * Fetch update endpoint for mandskab users.
-     * Accessible to: Users logged in as Mandskab.
-     * Purpose: Returns updated patrol information and location data for a specific post since last update
-     */
-    GetUpdate = "/getUpdate",
-
-    /**
      * Fetch complete data endpoint for mandskab users.
      * Accessible to: Users logged in as Mandskab.
      * Purpose: Returns comprehensive data about patrols at location, patrols en route, location name, and available routes
@@ -93,35 +86,35 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays interface for master users to manually create and record patrol check-ins
      */
-    MasterCheckin = "/master/checkin",
+    MasterAddPatrolUpdatePage = "/master/updatePage",
 
     /**
      * Master add check-in endpoint.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Processes and saves manually created patrol check-ins from master administrators
      */
-    MasterAddCheckin = "/master/addcheckin",
+    MasterAddPatrolUpdate = "/master/addPatrolUpdate",
 
     /**
      * Master check-ins list page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays a comprehensive list of all patrol check-ins in the system with history and status
      */
-    MasterCheckins = "/master/checkins",
+    MasterPatrolUpdates = "/master/patrolUpdates",
 
     /**
      * Master posts (locations) list page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays all posts/locations in the system with their current status and occupancy information
      */
-    MasterPosts = "/master/posts",
+    MasterPosts = "/master/locations",
 
     /**
      * Master single post detail page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific post including patrols present and incoming
      */
-    MasterPost = "/master/post",
+    MasterPost = "/master/location",
 
     /**
      * Master patrols list page.
@@ -149,7 +142,7 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Allows master administrators to delete any check-in record from the system
      */
-    MasterDeleteCheckin = "/master/deleteCheckin",
+    MasterDeletePatrolUpdate = "/master/deletePatrolUpdate",
 
     /**
      * Master analytics graph page.
@@ -163,5 +156,7 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Allows master users to change post status between open and closed
      */
-    MasterPostStatus = "/master/postStatus",
+    MasterPostStatus = "/master/locationStatus",
+
+    MasterHeartbeat = "/master/heartbeat",
 }
