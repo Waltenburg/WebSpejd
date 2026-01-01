@@ -82,6 +82,7 @@ class Server {
             .file(Endpoints.HomeAlias, `${assets}/html/home.html`)
             // .file("/plot", `${assets}/html/patruljePlot.html`)
             .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
+            .file(Endpoints.Contact, `${assets}/html/contact.html`)
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
             .route(Endpoints.GetData, UserType.Post, this.locationDataForMandskab)
@@ -183,13 +184,21 @@ class Server {
         const onLocation = this.locationService.patrolsOnLocation(user.locationId);
         const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId);
         const locationsFromRoutes = routesFromLocation.map(route => this.locationService.locationInfo(route.toLocationId));
+        const latestUpdates = this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
+        .map(update => {
+            return {
+                ...update,
+                patrol: this.patrolService.patrolInfo(update.patrolId),
+                targetLocationName: this.locationService.locationInfo(update.targetLocationId)?.name || "Ukendt destination"
+            };
+        });
 
         const data: MandskabData = {
             patrolsOnLocation: onLocation.map(p => this.patrolService.patrolInfo(p)),
             patrolsTowardsLocation: towardsLocation.map(p => this.patrolService.patrolInfo(p)),
             location: location,
             routesTo: locationsFromRoutes,
-            latestUpdates: this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
+            latestUpdates: latestUpdates
 
         };
 
@@ -315,15 +324,13 @@ class Server {
 
     // TODO: Update to work with new PatrolUpdate structure
     mandskabDeleteCheckin = async (request: Request): Promise<Response> => {
-        const timeToUndo = 1000 * 20; // 20 seconds
-
         const params = request.url.searchParams;
         const checkinId = Number.parseInt(params.get("id"));
         const checkin = this.updateService.updateById(checkinId);
         const locationIdAtCheckin = checkin?.currentLocationId;
 
-        const requestAndCheckinMatch = locationIdAtCheckin == request.user.locationId && locationIdAtCheckin != null;
-        const checkinIsRecent = checkin?.time.getTime() > Date.now() - timeToUndo;
+        const requestAndCheckinMatch = locationIdAtCheckin === request.user.locationId && locationIdAtCheckin != null;
+        const checkinIsRecent = checkin?.time.getTime() > Date.now() - SETTINGS.MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB;
 
         if(requestAndCheckinMatch && checkinIsRecent) {
             this.updateService.deleteUpdate(checkinId);
@@ -402,6 +409,11 @@ async function main(): Promise<void> {
     const locationService = new LocationService(db);
     const patrolService = new PatrolService(db);
     const updateService = new UpdateService(db);
+
+    if(resetDatabase){
+        console.log("Resetting database: Deleting all patrol updates");
+        updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
+    }
 
     const server = new Server(address, port, assets, db,
         adminService, locationService, patrolService, updateService

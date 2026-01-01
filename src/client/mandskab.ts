@@ -1,4 +1,4 @@
-import type { PatrolInfoToMandskab } from "@shared/responseTypes";
+import type { FullPatrolUpdateInfo, PatrolInfoToMandskab } from "@shared/responseTypes";
 import { sendRequest } from "./sendHTTPRequest.js";
 // import { PatrolUpdateWithNoId } from "../database/types";
 import { Endpoints } from "@shared/endpoints";
@@ -28,8 +28,7 @@ class Mandskab {
     patrolsOnLocation: PatrolInfoToMandskab[] = [];
     patrolsTowardsLocation: PatrolInfoToMandskab[] = [];
     currentLocationId = Number.NaN;
-    recentActions = new autoEmptyingFILO<number>(20, 5 * 60 * 1000, 500, () => this.undoButton.disabled = true); //Max 20 actions, max 5 minutes old, clean every 0.5 seconds, disable undo button when empty
-
+    recentActions: autoEmptyingFILO<number>;
     reloadDataInterval: number;
     errorDialogOpen = false;
 
@@ -41,8 +40,14 @@ class Mandskab {
         this.recentActionsTable = document.getElementById("recentActionsTable") as HTMLTableElement;
         this.locationNameHeader = document.getElementById("locationNameHeader") as HTMLElement;
 
+        this.recentActions = new autoEmptyingFILO<number>(10, 20 * 1000, 1000, () => {
+            this.undoButton.disabled = true;
+        });
         this.reloadDataInterval = window.setInterval(this.reloadData, secondsBetweenDataReload * 1000);
         this.reloadData();
+
+        // Set up undo button
+        this.undoButton.addEventListener("click", () => this.undoLastAction());
     }
 
     private reloadData = (): void => {
@@ -54,7 +59,7 @@ class Mandskab {
 
             this.addPatrolsToLists(this.patrolsTowardsLocation, this.patrolsOnLocation);
             this.setNextLocationSelector(data.routesTo);
-            this.setRecentActionsTable(data.latestUpdates);
+            this.addRecentActionsTable(data.latestUpdates, this.currentLocationId);
             this.locationNameHeader.innerHTML = data.location.name;
         }
 
@@ -62,8 +67,8 @@ class Mandskab {
             window.clearInterval(this.reloadDataInterval);
             this.showDialog(
                 "Der skete en fejl ved hentning af patruljer. Hvis fejlen fortsætter, kontroller internetforbindelsen eller log ind igen.",
-                [ "Prøv igen", () => this.reloadData() ],
-                [ "Log ud", () => this.logout() ]
+                ["Prøv igen", () => this.reloadData()],
+                ["Log ud", () => this.logout()]
             );
         }
 
@@ -71,11 +76,11 @@ class Mandskab {
 
         sendRequest(Endpoints.GetData, headers, success, fail);
     }
-        
+
     public clickedPatrol = (val: HTMLInputElement, action: Action): void => {
         const patrolID = parseInt(val.id.substring(1));
         const patrol = this.getPatrolById(patrolID);
-        if(!patrol){
+        if (!patrol) {
             alert("Kunne ikke finde patrulje med ID " + patrolID);
             return;
         }
@@ -89,10 +94,10 @@ class Mandskab {
                 patrolId: patrolID,
                 targetLocationId: targetLocationId
             }
-            const header = new Headers({update: JSON.stringify(patrolUpdate)});
+            const header = new Headers({ update: JSON.stringify(patrolUpdate) });
             const succesReciever = (status: number, headers: Headers) => {
                 const checkinID = headers.get("checkinID");
-                if(checkinID == null){
+                if (checkinID == null) {
                     alert("Mulig fejl ved opdaternig. Kontroller at opdateringen er registreret korrekt.");
                     this.reloadData();
                     return;
@@ -104,8 +109,8 @@ class Mandskab {
             const onFail = (err: number) => {
                 this.showDialog(
                     "Der skete en fejl ved afsendelse af opdatering. Du kan prøve igen eller genindlæse siden.",
-                    [ "Prøv igen", () => onConfirm() ],
-                    [ "Genindlæs side", () => this.reloadData() ]
+                    ["Prøv igen", () => onConfirm()],
+                    ["Genindlæs side", () => this.reloadData()]
                 );
             }
             sendRequest(Endpoints.SendUpdate, header, succesReciever, onFail);
@@ -114,30 +119,41 @@ class Mandskab {
         const nextLocationName = this.nextLocationSelector.options[this.nextLocationSelector.selectedIndex].text;
         const message = `Vil du checke #${patrolNumber} ${patrolName} ${action === Action.checkinToLocation ? ("ind på denne post") : ("ud imod " + nextLocationName)}?`;
         this.showDialog(message,
-            [`Ja, check patrulje ${action === Action.checkinToLocation ? "ind" : "ud"}` , onConfirm],
-            ["Nej, annuller", () => {}]);
+            [`Ja, check patrulje ${action === Action.checkinToLocation ? "ind" : "ud"}`, onConfirm],
+            ["Nej, annuller", () => { }]);
     }
 
     public undoLastAction = (): void => {
-        const lastActionId = this.recentActions.get();
-        if(lastActionId == null)
+        const lastActionId = this.recentActions.getTop()?.v;
+        if (lastActionId == null)
             return;
 
-        sendRequest(`${Endpoints.DeleteCheckin}?id=${lastActionId}`, null, (status, headers) => {
-            this.reloadData();
-        }, err => {
-            alert("Der skete en fejl ved fortrydelse af opdatering.")
-            this.reloadData();
-        })
+        const onConfirm = (): void => {
+            sendRequest(`${Endpoints.DeleteCheckin}?id=${lastActionId}`, null, (status, headers) => {
+                this.recentActions.pop();
+                this.reloadData();
+            }, err => {
+                this.showDialog(
+                    "Der skete en fejl ved fortrydelse af den seneste handling. Du kan prøve igen eller genindlæse siden.",
+                    ["Prøv igen", () => onConfirm()],
+                    ["Genindlæs side", () => this.reloadData()]
+                );
+            });
+        }
+
+        this.showDialog("Er du sikker på, at du vil fortryde den seneste handling?",
+            ["Ja, fortryd", onConfirm],
+            ["Nej, annuller", () => { }]
+        )
     }
-    
+
     private getPatrolById = (patrolId: number): PatrolInfoToMandskab | undefined => {
         const onLocation = this.patrolsOnLocation.find(p => p.id === patrolId);
         const towardsLocation = this.patrolsTowardsLocation.find(p => p.id === patrolId);
-    
+
         return onLocation ?? towardsLocation;
     }
-    
+
     private addPatrolsToLists = (patrolsTowardsLocation: PatrolInfoToMandskab[], patrolsOnLocation: PatrolInfoToMandskab[]): void => {
         this.listPatrolsOnLocation.innerHTML = "";
         this.listPatrolsTowardsLocation.innerHTML = "";
@@ -148,11 +164,11 @@ class Mandskab {
             newElement.type = "button"
             newElement.id = "p" + patrol.id.toString()
             newElement.value = `#${patrol.number} - ${patrol.name}`;
-        
+
             // newElement.setAttribute("onclick", `Client.Mandskab2.clickedPatrol(this, ${action})`);
             newElement.addEventListener("click", () => this.clickedPatrol(newElement, action));
 
-            if(action === Action.checkinToLocation)
+            if (action === Action.checkinToLocation)
                 this.listPatrolsTowardsLocation.appendChild(newElement);
             else
                 this.listPatrolsOnLocation.appendChild(newElement);
@@ -161,8 +177,20 @@ class Mandskab {
 
         patrolsOnLocation.forEach(patrol => addPatrolToList(patrol, Action.checkoutFromLocation));
         patrolsTowardsLocation.forEach(patrol => addPatrolToList(patrol, Action.checkinToLocation));
+
+        if (patrolsOnLocation.length === 0) {
+            const noPatrolText = document.createElement("p");
+            noPatrolText.textContent = "Ingen patruljer";
+            this.listPatrolsOnLocation.appendChild(noPatrolText);
+        }
+
+        if (patrolsTowardsLocation.length === 0) {
+            const noPatrolText = document.createElement("p");
+            noPatrolText.textContent = "Ingen patruljer";
+            this.listPatrolsTowardsLocation.appendChild(noPatrolText);
+        }
     }
-    
+
     private setNextLocationSelector = (routesTo: Location[]): void => {
         const currentValue = this.nextLocationSelector.value;
 
@@ -174,19 +202,44 @@ class Mandskab {
             this.nextLocationSelector.add(option);
         });
 
-        if(routesTo.find(loc => loc.id.toString() === currentValue)) {
+        if (routesTo.find(loc => loc.id.toString() === currentValue)) {
             this.nextLocationSelector.value = currentValue;
-        }else if(routesTo.length > 0) {
+        } else if (routesTo.length > 0) {
             this.nextLocationSelector.value = routesTo[0].id.toString();
         }
     }
 
-    private setRecentActionsTable = (latestUpdates: PatrolUpdate[]): void => {
-        
+    private addRecentActionsTable = (latestUpdates: FullPatrolUpdateInfo[], currentLocationId: number): void => {
+        const tbody = this.recentActionsTable.querySelector("tbody");
+        if (!tbody) return;
+
+        tbody.innerHTML = "";
+
+        latestUpdates.forEach(update => {
+            const patrol = update.patrol;
+
+            const row = document.createElement("tr");
+
+            const timeCell = document.createElement("td");
+            const updateTime = new Date(update.time);
+            timeCell.textContent = updateTime.toLocaleTimeString();
+            row.appendChild(timeCell);
+
+            const patrolCell = document.createElement("td");
+            patrolCell.textContent = `#${patrol.number} ${patrol.name}`;
+            row.appendChild(patrolCell);
+
+            const actionCell = document.createElement("td");
+            const isCheckIn = update.targetLocationId === currentLocationId;
+            actionCell.textContent = isCheckIn ? "Check ind" : `Check ud imod ${update.targetLocationName}`;
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
     }
 
     private showDialog = (message: string, option1: [string, () => void], option2: [string, () => void]): void => {
-        if(this.errorDialogOpen) return;
+        if (this.errorDialogOpen) return;
         this.errorDialogOpen = true;
 
         // Create overlay
@@ -247,6 +300,8 @@ class Mandskab {
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
+            outline: 3px solid transparent;
+            transition: outline 0.15s, background-color 0.15s;
         `;
         opt1Button.addEventListener("click", () => {
             this.closeErrorDialog(overlay);
@@ -257,6 +312,12 @@ class Mandskab {
         });
         opt1Button.addEventListener("mouseout", () => {
             opt1Button.style.backgroundColor = "#4CAF50";
+        });
+        opt1Button.addEventListener("focus", () => {
+            opt1Button.style.outline = "3px solid #2e7d32";
+        });
+        opt1Button.addEventListener("blur", () => {
+            opt1Button.style.outline = "3px solid transparent";
         });
 
         // Create logout button
@@ -271,6 +332,8 @@ class Mandskab {
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
+            outline: 3px solid transparent;
+            transition: outline 0.15s, background-color 0.15s;
         `;
         opt2Button.addEventListener("click", () => {
             this.closeErrorDialog(overlay);
@@ -282,12 +345,21 @@ class Mandskab {
         opt2Button.addEventListener("mouseout", () => {
             opt2Button.style.backgroundColor = "#f44336";
         });
+        opt2Button.addEventListener("focus", () => {
+            opt2Button.style.outline = "3px solid #b71c1c";
+        });
+        opt2Button.addEventListener("blur", () => {
+            opt2Button.style.outline = "3px solid transparent";
+        });
 
         buttonContainer.appendChild(opt1Button);
         buttonContainer.appendChild(opt2Button);
         dialog.appendChild(buttonContainer);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+
+        // Focus the first button for accessibility and trigger focus styling
+        opt1Button.focus();
     }
 
     private closeErrorDialog = (overlay: HTMLElement): void => {
@@ -302,18 +374,21 @@ class Mandskab {
         window.location.href = "/";
     }
 }
-
+interface valueTimestampPair<T> {
+    v: T;
+    timestamp: number;
+}
 class autoEmptyingFILO<T> {
     private maxSize: number;
     private timeToLive: number; //In milliseconds
-    private arr: { v: T; timestamp: number }[] = [];
-    private autoCleanIntervalId: number;
+    private arr: valueTimestampPair<T>[] = [];
+    // private autoCleanIntervalId: number;
     private isEmptyCallback?: () => void;
 
     constructor(maxSize: number, timeToLive: number, autoCleanInterval = 1000, isEmptyCallback?: () => void) {
         this.maxSize = maxSize;
         this.timeToLive = timeToLive;
-        this.autoCleanIntervalId = window.setInterval(this.clean, autoCleanInterval);
+        window.setInterval(this.clean, autoCleanInterval);
         this.isEmptyCallback = isEmptyCallback;
     }
 
@@ -322,36 +397,35 @@ class autoEmptyingFILO<T> {
         this.arr.push({ v: item, timestamp: Date.now() });
     }
 
-    public get = (): T | null => {
+    public getTop = (): valueTimestampPair<T> | null => {
         this.clean();
-        if(this.arr.length == 0)
+        if (this.arr.length == 0)
             return null;
-        return this.arr.pop() as T;
+        return this.arr[this.arr.length - 1];
+    }
+
+    public pop = (): valueTimestampPair<T> | null => {
+        this.clean();
+        return this.arr.pop() || null;
     }
 
     private clean = (): void => {
         const now = Date.now();
 
         const overLimit = this.arr.length - this.maxSize;
-        if(overLimit > 0) {
+        if (overLimit > 0) {
             this.arr.splice(0, overLimit);
         }
 
         const oldestValidTimestamp = now - this.timeToLive;
-        let oldestValidIndex = 0;
-        for (let i = 0; i < this.arr.length; i++) {
-            const item = this.arr[i];
-            if(item.timestamp >= oldestValidTimestamp) {
-                oldestValidIndex = i;
-                break;
-            }
-        }
-        if(oldestValidIndex > 0) {
-            this.arr.splice(0, oldestValidIndex);
-        }
-        if(this.arr.length == 0 && this.isEmptyCallback != null) {
+        let numOfInvalidItems = this.arr.findIndex(item => item.timestamp >= oldestValidTimestamp);
+        numOfInvalidItems = numOfInvalidItems === -1 ? this.arr.length : numOfInvalidItems;
+
+        this.arr.splice(0, numOfInvalidItems);
+
+        if (this.arr.length == 0 && this.isEmptyCallback != null) {
             this.isEmptyCallback();
         }
     }
-    
+
 }

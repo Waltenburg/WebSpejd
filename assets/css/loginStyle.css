@@ -1,56 +1,345 @@
+/* ========== Global Styles ========== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body,
 html {
     height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-.bg {
+body {
     background-image: url(../images/bg-login.jpg);
-    height: 100%;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    z-index: -10;
+    background-attachment: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    position: relative;
 }
 
-h1 {
+/* Light overlay to ensure readability while keeping background visible */
+.bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 0;
+}
+
+/* ========== Login Container ========== */
+.login-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== Logo Section ========== */
+.logo-section {
     text-align: center;
-    font-size: 100px;
-    font-family: Verdana, Geneva, Tahoma, sans-serifS;
-    opacity: 100%;
+    margin-bottom: 2rem;
 }
 
-h2 {
-    text-align: center;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-size: 3em;
-    opacity: 100%;
+.logo {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+    animation: float 3s ease-in-out infinite;
 }
 
-p {
-    text-align: left;
-    margin-left: 5%;
-    margin-bottom: 5px;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-size: 2.5em;
-    opacity: 100%;
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.app-title {
+    font-size: 4rem;
+    font-weight: 700;
     color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+    margin: 0;
 }
 
-button {
-    opacity: 100%;
-    font-size: 2.5em;
-    width: 90%;
-    display: block;
-    margin: auto;
-    margin-top: 1em;
+/* ========== Login Card ========== */
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-input {
-    opacity: 100%;
-    width: 90%;
-    height: 50px;
-    margin: auto;
-    display: block;
-    font-size: 2em;
-    /* text-align: center; */
+.login-heading {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
 }
+
+.login-subtext {
+    text-align: center;
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+/* ========== Form Styles ========== */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input {
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #004a8f;
+    box-shadow: 0 0 0 3px rgba(0, 74, 143, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+/* ========== Button Styles ========== */
+.btn {
+    padding: 0.875rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #004a8f 0%, #0062b8 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0062b8 0%, #0077dd 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 74, 143, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: white;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* ========== Saved Logins Section ========== */
+.saved-logins {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.saved-logins-text {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 600px) {
+    .login-container {
+        max-width: 100%;
+    }
+    
+    .logo {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .app-title {
+        font-size: 2.5rem;
+    }
+    
+    .login-card {
+        padding: 2.5rem 2rem;
+    }
+    
+    .login-heading {
+        font-size: 2rem;
+    }
+    
+    .login-subtext {
+        font-size: 1.1rem;
+    }
+    
+    .form-group label {
+        font-size: 1.1rem;
+    }
+    
+    .form-group input {
+        font-size: 1.2rem;
+        padding: 1rem 1.2rem;
+    }
+    
+    .btn {
+        font-size: 1.2rem;
+        padding: 1rem 1.5rem;
+    }
+    
+    .saved-logins-text {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .logo {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .app-title {
+        font-size: 2.2rem;
+    }
+    
+    .login-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .login-heading {
+        font-size: 1.8rem;
+    }
+}
+/* Contact widget on login */
+.contact-widget {
+    margin-top: 1.75rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.contact-widget__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.contact-widget__btn {
+    padding: 0.6rem 0.9rem;
+    background: linear-gradient(135deg, #004a8f 0%, #0062b8 100%);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 74, 143, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contact-widget__btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(0, 74, 143, 0.3);
+}
+
+@media (max-width: 600px) {
+    .contact-widget {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+    .contact-widget__btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+

@@ -33,6 +33,13 @@ export const enum Endpoints {
     Mandskab = "/mandskab",
 
     /**
+     * Contact page - contact information.\
+     * Accessible to: All users\
+     * Purpose: Provides contact details.
+     */
+    Contact = "/contact",
+
+    /**
      * User authentication endpoint.\
      * Accessible to: Unauthenticated users.\
      * Purpose: Authenticates users by validating password.

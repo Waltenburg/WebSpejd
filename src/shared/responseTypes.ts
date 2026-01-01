@@ -7,10 +7,15 @@ export interface MandskabData {
     patrolsTowardsLocation: PatrolInfoToMandskab[];
     location: Location;
     routesTo: Location[];
-    latestUpdates: PatrolUpdate[];
+    latestUpdates: FullPatrolUpdateInfo[];
 }
 
 export interface PatrolUpdateFromMandskab {
     patrolId: number;
     targetLocationId: number;
+}
+
+export interface FullPatrolUpdateInfo extends Omit<PatrolUpdate, "patrolId"> {
+    patrol: PatrolInfoToMandskab;
+    targetLocationName: string;
 }
