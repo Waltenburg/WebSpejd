@@ -8,6 +8,6 @@
         "rootDir": "./",
         "outDir": "../../target/server"
     },
-    "include": ["./**/*.ts"],
+    "include": ["./**/*.ts", "pages/demo.tsx"],
     "references": [{ "path": "../shared" }]
 }

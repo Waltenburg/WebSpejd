@@ -18,7 +18,8 @@
         "better-sqlite3": "^11.9.1",
         "commander": "^12.1.0",
         "nunjucks": "^3.2.4",
-        "rimraf": "^6.0.1"
+        "rimraf": "^6.0.1",
+        "typed-html": "^3.0.1"
     },
     "scripts": {
         "start": "node target/server/server.js",
