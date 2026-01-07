@@ -1,3 +1,7 @@
+/** TODO
+ * - Currently, if no next locations are available, the user cannot check patrols in.
+ */
+
 import type { FullPatrolUpdateInfo, PatrolInfoToMandskab } from "@shared/responseTypes";
 import { sendRequest } from "./sendHTTPRequest.js";
 // import { PatrolUpdateWithNoId } from "../database/types";
@@ -5,6 +9,7 @@ import { Endpoints } from "@shared/endpoints";
 import type { PatrolUpdateFromMandskab, MandskabData } from "@shared/responseTypes";
 import type { Location, PatrolUpdate } from "@shared/types";
 import { deleteCookie } from "./cookie.js";
+import { showDialog, isErrorDialogOpen} from "./dialog.js";
 
 const enum Action {
     checkinToLocation,
@@ -21,6 +26,7 @@ class Mandskab {
     listPatrolsOnLocation: HTMLElement;
     listPatrolsTowardsLocation: HTMLElement;
     nextLocationSelector: HTMLSelectElement;
+    nextLocationsAtLastLoad: number[] = [];
     undoButton: HTMLInputElement;
     recentActionsTable: HTMLTableElement;
     locationNameHeader: HTMLElement;
@@ -31,6 +37,8 @@ class Mandskab {
     recentActions: autoEmptyingFILO<number>;
     reloadDataInterval: number;
     errorDialogOpen = false;
+
+    firstLoad = true;
 
     constructor() {
         this.listPatrolsOnLocation = document.getElementById("listPåPost") as HTMLElement;
@@ -57,6 +65,11 @@ class Mandskab {
             this.patrolsTowardsLocation = data.patrolsTowardsLocation;
             this.currentLocationId = data.location.id;
 
+            if(this.firstLoad){
+                this.firstLoad = false;
+                this.nextLocationsAtLastLoad = data.routesTo.map(location => location.id);
+            }
+
             this.addPatrolsToLists(this.patrolsTowardsLocation, this.patrolsOnLocation);
             this.setNextLocationSelector(data.routesTo);
             this.addRecentActionsTable(data.latestUpdates, this.currentLocationId);
@@ -65,7 +78,7 @@ class Mandskab {
 
         const fail = (err: number) => {
             window.clearInterval(this.reloadDataInterval);
-            this.showDialog(
+            showDialog(
                 "Der skete en fejl ved hentning af patruljer. Hvis fejlen fortsætter, kontroller internetforbindelsen eller log ind igen.",
                 ["Prøv igen", () => this.reloadData()],
                 ["Log ud", () => this.logout()]
@@ -74,7 +87,7 @@ class Mandskab {
 
         const headers: Headers | null = null;
 
-        sendRequest(Endpoints.GetData, headers, success, fail);
+        sendRequest(Endpoints.GetMandskabData, headers, success, fail);
     }
 
     public clickedPatrol = (val: HTMLInputElement, action: Action): void => {
@@ -107,7 +120,7 @@ class Mandskab {
                 this.reloadData();
             };
             const onFail = (err: number) => {
-                this.showDialog(
+                showDialog(
                     "Der skete en fejl ved afsendelse af opdatering. Du kan prøve igen eller genindlæse siden.",
                     ["Prøv igen", () => onConfirm()],
                     ["Genindlæs side", () => this.reloadData()]
@@ -118,7 +131,7 @@ class Mandskab {
 
         const nextLocationName = this.nextLocationSelector.options[this.nextLocationSelector.selectedIndex].text;
         const message = `Vil du checke #${patrolNumber} ${patrolName} ${action === Action.checkinToLocation ? ("ind på denne post") : ("ud imod " + nextLocationName)}?`;
-        this.showDialog(message,
+        showDialog(message,
             [`Ja, check patrulje ${action === Action.checkinToLocation ? "ind" : "ud"}`, onConfirm],
             ["Nej, annuller", () => { }]);
     }
@@ -133,7 +146,7 @@ class Mandskab {
                 this.recentActions.pop();
                 this.reloadData();
             }, err => {
-                this.showDialog(
+                showDialog(
                     "Der skete en fejl ved fortrydelse af den seneste handling. Du kan prøve igen eller genindlæse siden.",
                     ["Prøv igen", () => onConfirm()],
                     ["Genindlæs side", () => this.reloadData()]
@@ -141,7 +154,7 @@ class Mandskab {
             });
         }
 
-        this.showDialog("Er du sikker på, at du vil fortryde den seneste handling?",
+        showDialog("Er du sikker på, at du vil fortryde den seneste handling?",
             ["Ja, fortryd", onConfirm],
             ["Nej, annuller", () => { }]
         )
@@ -194,12 +207,35 @@ class Mandskab {
     private setNextLocationSelector = (routesTo: Location[]): void => {
         const currentValue = this.nextLocationSelector.value;
 
+        let nextLocationsAtThisLoad = routesTo.map(location => location.id);
+
+        // TODO do this with a queing system to queue multiple warnings if needed
+        const warnUser = (): void => {
+            showDialog(
+                "Der er sket en ændring i de tilgængelige næste poster. Sikr dig at du har valgt den rigtige post før du checker ud.",
+                ["OK", () => { }],
+                null
+            );
+        }
+
+        if(this.nextLocationsAtLastLoad.length !== nextLocationsAtThisLoad.length ||
+            !this.nextLocationsAtLastLoad.every((value, index) => value === nextLocationsAtThisLoad[index])){
+            if (!isErrorDialogOpen()){
+                warnUser();
+                this.nextLocationsAtLastLoad = nextLocationsAtThisLoad;
+            }
+        }
+
+
+
         this.nextLocationSelector.innerHTML = "";
         routesTo.forEach(location => {
             const option = document.createElement("option");
             option.value = location.id.toString();
             option.text = location.name;
             this.nextLocationSelector.add(option);
+
+
         });
 
         if (routesTo.find(loc => loc.id.toString() === currentValue)) {
@@ -236,135 +272,6 @@ class Mandskab {
 
             tbody.appendChild(row);
         });
-    }
-
-    private showDialog = (message: string, option1: [string, () => void], option2: [string, () => void]): void => {
-        if (this.errorDialogOpen) return;
-        this.errorDialogOpen = true;
-
-        // Create overlay
-        const overlay = document.createElement("div");
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        `;
-
-        // Create dialog box
-        const dialog = document.createElement("div");
-        dialog.style.cssText = `
-            background-color: white;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-        `;
-
-        // Create message
-        const messageElement = document.createElement("p");
-        messageElement.textContent = message;
-        messageElement.style.cssText = `
-            margin: 0 0 24px 0;
-            font-size: 16px;
-            color: #333;
-            line-height: 1.5;
-        `;
-        dialog.appendChild(messageElement);
-
-        // Create button container
-        const buttonContainer = document.createElement("div");
-        buttonContainer.style.cssText = `
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        `;
-
-        // Create retry button
-        const opt1Button = document.createElement("button");
-        opt1Button.textContent = option1[0];
-        opt1Button.style.cssText = `
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            outline: 3px solid transparent;
-            transition: outline 0.15s, background-color 0.15s;
-        `;
-        opt1Button.addEventListener("click", () => {
-            this.closeErrorDialog(overlay);
-            option1[1]();
-        });
-        opt1Button.addEventListener("mouseover", () => {
-            opt1Button.style.backgroundColor = "#45a049";
-        });
-        opt1Button.addEventListener("mouseout", () => {
-            opt1Button.style.backgroundColor = "#4CAF50";
-        });
-        opt1Button.addEventListener("focus", () => {
-            opt1Button.style.outline = "3px solid #2e7d32";
-        });
-        opt1Button.addEventListener("blur", () => {
-            opt1Button.style.outline = "3px solid transparent";
-        });
-
-        // Create logout button
-        const opt2Button = document.createElement("button");
-        opt2Button.textContent = option2[0];
-        opt2Button.style.cssText = `
-            padding: 10px 20px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            outline: 3px solid transparent;
-            transition: outline 0.15s, background-color 0.15s;
-        `;
-        opt2Button.addEventListener("click", () => {
-            this.closeErrorDialog(overlay);
-            option2[1]();
-        });
-        opt2Button.addEventListener("mouseover", () => {
-            opt2Button.style.backgroundColor = "#da190b";
-        });
-        opt2Button.addEventListener("mouseout", () => {
-            opt2Button.style.backgroundColor = "#f44336";
-        });
-        opt2Button.addEventListener("focus", () => {
-            opt2Button.style.outline = "3px solid #b71c1c";
-        });
-        opt2Button.addEventListener("blur", () => {
-            opt2Button.style.outline = "3px solid transparent";
-        });
-
-        buttonContainer.appendChild(opt1Button);
-        buttonContainer.appendChild(opt2Button);
-        dialog.appendChild(buttonContainer);
-        overlay.appendChild(dialog);
-        document.body.appendChild(overlay);
-
-        // Focus the first button for accessibility and trigger focus styling
-        opt1Button.focus();
-    }
-
-    private closeErrorDialog = (overlay: HTMLElement): void => {
-        overlay.remove();
-        this.errorDialogOpen = false;
     }
 
     private logout = (): void => {
