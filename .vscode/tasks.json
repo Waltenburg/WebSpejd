@@ -9,6 +9,14 @@
 			],
 			"group": "build",
 			"label": "tsc: build - Development/tsconfig.json"
+		},
+		{
+			"label": "npm: build:watch",
+			"type": "npm",
+			"script": "build:watch",
+			"isBackground": true,
+			"group": "build",
+			"runOptions": { "runOn": "folderOpen" }
 		}
 	]
 }

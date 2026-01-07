@@ -2,10 +2,11 @@
 {% import "./utils.html.njk" as utils %}
 
 {% block body %}
-    <h2>Poster</h2>
-    <div hx-get="/master/locations" hx-trigger="every 5s">
-        {{ utils.locations(locations) }}
+    <h2>Poster og rute</h2>
+    <div hx-get="/master/getLocationsTable" hx-trigger="load">
+        {# {{ utils.locations(locations) }} #}
     </div>
+    <a href="/master/routes" class="button">Se ruter</a>
     <h2>Patruljer</h2>
     {{ utils.patrols(patrols) }}
     {# <h2>Graf</h2>

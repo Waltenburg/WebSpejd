@@ -1,3 +1,23 @@
+{% macro formatUpdateLocation(update) %}
+    {% if update == null %}
+        Ukendt lokation
+    {% elif update.targetLocationId == update.currentLocationId %}
+        På <a href="/master/location?id={{update.currentLocationId}}"
+              class="hover-underline">
+            {{update.currentLocationId | locationName}}
+        </a>
+    {% else %}
+        Mellem <a href="/master/location?id={{update.currentLocationId}}"
+               class="hover-underline">
+            {{update.currentLocationId | locationName}}
+        </a>
+        og <a href="/master/location?id={{update.targetLocationId}}"
+               class="hover-underline">
+            {{update.targetLocationId | locationName}}
+        </a>
+    {% endif %}
+{% endmacro %}
+
 {% macro updates(updates) %}
     <table cellspacing="0" cellpadding="0">
         <tr>
@@ -11,19 +31,16 @@
                 <td>
                     <a href="/master/patrol?id={{update.patrolId}}"
                        class="hover-underline">
-                        Patrulje {{update.patrolId}}
+                        {{update.patrolId | formatPatrol}}
                     </a>
                 </td>
                 <td>
-                    <a href="/master/location?id={{update.currentLocationId}}"
-                       class="hover-underline">
-                        {{update | formatPatrolLocation}}
-                    </a>
+                    {{ formatUpdateLocation(update) }}
                 </td>
                 <td>{{update.time | clock}}</td>
                 <td>
                     <button
-                        hx-confirm="Vil du slette dette update?"
+                        hx-confirm="Vil du slette denne patruljeopdatering?"
                         hx-post="/master/deletePatrolUpdate?id={{update.id}}"
                         hx-target="closest tr"
                         hx-swap="outerHTML">Slet
@@ -91,28 +108,97 @@
                     </td>
                 </tr>
                 {% for patrol in patrols %}
-                    <tr class="hover-grey">
-                        <td>
-                            {{patrol.id}}. 
-                            <a href="/master/patrol?id={{patrol.id}}"
-                               class="hover-underline">
-                                {{patrol.name}}
-                            </a>
-                        </td>
-                        <td>
-                            {% if patrol.lastUpdate %}
-                                <a href="/master/location?id={{patrol.lastUpdate.targetLocationId}}"
-                                   class="hover-underline">
-                                    {{patrol.lastUpdate | formatPatrolLocation}}
+                    {% if patrol%}
+                        <tr class="hover-grey">
+                            <td> 
+                                <a href="/master/patrol?id={{patrol.id}}"
+                                class="hover-underline">
+                                    {{patrol.id | formatPatrol}}
                                 </a>
-                            {% else %}
-                                {{patrol.lastUpdate | formatPatrolLocation}}
-                            {% endif %}
-                        </td>
-                        <td>{{patrol.lastUpdate.time | clock}}</td>
-                    </tr>
+                            </td>
+                            <td>
+                                {% if patrol.lastUpdate %}
+                                    {{ formatUpdateLocation(patrol.lastUpdate) }}
+                                {% else %}
+                                    Ikke startet løb.
+                                {% endif %}
+                            </td>
+                            <td>{{patrol.lastUpdate.time | clock}}</td>
+                        </tr>
+                    {% else %}
+                        <tr class="hover-grey">
+                            <td>Ukendt patrulje</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </table>
         {% endif %}
     </div>
 {% endmacro %}
+
+
+{% macro routes(locationId, showFrom, showTo) %}
+    <div class="routes">
+        <form hx-post="/master/getRoutesTable"
+                hx-trigger="load"
+                hx-swap="outerHTML"
+                hx-vals="{{JSON.stringify({
+                    locationId: locationId,
+                    showFrom: showFrom,
+                    showTo: showTo
+                })}}">
+            {# <input type="hidden" name="showFrom" value="{{showFrom}}" />
+            <input type="hidden" name="showTo" value="{{showTo}}" />
+            <input type="hidden" name="locationId" value="{{locationId}}" /> #}
+        </form>
+    </div>
+{% endmacro %}
+
+
+{# {% macro routes(routes, showFrom, showTo) %}
+    <div class="routes">
+        {% if (routes | length) == 0 %}
+            Ingen ruter.
+        {% else %}
+            <table cellspacing="0" cellpadding="0">
+                <tr>
+                    {% if showFrom %}
+                        <td class="bold">Fra</td>
+                    {% endif %}
+                    {% if showTo %}
+                        <td class="bold">Til</td>
+                    {% endif %}
+                    <td class="bold">Status</td>
+                    <td class="bold">Handling</td>
+                </tr>
+                {% for route in routes %}
+                    <tr class="hover-grey">
+                        {% if showFrom %}
+                            <td> <a href="/master/location?id={{route.fromLocationId}}"
+                                class="hover-underline">
+                                {{route.fromLocationId | locationName}}
+                            </a> </td>
+                        {% endif %}
+                        {% if showTo %}
+                            <td> <a href="/master/location?id={{route.toLocationId}}"
+                                class="hover-underline">
+                                {{route.toLocationId | locationName}}
+                            </a> </td>
+                        {% endif %}
+                        <td>{{ "Åben" if route.is_open else "Lukket" }}</td>
+                    <td>
+
+                        <form hx-post="/master/changeRouteStatus" hx-target="closest tr" hx-swap="outerHTML" style="display:inline">
+                        <input type="hidden" name="routeId" value="{{route.id}}">
+                        <input type="hidden" name="open" value="{{ "false" if route.is_open else "true" }}">
+                        <button type="submit" class="button button-secondary">{{ "Luk" if route.is_open else "Åbn" }}</button>
+                        </form>
+                    </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+{% endmacro %} #}

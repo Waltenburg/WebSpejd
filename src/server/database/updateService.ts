@@ -42,7 +42,7 @@ export class UpdateService extends ServiceBase {
         const patrolExists = this.prepare(`SELECT 1 FROM ${PATROL_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.patrolId) != undefined;
         const currentLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.currentLocationId) != undefined;
         const targetLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.targetLocationId) != undefined;
-        const routeIsValid = newUpdate.currentLocationId === newUpdate.targetLocationId || this.prepare(`SELECT 1 FROM ${ROUTE_TABLE.TABLE_NAME} WHERE (${ROUTE_TABLE.FROM_LOCATION_ID} = ? AND ${ROUTE_TABLE.TO_LOCATION_ID} = ?)`).get(newUpdate.currentLocationId, newUpdate.targetLocationId) != undefined;
+        const routeIsValid = newUpdate.currentLocationId === newUpdate.targetLocationId || this.prepare(`SELECT 1 FROM ${ROUTE_TABLE.TABLE_NAME} WHERE (${ROUTE_TABLE.FROM_LOCATION_ID} = ? AND ${ROUTE_TABLE.TO_LOCATION_ID} = ? AND ${ROUTE_TABLE.IS_OPEN} = 1)`).get(newUpdate.currentLocationId, newUpdate.targetLocationId) != undefined;
         const lastUpdate = this.latestUpdateOfPatrol(newUpdate.patrolId);
 
         // Check that data is valid

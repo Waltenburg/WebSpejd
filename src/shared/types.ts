@@ -11,8 +11,13 @@ export interface Route{
     id: number;
     fromLocationId: number;
     toLocationId: number;
-    open: boolean;
+    is_open: boolean;
     distance?: number;
+}
+
+export interface FullRouteInfo extends Omit<Route, 'fromLocationId' | 'toLocationId'> {
+    from: Location;
+    to: Location;
 }
 
 export enum PatrolLocationType {

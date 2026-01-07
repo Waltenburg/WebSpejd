@@ -26,5 +26,9 @@
         {{ utils.updates(updates) }}
     </div>
 
+    <h2>Ruter til denne post</h2>
+    {{utils.routes(location.id, showFrom=true, showTo=false)}}
+    <h2>Ruter fra denne post</h2>
+    {{utils.routes(location.id, showFrom=false, showTo=true)}}
 
 {% endblock %}

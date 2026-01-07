@@ -109,10 +109,12 @@ tr:nth-child(even) {
     background: #f9fafb;
 }
 
-td {
+td, th {
     padding: 0.65rem 0.75rem;
+    /* padding: 0; */
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
+    text-align: left;
     word-break: break-word;
 }
 
@@ -262,6 +264,12 @@ textarea:focus {
 
 .button-secondary:hover {
     background: #4b5563;
+}
+
+.actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
 }
 
 @media (max-width: 720px) {

@@ -1,0 +1,56 @@
+{% extends "./base.html.njk" %}
+{% block body %}
+<h1>Ruter</h1>
+<div class="table-wrapper">
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="bold">Fra</td>
+            <td class="bold">Til</td>
+            <td class="bold">Status</td>
+            <td class="bold">Handling</td>
+        </tr>
+        {% for route in routes %}
+            <tr class="hover-grey">
+                <td>{{ route.from.name if route.from else route.fromLocationId }}</td>
+                <td>{{ route.to.name if route.to else route.toLocationId }}</td>
+                <td>{{ "Åben" if route.is_open else "Lukket" }}</td>
+                <td class="actions">
+                    <form action="/master/changeRouteStatus" method="POST" style="display:inline">
+                        <input type="hidden" name="routeId" value="{{route.id}}">
+                        <input type="hidden" name="open" value="{{ "false" if route.is_open else "true" }}">
+                        <button type="submit" class="button button-secondary">{{ "Luk" if route.is_open else "Åbn" }}</button>
+                    </form>
+                    <form action="/master/deleteRoute" method="POST" style="display:inline" onsubmit="return confirm('Slet rute?')">
+                        <input type="hidden" name="routeId" value="{{route.id}}">
+                        <button type="submit" class="button button-secondary">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<h2>Tilføj ny rute</h2>
+<form action="/master/addRoute" method="POST">
+    <div>
+        <label>Fra</label>
+        <select name="fromLocation">
+            {% for loc in locations %}
+                <option value="{{loc.id}}">{{loc.id}}. {{loc.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label>Til</label>
+        <select name="toLocation">
+            {% for loc in locations %}
+                <option value="{{loc.id}}">{{loc.id}}. {{loc.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label><input type="checkbox" name="open" checked> Åben</label>
+    </div>
+    <input type="submit" value="Tilføj rute">
+</form>
+{% endblock %}

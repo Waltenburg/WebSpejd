@@ -11,10 +11,13 @@ import { inspect } from 'util';
 
 // Database and data types
 import { UpdateService, AdminService, PatrolService, LocationService, Database} from "./databaseBarrel";
-import { PatrolUpdate, PatrolUpdateWithNoId } from '@shared/types';
+import { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
 import { SETTINGS_TABLE } from './database/database';
 import { Endpoints } from '@shared/endpoints';
 import { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
+
+import { HTMLLocationTableGenerator } from './pages/HTMLLocationTableGenerator';
+import { HTMLRouteTableGenerator } from './pages/HTMLRouteTableGenerator';
 
 
 const enum SETTINGS {
@@ -30,6 +33,9 @@ class Server {
     private locationService: LocationService;
     private patrolService: PatrolService;
     private updateService: UpdateService;
+
+    private locationTableGenerator: HTMLLocationTableGenerator; 
+    private routeTableGenerator: HTMLRouteTableGenerator;
 
     private users: users.UserCache;
     private pages: pages.Pages;
@@ -48,6 +54,9 @@ class Server {
         this.locationService = locationService;
         this.patrolService = patrolService;
         this.updateService = updateService;
+
+        this.locationTableGenerator = new HTMLLocationTableGenerator(this.locationService);
+        this.routeTableGenerator = new HTMLRouteTableGenerator(this.locationService);
 
         this.users = new users.UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false,
@@ -86,21 +95,37 @@ class Server {
             .file('/favicon.ico', `${assets}/favicon.ico`)
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
-            .route(Endpoints.GetData, UserType.Post, this.locationDataForMandskab)
+            .route(Endpoints.GetMandskabData, UserType.Post, this.locationDataForMandskab)
             .route(Endpoints.SendUpdate, UserType.Post, this.makePatrolUpdate)
             .route(Endpoints.DeleteCheckin, UserType.Post, this.mandskabDeleteUpdate)
             .route(Endpoints.Master, UserType.Master, this.pages.master)
             .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, this.pages.patrolUpdatePage)
             .route(Endpoints.MasterAddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
             .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
-            .route(Endpoints.MasterPosts, UserType.Master, this.pages.locations)
-            .route(Endpoints.MasterPost, UserType.Master, this.pages.location)
+            .route(Endpoints.MasterLocations, UserType.Master, this.pages.locations)
+            .route(Endpoints.MasterLocation, UserType.Master, this.pages.locationPage)
             .route(Endpoints.MasterPatrols, UserType.Master, this.pages.patrols)
             .route(Endpoints.MasterPatrol, UserType.Master, this.pages.patrol)
             .route(Endpoints.MasterPatrolStatus, UserType.Master, this.patrolStatus)
             .route(Endpoints.MasterDeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
-            .route(Endpoints.MasterPostStatus, UserType.Master, this.postStatus)
-            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok());
+            .route(Endpoints.MasterPostStatus, UserType.Master, this.changeLocationStatus)
+            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
+            .route(Endpoints.MasterRoutes, UserType.Master, this.pages.routes)
+            // ================================ Route Management Endpoints ================================
+            .route(Endpoints.AddRoute, UserType.Master, this.addRoute)
+            .route(Endpoints.DeleteRoute, UserType.Master, this.deleteRoute)
+            .route(Endpoints.ChangeRouteStatus, UserType.Master, this.changeRouteStatus)
+            .route(Endpoints.GetRouteTableRow, UserType.Master, this.getRouteTableRow)
+            .route(Endpoints.GetRoutesTable, UserType.Master, this.getRoutesTable)
+            // ================================ Location Management Endpoints ============================
+            .route(Endpoints.AddLocation, UserType.Master, this.addLocation)
+            .route(Endpoints.DeleteLocation, UserType.Master, this.deleteLocation)
+            .route(Endpoints.ChangeLocationStatus, UserType.Master, this.changeLocationStatus)
+            .route(Endpoints.GetLocationTableRow, UserType.Master, this.getLocationTableRow)
+            .route(Endpoints.GetLocationTable, UserType.Master, this.getLocationTable)
+            .route(Endpoints.GetLocationTableBody, UserType.Master, this.getLocationTableBody)
+
+            
     }
 
     /**
@@ -157,8 +182,9 @@ class Server {
         }
 
         const onLocation = this.locationService.patrolsOnLocation(user.locationId);
-        const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId);
-        const locationsFromRoutes = routesFromLocation.map(route => this.locationService.locationInfo(route.toLocationId));
+        const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId)
+        const openRoutes = routesFromLocation.filter(route => route.is_open);
+        const nextLocations = openRoutes.map(route => this.locationService.locationInfo(route.toLocationId));
         const latestUpdates = this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
         .map(update => {
             return {
@@ -172,7 +198,7 @@ class Server {
             patrolsOnLocation: onLocation.map(p => this.patrolService.patrolInfo(p)),
             patrolsTowardsLocation: towardsLocation.map(p => this.patrolService.patrolInfo(p)),
             location: location,
-            routesTo: locationsFromRoutes,
+            routesTo: nextLocations,
             latestUpdates: latestUpdates
 
         };
@@ -275,14 +301,19 @@ class Server {
     }
 
 
-    postStatus = async(request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const statusParam = params.get("status");
-        const locationId = Number.parseInt(params.get("post"));
-        const newStatus = statusParam === "open";
+    changeLocationStatus = async(request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const locationId = Number.parseInt(form["locationId"])
+        const openText = form["open"];
+        const open = openText === "on" || openText === "true";
 
-        this.locationService.changeLocationStatus(locationId, newStatus);
-        return responses.redirect(`${Endpoints.MasterPostStatus}?id=${locationId}`);
+        if(Number.isNaN(locationId) || openText == null)
+            return responses.response_code(400);
+
+        const succes = this.locationService.changeLocationStatus(locationId, open);
+        if(!succes)
+            return responses.response_code(400);
+        return responses.ok();
     }
 
 
@@ -301,6 +332,144 @@ class Server {
         this.updateService.deleteUpdate(updateId);
         return responses.ok();
     }
+
+    private parseForm(body: string | null): Record<string, string> {
+        if (!body) return {};
+        return body.split("&").reduce((acc, pair) => {
+            const [k, v] = pair.split("=");
+            if (k) acc[decodeURIComponent(k)] = decodeURIComponent(v ?? "");
+            return acc;
+        }, {} as Record<string, string>);
+    }
+
+    addRoute = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const fromId = Number.parseInt(form["fromLocationId"]);
+        const toId = Number.parseInt(form["toLocationId"]);
+        const open = form["open"] === "on" || form["open"] === "true";
+
+        if (Number.isNaN(fromId) || Number.isNaN(toId)) {
+            return responses.response_code(400);
+        }
+
+        if(this.locationService.addRoute(fromId, toId, open))
+            return responses.ok();
+        return responses.response_code(400);
+    }
+
+    changeRouteStatus = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
+        const open = (form["open"] ?? request.url.searchParams.get("open")) === "true";
+        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
+        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+
+        if (!Number.isNaN(routeId)) {
+            const result = this.locationService.changeRouteStatus(routeId, open);
+            if(result)
+                return responses.ok();
+        }
+        return responses.response_code(400);
+    }
+
+    getRouteTableRow = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
+        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
+        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+        if (!Number.isNaN(routeId)) {
+            const route = this.locationService.routeInfo(routeId);
+            if(route)
+                return responses.ok(this.routeTableGenerator.row(route, !showFrom, !showTo));
+        }
+        return responses.response_code(400);
+    }
+
+    getRoutesTable = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
+        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+        const locationId = Number.parseInt(form["locationId"]);
+        
+        let routes: Route[] = [];
+        
+        if(!Number.isNaN(locationId)) {
+            if(showFrom) 
+                routes = routes.concat(this.locationService.allRoutesToLocation(locationId));
+            if(showTo)
+                routes = routes.concat(this.locationService.allRoutesFromLocation(locationId));
+            }else
+            routes = this.locationService.allRoutes();
+
+        // const routes = this.locationService.allRoutes();
+        const tableHTML = this.routeTableGenerator.table(routes, locationId, !showFrom, !showTo);
+        return responses.ok(tableHTML);
+    }
+
+    deleteRoute = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
+
+        if (!Number.isNaN(routeId)) {
+            this.locationService.deleteRoute(routeId);
+            return responses.ok();
+        }
+        return responses.response_code(400);
+    }
+
+    addLocation = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const name = form["name"];
+        const team = form["team"];
+        const openText = form["open"];
+        const open = openText === "on" || openText === "true";
+        if (!name || !team || !openText) {
+            return responses.response_code(400);
+        }
+
+        const locationId = this.locationService.addLocation(name, team, open);
+        if (locationId === null) {
+            return responses.response_code(400);
+        }
+        return responses.ok();
+    }
+
+    deleteLocation = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const locationId = Number.parseInt(form["locationId"]);
+        if(Number.isNaN(locationId))
+            return responses.response_code(400);
+
+        const succes = this.locationService.deleteLocation(locationId);
+        if(!succes)
+            return responses.response_code(400);
+
+        return responses.ok();
+    }
+
+    getLocationTableRow = async (request: Request): Promise<Response> => {
+        const form = this.parseForm(request.body);
+        const locationId = Number.parseInt(form["locationId"]);
+
+        if(Number.isNaN(locationId))
+            return responses.response_code(400);
+
+        const tableHTML = this.locationTableGenerator.row(locationId);
+        return responses.ok(tableHTML);
+    }
+
+    getLocationTable = async (request: Request): Promise<Response> => {
+        const locations = this.locationService.allLocationIds();
+        const tableHTML = this.locationTableGenerator.table(locations);
+        return responses.ok(tableHTML);
+    }
+
+    getLocationTableBody = async (request: Request): Promise<Response> => {
+        const locations = this.locationService.allLocationIds();
+        const tableHTML = this.locationTableGenerator.tableBody(locations);
+        return responses.ok(tableHTML);
+    }
+        
 
     mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
@@ -333,8 +502,11 @@ const readArguments = (): Command => {
         .option(
             "-a, --address <address>",
             "Address the server is hosted on",
-            // "127.0.0.1"
-            "192.168.1.138"
+            // "10.209.229.186"
+            "127.0.0.1"
+            // "192.168.128.1"
+            // "192.168.1.138"
+            // "10.34.158.253"
         )
         .option(
             "-p, --port <port>",

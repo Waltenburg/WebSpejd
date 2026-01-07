@@ -2,7 +2,7 @@ import * as responses from "../response";
 import nunjucks from "nunjucks";
 import { Request } from "../request";
 import { AdminService, Database, LocationService, PatrolService, UpdateService } from "../databaseBarrel";
-import { PatrolUpdate, Location } from "@shared/types";
+import { PatrolUpdate, Location, FullRouteInfo, Patrol } from "@shared/types";
 import { SETTINGS_TABLE } from "../database/database";
 
 type Response = responses.Response;
@@ -15,6 +15,7 @@ export const PATROL_UPDATES: string = "master/patrolUpdates.html.njk";
 export const PATROL_UPDATE_PAGE: string = "master/patrolUpdate.html.njk";
 export const PATROLS: string = "master/patrols.html.njk";
 export const PATROL: string = "master/patrol.html.njk";
+export const ROUTES: string = "master/routes.html.njk";
 
 export class Pages {
     private db: Database;
@@ -36,10 +37,13 @@ export class Pages {
                 noCache: !cache
             }
         );
-        this.env.addFilter("clock", safeFilter(formatTime));
-        this.env.addFilter("formatPatrolLocation", safeFilter(this.formatPatrolLocation));
-        this.env.addFilter("formatCheckinLocation", safeFilter(this.formatCheckinLocation));
+        this.env.addFilter("clock", safeFilter(formatTime, "Tid ukendt"));
+        this.env.addFilter("formatPatrolLocation", safeFilter(this.formatPatrolLocation, "Ukendt lokation"));
+        this.env.addFilter("formatCheckinLocation", safeFilter(this.formatCheckinLocation, "Ukendt lokation"));
+        this.env.addFilter("locationName", safeFilter((locationId: number) => this.locationService.locationInfo(locationId).name, "Ukendt lokation"));
+        this.env.addFilter("formatPatrol", safeFilter(this.formatPatrol, "Ukendt patrulje"));
         this.env.addGlobal("patrolsUrl", patrolsUrl);
+        this.env.addGlobal("JSON", JSON);
 
         this.db = db;
         this.locationService = locationService;
@@ -65,7 +69,22 @@ export class Pages {
         });
     }
 
-    location = async (request: Request): Promise<Response> => {
+    routes = async (): Promise<Response> => {
+        const routes = this.locationService.allRoutes().map(route => {
+            return {
+                ...route,
+                from: this.locationService.locationInfo(route.fromLocationId),
+                to: this.locationService.locationInfo(route.toLocationId)
+            } as FullRouteInfo;
+        });
+
+        return this.response(ROUTES, {
+            routes: routes,
+            locations: this.locationData()
+        });
+    }
+
+    locationPage = async (request: Request): Promise<Response> => {
         const locationId = Number.parseInt(request.url.searchParams.get("id"));
         let location = this.locationService.locationInfo(locationId);
 
@@ -77,12 +96,17 @@ export class Pages {
             patrolsOnTheirWayIDs = patrolsOnTheirWayIDs.concat(patrolsWithNoUpdates);
         }
 
+        const routesToLocation = this.locationService.allRoutesToLocation(locationId);//.map(route => this.locationService.locationInfo(route.fromLocationId));
+        const routesFromLocation = this.locationService.allRoutesFromLocation(locationId);//.map(route => this.locationService.locationInfo(route.toLocationId));
+
         return this.response(LOCATION, {
             patrolsOnPost: this.patrolsData(this.locationService.patrolsOnLocation(locationId)),
             patrolsOnTheirWay: this.patrolsData(patrolsOnTheirWayIDs),
             patrolsCheckedOut: this.patrolsData(this.locationService.patrolsCheckedOutFromLocation(locationId)),
             location: location,
             updates: this.updateService.updatesAtLocation(locationId).reverse(),
+            routesToLocation: routesToLocation,
+            routesFromLocation: routesFromLocation,
         });
     }
 
@@ -162,7 +186,7 @@ export class Pages {
         });
     }
 
-    private patrolsData = (patrolIds?: number[], sortBy?: string): any => {
+    private patrolsData = (patrolIds?: number[], sortBy?: string): ({lastUpdate: PatrolUpdate | null} & Patrol)[] => {
         if (patrolIds === undefined) {
             patrolIds = this.patrolService.allPatrolIds();
         }
@@ -172,7 +196,6 @@ export class Pages {
                 let lastUpdate = this.updateService.latestUpdateOfPatrol(patrolId);
                 return {
                     lastUpdate: lastUpdate,
-                    //location: this.patrolService.locationOfPatrol(patrolId),
                     ...patrol
                 };
             })
@@ -241,12 +264,18 @@ export class Pages {
         const location = this.locationService.locationInfo(patrolUpdate.currentLocationId);
         return location.name;
     }
+
+    formatPatrol = (patrolId: number): string => {
+        const patrol = this.patrolService.patrolInfo(patrolId);
+        return `#${patrol.number} ${patrol.name}`;
+    }
 }
 
 function safeFilter<T>(filterFunc: (item: T) => string, defaultError: string = "Ukendt", log: boolean = false): (item: T) => string {
     return (item: T): string => {
         try {
-            return filterFunc(item);
+            const value = filterFunc(item);
+            return value ?? defaultError;
         } catch (e) {
             if (log)
                 console.error(e);

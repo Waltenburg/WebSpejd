@@ -58,7 +58,7 @@ export const enum Endpoints {
      * Accessible to: Users logged in as Mandskab.
      * Purpose: Returns comprehensive data about patrols at location, patrols en route, location name, and available routes
      */
-    GetData = "/getData",
+    GetMandskabData = "/getData",
 
     /**
      * Submit patrol update endpoint.\
@@ -107,14 +107,14 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays all posts/locations in the system with their current status and occupancy information
      */
-    MasterPosts = "/master/locations",
+    MasterLocations = "/master/locations",
 
     /**
      * Master single post detail page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific post including patrols present and incoming
      */
-    MasterPost = "/master/location",
+    MasterLocation = "/master/location",
 
     /**
      * Master patrols list page.
@@ -159,4 +159,32 @@ export const enum Endpoints {
     MasterPostStatus = "/master/locationStatus",
 
     MasterHeartbeat = "/master/heartbeat",
+    
+    MasterRoutes = "/master/routes",
+
+    // ================================ Location Management Endpoints ============================
+    AddLocation = "/master/addLocation",
+
+    DeleteLocation = "/master/deleteLocation",
+
+    ChangeLocationStatus = "/master/changeLocationStatus",
+
+    GetLocationTableRow = "/master/getLocationTableRow",
+    
+    GetLocationTable = "/master/getLocationsTable",
+
+    GetLocationTableBody = "/master/getLocationsTableBody",
+
+    // ================================ Route Management Endpoints ================================
+    
+    AddRoute = "/master/addRoute",
+
+    DeleteRoute = "/master/deleteRoute",
+
+    ChangeRouteStatus = "/master/changeRouteStatus",
+
+    GetRouteTableRow = "/master/getRouteTableRow",
+    
+    GetRoutesTable = "/master/getRoutesTable",
+
 }
