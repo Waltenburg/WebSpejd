@@ -1,6 +1,7 @@
 import { User, UserCache } from "./users";
 import * as http from 'http'
 import * as responses from "./response";
+import type { ServiceBase } from "./databaseBarrel";
 
 export interface Request {
     user: User;
@@ -37,14 +38,33 @@ export class Router {
         return this;
     }
 
-    route(path: string, userType: UserType, func: RouteFunction): Router {
+    // route(path: string, userType: UserType, func: RouteFunction): Router {
+    //     this.routes.push({
+    //         userType: userType,
+    //         path: path,
+    //         func: func
+    //     });
+    //     return this;
+    // }
+
+    /**
+     * Registers a route with dependency injection.
+     * 
+     * @param path - The URL endpoint path.
+     * @param userType - Required authorization level.
+     * @param func - Handler receiving `(Request, ...services)`.
+     * @param services - Instances of `ServiceBase` to inject into the handler. If none, it behaves like a normal route.
+     * @returns `this` (instance of `Router`) for chaining.
+     */
+    route<T extends ServiceBase[]>(path: string, userType: UserType, func: RouteFunction<T>, ...services: T): Router {
         this.routes.push({
             userType: userType,
             path: path,
-            func: func
+            func: (req: Request) => func(req, ...services)
         });
         return this;
     }
+
 
     /**
      * Create new route for a file.
@@ -176,13 +196,15 @@ export class Router {
 }
 
 type Response = responses.Response;
-type RouteFunction = (request?: Request) => Promise<Response>;
+// type RouteFunction = (request: Request) => Promise<Response>;
+type RouteFunction<T extends ServiceBase[]> = (request: Request, ...services: T) => Promise<Response>;
 
 interface Route {
     userType: UserType;
     path: string;
-    func: RouteFunction
+    func: RouteFunction<any>
 }
+
 
 interface AssertDir {
     urlPath: string,
