@@ -74,8 +74,8 @@ export class Router {
 
             // Asset directories
             let assetDir = this.assetDirs
-            .find((assetDir) => path.startsWith(`${assetDir.urlPath}/`));
-            if(assetDir != undefined) {
+                .find((assetDir) => path.startsWith(`${assetDir.urlPath}/`));
+            if (assetDir != undefined) {
                 let relativePath = path.slice(assetDir.urlPath.length + 1);
                 let fullPath = `${assetDir.dir}/${relativePath}`;
                 return responses.file(fullPath);
@@ -83,17 +83,17 @@ export class Router {
 
             // Function routes
             let route = this.routes
-            .find((route) => route.path === path);
-            if(route === undefined) {
+                .find((route) => route.path === path);
+            if (route === undefined) {
                 return responses.not_found("Page not found");
             }
             //TODO: Autherization check is failing
-            if(!this.isAuthorized(request, route)) {
+            if (!this.isAuthorized(request, route)) {
                 return responses.unauthorized("Not authorized");
             }
 
             return await route.func(request);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             return responses.server_error(err);
         }
@@ -116,63 +116,63 @@ export class Router {
             || (userType === UserType.None);
     }
 
-// ...existing code...
-/**
- * Parse incoming http message.
- *
- * @param request the incoming http method
- * @returns a new `Request` object
- */
-async parseRequest(request: http.IncomingMessage): Promise<Request> {
-    const url = new URL(`http://${this.address}:${this.port}${request.url}`);
+    // ...existing code...
+    /**
+     * Parse incoming http message.
+     *
+     * @param request the incoming http method
+     * @returns a new `Request` object
+     */
+    async parseRequest(request: http.IncomingMessage): Promise<Request> {
+        const url = new URL(`http://${this.address}:${this.port}${request.url}`);
 
-    const headers: { [key: string]: string } = {}
-    for(let header in request.headers) {
-        headers[header.toLowerCase()] = request.headers[header] as string;
-    }
-
-    const cookies: { [key: string]: string } = {};
-    if(headers["cookie"] !== undefined) {
-        headers["cookie"]
-            .split(";")
-            .forEach((cookieString) => {
-                const trimmed = cookieString.trim();
-                const splitPoint = trimmed.indexOf("=");
-                const key = trimmed.slice(0, splitPoint);
-                const value = trimmed.slice(splitPoint+1);
-                cookies[key] = value;
-            });
-    }
-
-    const userIdentifier = cookies["identifier"] || headers["id"];
-    const user =
-        userIdentifier === undefined
-        ? new User(-1)
-        : this.users.userFromIdentifier(userIdentifier);
-
-    // Get body asynchronously
-    let body: string | null = null;
-    if(request.method === "POST" || request.method === "PUT") {
-        const chunks: Buffer[] = [];
-        for await (const chunk of request) {
-            chunks.push(chunk);
+        const headers: { [key: string]: string } = {}
+        for (let header in request.headers) {
+            headers[header.toLowerCase()] = request.headers[header] as string;
         }
-        //@ts-ignore
-        body = Buffer.concat(chunks).toString();
+
+        const cookies: { [key: string]: string } = {};
+        if (headers["cookie"] !== undefined) {
+            headers["cookie"]
+                .split(";")
+                .forEach((cookieString) => {
+                    const trimmed = cookieString.trim();
+                    const splitPoint = trimmed.indexOf("=");
+                    const key = trimmed.slice(0, splitPoint);
+                    const value = trimmed.slice(splitPoint + 1);
+                    cookies[key] = value;
+                });
+        }
+
+        const userIdentifier = cookies["identifier"] || headers["id"];
+        const user =
+            userIdentifier === undefined
+                ? new User(-1)
+                : this.users.userFromIdentifier(userIdentifier);
+
+        // Get body asynchronously
+        let body: string | null = null;
+        if (request.method === "POST" || request.method === "PUT") {
+            const chunks: Buffer[] = [];
+            for await (const chunk of request) {
+                chunks.push(chunk);
+            }
+            //@ts-ignore
+            body = Buffer.concat(chunks).toString();
+        }
+
+        if (body)
+            console.log(body);
+
+        return {
+            user: user,
+            url: url,
+            headers: headers,
+            cookies: cookies,
+            body: body
+        };
     }
-
-    if(body)
-        console.log(body);
-
-    return {
-        user: user,
-        url: url,
-        headers: headers,
-        cookies: cookies,
-        body: body
-    };
-}
-// ...existing code...
+    // ...existing code...
 }
 
 type Response = responses.Response;
