@@ -2,7 +2,7 @@
 export interface Location {
     id: number;
     name: string;
-    team: number;
+    team: string;
     open: boolean;
     lastUpdate: Date;
 }
