@@ -148,7 +148,7 @@ const html_row = (locationService: LocationService, locationId: number): string 
                 hx-target="closest tr"
                 hx-swap="outerHTML"
                 hx-vals={hxVals}
-                hx-post={`${Endpoints.GetLocationTableRow}`}>
+                hx-post={`${Endpoints.GetLocationConfigTableRow}`}>
             </span>
 
             <button hx-post={`${Endpoints.DeleteLocation}`} hx-target="closest tr"
@@ -190,7 +190,7 @@ const html_addRow = (): string => {
                 hx-trigger={hxTriggers.fetchLocationTable}
                 hx-target="closest table"
                 hx-swap="outerHTML"
-                hx-post={`${Endpoints.GetLocationTable}`}>
+                hx-post={`${Endpoints.GetLocationConfigTable}`}>
             </span>
         </td>
     </tr>;
@@ -223,11 +223,11 @@ const html_renameLocationRow = (locationService: LocationService, locationId: nu
                 hx-target="closest tr"
                 hx-swap="outerHTML"
                 hx-vals={JSON.stringify({ locationId: location.id })}
-                hx-post={`${Endpoints.GetLocationTableRow}`}>
+                hx-post={`${Endpoints.GetLocationConfigTableRow}`}>
             </span>
 
             <button type='button'
-                hx-post={`${Endpoints.GetLocationTableRow}`}
+                hx-post={`${Endpoints.GetLocationConfigTableRow}`}
                 hx-vals={JSON.stringify({ locationId: location.id })}
                 hx-target="closest tr"
                 hx-swap="outerHTML"
@@ -243,7 +243,7 @@ const html_tableBody = (locationService: LocationService, locationIds: number[])
     return <tbody
         id="location-table-body"
         hx-ext="idiomorph"
-        hx-get={`${Endpoints.GetLocationTableBody}`}
+        hx-get={`${Endpoints.GetLocationConfigTableBody}`}
         hx-target="this"
         hx-swap="outerHTML"
         hx-trigger="every 1s"   

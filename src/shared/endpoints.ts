@@ -12,6 +12,72 @@
  */
 export const enum Endpoints {
     /**
+     * User authentication endpoint.\
+     * Accessible to: Unauthenticated users.\
+     * Purpose: Authenticates users by validating password.
+     */
+    Login = "/login",
+
+    /**
+     * User logout endpoint.
+     * Accessible to: All authenticated users
+     * Purpose: Clears user session and redirects to home page
+     */
+    Logout = "/logout",
+
+    /**
+     * Fetch complete data endpoint for mandskab users.
+     * Accessible to: Users logged in as Mandskab.
+     * Purpose: Returns comprehensive data about patrols at location, patrols en route, location name, and available routes
+     */
+    GetMandskabData = "/getData",
+
+    // =============================== Pages Endpoints (returning entire pages) ================================
+    /**
+     * Master dashboard page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays the main master control panel with overview of all posts, patrols, and system status
+     */
+    MainMasterPage = "/master",
+
+    /**
+     * Master check-in creation page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays interface for master users to manually create and record patrol check-ins
+     */
+    MasterAddPatrolUpdatePage = "/master/updatePage",
+
+    /**
+     * Master check-ins list page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays a comprehensive list of all patrol check-ins in the system with history and status
+     */
+    MasterPatrolUpdates = "/master/patrolUpdates",
+
+    /**
+     * Master posts (locations) list page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays all posts/locations in the system with their current status and occupancy information
+     */
+    MasterLocations = "/master/locations",
+
+    /**
+     * Master single location detail page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays detailed information about a specific location including patrols present and incoming
+     */
+    MasterLocation = "/master/location",
+
+    /**
+     * Master single patrol detail page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays detailed information about a specific patrol including location history and status timeline
+     */
+    SinglePatrolPage = "/master/patrol",
+    
+    RoutesPage = "/master/routes",
+
+    /**
      * Home page - public landing page.\
      * Accessible to: All users\
      * Purpose: Displays the main welcome page of the application
@@ -39,55 +105,11 @@ export const enum Endpoints {
      */
     Contact = "/contact",
 
-    /**
-     * User authentication endpoint.\
-     * Accessible to: Unauthenticated users.\
-     * Purpose: Authenticates users by validating password.
-     */
-    Login = "/login",
-
-    /**
-     * User logout endpoint.
-     * Accessible to: All authenticated users
-     * Purpose: Clears user session and redirects to home page
-     */
-    Logout = "/logout",
-
-    /**
-     * Fetch complete data endpoint for mandskab users.
-     * Accessible to: Users logged in as Mandskab.
-     * Purpose: Returns comprehensive data about patrols at location, patrols en route, location name, and available routes
-     */
-    GetMandskabData = "/getData",
-
-    /**
-     * Submit patrol update endpoint.\
-     * Accessible to: Users logged in as Mandskab.\
-     * Purpose: Records a patrol check-in or movement from current location to target location
-     */
-    SendUpdate = "/sendUpdate",
-
-    /**
-     * Delete check-in endpoint for Mandskab page.\
-     * Accessible to: Users logged in as Mandskab.\
-     * Purpose: Allows deletion of recent patrol updates from their own location
-     */
-    DeleteCheckin = "/deleteCheckin",
-
-    /**
-     * Master dashboard page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays the main master control panel with overview of all posts, patrols, and system status
-     */
-    Master = "/master",
-
-    /**
-     * Master check-in creation page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays interface for master users to manually create and record patrol check-ins
-     */
-    MasterAddPatrolUpdatePage = "/master/updatePage",
-
+    
+    // ================================ Master page utility Endpoints ================================
+    MasterHeartbeat = "/master/heartbeat",
+    
+    // ================================ Patrol Update management Endpoints ================================
     /**
      * Master add check-in endpoint.
      * Accessible to: Master administrators (UserType.Master)
@@ -96,88 +118,67 @@ export const enum Endpoints {
     MasterAddPatrolUpdate = "/master/addPatrolUpdate",
 
     /**
-     * Master check-ins list page.
+     * Master delete check-in endpoint.
      * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays a comprehensive list of all patrol check-ins in the system with history and status
+     * Purpose: Allows master administrators to delete any check-in record from the system
      */
-    MasterPatrolUpdates = "/master/patrolUpdates",
+    DeletePatrolUpdate = "/master/deletePatrolUpdate",
 
     /**
-     * Master posts (locations) list page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays all posts/locations in the system with their current status and occupancy information
+     * Delete check-in endpoint for Mandskab page.\
+     * Accessible to: Users logged in as Mandskab.\
+     * Purpose: Allows deletion of recent patrol updates from their own location
      */
-    MasterLocations = "/master/locations",
+    DeletePatrolUpdateMandskab = "/deletePatrolUpdateMandskab",
 
     /**
-     * Master single post detail page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays detailed information about a specific post including patrols present and incoming
+     * Submit patrol update endpoint.\
+     * Accessible to: Users logged in as Mandskab.\
+     * Purpose: Records a patrol check-in or movement from current location to target location
      */
-    MasterLocation = "/master/location",
+    SendPatrolUpdateMandskab = "/sendPatrolUpdateMandskab",
 
-    /**
-     * Master patrols list page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays all patrols in the system with their current location, status, and activity history
-     */
-    MasterPatrols = "/master/patrols",
 
-    /**
-     * Master single patrol detail page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays detailed information about a specific patrol including location history and status timeline
-     */
-    MasterPatrol = "/master/patrol",
+    // ================================ Patrol management Endpoints ================================
+    AddPatrol = "/master/addPatrol",
+
+    DeletePatrol = "/master/deletePatrol",
+
+    RenamePatrol = "/master/renamePatrol",
 
     /**
      * Master patrol status update endpoint.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Allows master users to change patrol status between active (out) and inactive (in)
      */
-    MasterPatrolStatus = "/master/patrolStatus",
+    ChangePatrolStatus = "/master/patrolStatus",
 
-    /**
-     * Master delete check-in endpoint.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Allows master administrators to delete any check-in record from the system
-     */
-    MasterDeletePatrolUpdate = "/master/deletePatrolUpdate",
-
-    /**
-     * Master analytics graph page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays visual analytics and graphs of patrol movements and location statistics
-     */
-    MasterGraph = "/master/graph",
-
-    /**
-     * Master post status update endpoint.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Allows master users to change post status between open and closed
-     */
-    MasterPostStatus = "/master/locationStatus",
-
-    MasterHeartbeat = "/master/heartbeat",
+    // ================================ Patrol status table Endpoints =====================================
     
-    MasterRoutes = "/master/routes",
+    /**
+     * Master patrols list page.
+     * Accessible to: Master administrators (UserType.Master)
+     * Purpose: Displays all patrols in the system with their current location, status, and activity history
+     */
+    GetPatrolStatusTable = "/master/patrols",
 
-    // ================================ Location Management Endpoints ============================
+    // ================================ Location Config Endpoints ============================
     AddLocation = "/master/addLocation",
 
     DeleteLocation = "/master/deleteLocation",
 
     RenameLocation = "/master/renameLocation",
-
+    
+    ChangeLocationStatus = "/master/changeLocationStatus",
+    
+    // ================================ Location config table Endpoints ================================
     GetRenameLocationRow = "/master/renameLocationRow",
 
-    ChangeLocationStatus = "/master/changeLocationStatus",
-
-    GetLocationTableRow = "/master/getLocationTableRow",
+    GetLocationConfigTableRow = "/master/getLocationTableRow",
     
-    GetLocationTable = "/master/getLocationsTable",
+    GetLocationConfigTable = "/master/getLocationsTable",
 
-    GetLocationTableBody = "/master/getLocationsTableBody",
+    GetLocationConfigTableBody = "/master/getLocationsTableBody",
 
     // ================================ Route Management Endpoints ================================
     
@@ -187,6 +188,7 @@ export const enum Endpoints {
 
     ChangeRouteStatus = "/master/changeRouteStatus",
 
+    // ================================ Route table Endpoints ================================
     GetRouteTableRow = "/master/getRouteTableRow",
     
     GetRoutesTable = "/master/getRoutesTable",
