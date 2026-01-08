@@ -73,8 +73,11 @@ class Server {
 
         http.createServer(async (req, connection) => {
             try{
+                // let timeStart = Date.now();
                 let response = await this.router.handleRequest(req);
                 responses.send(connection, response);
+                // let timeEnd = Date.now();
+                // console.log(`Request to ${req.url} took ${timeEnd - timeStart} ms`);
             }catch(e) {
                 console.error(e);
                 responses.send(connection, responses.server_error());
