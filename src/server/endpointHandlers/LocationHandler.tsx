@@ -1,10 +1,11 @@
 import * as elements from 'typed-html';
 import { LocationService } from '../databaseBarrel';
 import { Endpoints } from '@shared/endpoints';
-import { formatLocationAnchor } from './HTMLGeneral';
+import { formatLocationAnchor, getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral';
 import * as responses from '../response';
 import { parseForm } from '../request';
 import { Request } from '../request';
+import { table } from 'console';
 
 type Response = responses.Response;
 
@@ -42,6 +43,21 @@ export const changeLocationStatus = async(request: Request, locationService: Loc
         return responses.ok();
 }
 
+export const renameLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    const name = form["name"];
+    const team = form["team"];
+    if (Number.isNaN(locationId) || (!name && !team)) {
+        return responses.response_code(400);
+    }
+    const succes = locationService.renameLocation(locationId, name, team);
+    if (!succes) {
+        return responses.response_code(400);
+    }
+    return responses.ok();
+}
+
 export const deleteLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
@@ -55,6 +71,8 @@ export const deleteLocation = async (request: Request, locationService: Location
     return responses.ok();
 }
 
+// ========================== Getting HTML for Locations ==========================
+
 export const getLocationTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
@@ -62,27 +80,47 @@ export const getLocationTableRow = async (request: Request, locationService: Loc
     if (Number.isNaN(locationId))
         return responses.response_code(400);
 
-    const tableHTML = row(locationService, locationId);
+    const tableHTML = html_row(locationService, locationId);
     return responses.ok(tableHTML);
 }
 
 export const getLocationTable = async (request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds();
-    const tableHTML = table(locationService, locations);
+    const tableHTML = html_table(locationService, locations);
     return responses.ok(tableHTML);
 }
 
 export const getLocationTableBody = async (request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds();
-    const tableHTML = tableBody(locationService, locations);
+    const tableHTML = html_tableBody(locationService, locations);
+    return responses.ok(tableHTML);
+}
+
+export const getRenameLocationRow = async (request: Request, locationService: LocationService): Promise<Response> => {
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    if (Number.isNaN(locationId)) {
+        return responses.response_code(400);
+    }
+    const tableHTML = html_renameLocationRow(locationService, locationId);
     return responses.ok(tableHTML);
 }
 
 
-
 // ========================== HTML Generation Functions ==========================
+const enum ids {
+    table = "location-table",
+    tableBody = "location-table-body"
+}
+const enum classes {
+    renaming = "renaming"
+}
+const enum hxTriggers {
+    fetchLocationsRow = "fetchLocationsRow",
+    fetchLocationTable = "fetchLocationTable"
+}
 
-export const row = (locationService: LocationService, locationId: number): string => {
+const html_row = (locationService: LocationService, locationId: number): string => {
     const location = locationService.locationInfo(locationId);
     if (!location)
         return <tr><td colspan={4}>Lokation ikke fundet</td></tr>;
@@ -100,31 +138,36 @@ export const row = (locationService: LocationService, locationId: number): strin
         <td>
             <button
                 hx-post={`${Endpoints.ChangeLocationStatus}`}
-                hx-on--after-request="htmx.trigger(this.nextElementSibling, 'fetchLocationsRow')"
+                hx-on--after-request={`htmx.trigger(this.nextElementSibling, '${hxTriggers.fetchLocationsRow}')`}
                 hx-swap="none"
                 hx-vals={hxVals}>
                 {location.open ? "Luk" : "Åbn"}
             </button>
             <span
-                hx-trigger="fetchLocationsRow"
+                hx-trigger={hxTriggers.fetchLocationsRow}
                 hx-target="closest tr"
                 hx-swap="outerHTML"
                 hx-vals={hxVals}
                 hx-post={`${Endpoints.GetLocationTableRow}`}>
             </span>
 
-            <button hx-post={`${Endpoints.DeleteLocation}`} hx-target="closest tr" hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}>
+            <button hx-post={`${Endpoints.DeleteLocation}`} hx-target="closest tr"
+                hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}
+                hx-confirm={`Er du sikker på, at du vil slette lokationen "${location.name}"? Dette kan ikke fortrydes.\nHvis der er ruter til/fra denne lokation, eller patruljer der er checket imod/ind/ud fra denne lokation, kan lokationen ikke slettes.`}>
                 Slet lokation
             </button>
 
-            <button hx-get={`${Endpoints.RenameLocation}`} hx-target="closest tr" hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}>
+            <button hx-post={`${Endpoints.GetRenameLocationRow}`} hx-target="closest tr"
+                hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}
+                hx-on--before-request={addClassToElement(getElementById(ids.table), classes.renaming)}>
+                {/* hx-on--before-request="console.log('Got clicked!');"> */}
                 Omdøb
             </button>
         </td>
     </tr>;
 }
 
-export const addRow = (): string => {
+const html_addRow = (): string => {
     return <tr id="add-location-row">
         <td><input required='true' type="text" name="name" placeholder="Navn" /></td>
         <td><input required='true' type="text" name="team" placeholder="Team" /></td>
@@ -138,13 +181,13 @@ export const addRow = (): string => {
             <button type="button"
                 hx-post={`${Endpoints.AddLocation}`}
                 hx-include="closest tr"
-                hx-on--after-request="htmx.trigger(this.nextElementSibling, 'fetchLocationTable')"
+                hx-on--after-request={`htmx.trigger(this.nextElementSibling, '${hxTriggers.fetchLocationTable}')`}
                 hx-swap="none"
             >
                 Tilføj lokation
             </button>
             <span
-                hx-trigger="fetchLocationTable"
+                hx-trigger={hxTriggers.fetchLocationTable}
                 hx-target="closest table"
                 hx-swap="outerHTML"
                 hx-post={`${Endpoints.GetLocationTable}`}>
@@ -153,20 +196,23 @@ export const addRow = (): string => {
     </tr>;
 }
 
-export const renameLocationRow = (locationService: LocationService, locationId: number): string => {
+const html_renameLocationRow = (locationService: LocationService, locationId: number): string => {
     const location = locationService.locationInfo(locationId);
     if (!location)
         return <tr><td colspan={4}>Lokation ikke fundet</td></tr>;
 
+    const removeRenamingClassScript = removeClassFromElement(getElementById(ids.table), classes.renaming);
+
     return <tr id={`rename-location-row-${locationId}`}>
-        <td><input required='true' type="text" name="name" placeholder={location.name} /></td>
-        <td><input required='true' type="text" name="team" placeholder={location.team} /></td>
+        <td><input required='true' type="text" name="name" value={location.name} /></td>
+        <td><input required='true' type="text" name="team" value={location.team} /></td>
         <td> N/A </td>
         <td>
             <button type="button"
                 hx-post={`${Endpoints.RenameLocation}`}
                 hx-include="closest tr"
-                hx-on--after-request="htmx.trigger(this.nextElementSibling, 'fetchLocationsRow')"
+                hx-on--before-request={removeRenamingClassScript}
+                hx-on--after-request={hxTrigger("this.nextElementSibling", hxTriggers.fetchLocationsRow)}
                 hx-vals={JSON.stringify({ locationId: location.id })}
                 hx-swap="none"
             >
@@ -180,23 +226,37 @@ export const renameLocationRow = (locationService: LocationService, locationId: 
                 hx-post={`${Endpoints.GetLocationTableRow}`}>
             </span>
 
-            <button type='button' hx-get={`${Endpoints.GetLocationTableRow}`} hx-vals={JSON.stringify({ locationId: location.id })} hx-target="closest tr" hx-swap="outerHTML">
+            <button type='button'
+                hx-post={`${Endpoints.GetLocationTableRow}`}
+                hx-vals={JSON.stringify({ locationId: location.id })}
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-on--before-request={removeRenamingClassScript}
+                >
                 Annuller
             </button>
         </td>
     </tr>;
 }
 
-export const tableBody = (locationService: LocationService, locationIds: number[]): string => {
-    return <tbody hx-ext="idiomorph" hx-get={`${Endpoints.GetLocationTableBody}`} hx-target="this" hx-swap="outerHTML" hx-trigger="every 10s">
+const html_tableBody = (locationService: LocationService, locationIds: number[]): string => {
+    return <tbody
+        id="location-table-body"
+        hx-ext="idiomorph"
+        hx-get={`${Endpoints.GetLocationTableBody}`}
+        hx-target="this"
+        hx-swap="outerHTML"
+        hx-trigger="every 1s"   
+        // hx-on--before-request="console.log(this.id, event.detail.elt.id)">
+        hx-on--before-request={`if (event.detail.elt.id === this.id && ${isClassOnElement(getElementById(ids.table), classes.renaming)}) {console.log("cancelled request"); event.preventDefault(); }`}>
         {locationIds.length === 0 ?
             <tr><td colspan={4}>Ingen lokationer</td></tr>
             : null}
-        {locationIds.map(locationId => row(locationService, locationId))}
+        {locationIds.map(locationId => html_row(locationService, locationId))}
     </tbody>
 }
 
-export const table = (locationService: LocationService, locationIds: number[]): string => {
+const html_table = (locationService: LocationService, locationIds: number[]): string => {
     return <table id="location-table">
         <thead>
             <th>Navn</th>
@@ -204,9 +264,9 @@ export const table = (locationService: LocationService, locationIds: number[]): 
             <th>Status</th>
             <th>Handling</th>
         </thead>
-        {tableBody(locationService, locationIds)}
+        {html_tableBody(locationService, locationIds)}
         <tfoot>
-            {addRow()}
+            {html_addRow()}
         </tfoot>
     </table>
 }

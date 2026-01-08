@@ -4,6 +4,26 @@ import { Location, PatrolUpdate } from "@shared/types"
 import { LocationService } from "../databaseBarrel"
 import { Endpoints } from '@shared/endpoints';
 
+export const getElementById = (id: string): string => {
+    return `document.getElementById('${id}')`;
+}
+
+export const addClassToElement = (element: string, className: string): string => {
+    return `${element}.classList.add('${className}')`;
+}
+
+export const removeClassFromElement = (element: string, className: string): string => {
+    return `${element}.classList.remove('${className}')`;
+}
+
+export const isClassOnElement = (element: string, className: string): string => {
+    return `${element}.classList.contains('${className}')`;
+}
+
+export const hxTrigger = (element: string, triggerName: string): string => {
+    return `htmx.trigger(${element}, '${triggerName}')`;
+}
+
 export const formatLocationAnchor = (location: Location | null): string => {
     if (location == null)
         return "Ukendt lokation";

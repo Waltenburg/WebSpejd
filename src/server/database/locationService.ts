@@ -142,6 +142,18 @@ export class LocationService extends ServiceBase {
         return result.lastInsertRowid as number;
     }
 
+    renameLocation(locationId: number, name?: string, team?: string): boolean {
+        const location = this.locationInfo(locationId);
+        if (!location) {
+            return false;
+        }
+        const newName = name ?? location.name;
+        const newTeam = team ?? location.team;
+        const result = this.prepare(`UPDATE ${LOCATION_TABLE.TABLE_NAME} SET ${LOCATION_TABLE.NAME} = ?, ${LOCATION_TABLE.TEAM} = ? WHERE id = ?`)
+            .run(newName, newTeam, locationId);
+        return result.changes > 0;
+    }
+
     /**
      * Delete a location.
      * @param locationId the id of the location to delete

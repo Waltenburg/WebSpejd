@@ -41,6 +41,19 @@ export const changeRouteStatus = async (request: Request, locationService: Locat
     return responses.response_code(400);
 }
 
+export const deleteRoute = async (request: Request, locationService: LocationService): Promise<Response> => {
+    const form = parseForm(request.body);
+    const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
+
+    if (!Number.isNaN(routeId)) {
+        locationService.deleteRoute(routeId);
+        return responses.ok();
+    }
+    return responses.response_code(400);
+}
+
+// ========================== Getting HTML for Routes ==========================
+
 export const getRouteTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
@@ -54,19 +67,29 @@ export const getRouteTableRow = async (request: Request, locationService: Locati
     return responses.response_code(400);
 }
 
-export const deleteRoute = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getRouteTable = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
-    const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
+    const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
+    const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+    const locationId = Number.parseInt(form["locationId"]);
 
-    if (!Number.isNaN(routeId)) {
-        locationService.deleteRoute(routeId);
-        return responses.ok();
-    }
-    return responses.response_code(400);
+    let routes: Route[] = [];
+
+    if (!Number.isNaN(locationId)) {
+        if (showFrom)
+            routes = routes.concat(locationService.allRoutesToLocation(locationId));
+        if (showTo)
+            routes = routes.concat(locationService.allRoutesFromLocation(locationId));
+    } else
+        routes = locationService.allRoutes();
+
+    // const routes = locationService.allRoutes();
+    const tableHTML = table(locationService, routes, locationId, !showFrom, !showTo);
+    return responses.ok(tableHTML);
 }
 
 // ========================== HTML Generators for Routes ==========================
-export const row = (locationService: LocationService, route: Route, skipFrom?: boolean, skipTo?: boolean): string => {
+const row = (locationService: LocationService, route: Route, skipFrom?: boolean, skipTo?: boolean): string => {
     const hxVals = JSON.stringify({
         routeId: route.id,
         showFrom: !skipFrom,
@@ -108,7 +131,7 @@ export const row = (locationService: LocationService, route: Route, skipFrom?: b
     </tr>
 }
 
-export const addRow = (locationService: LocationService, locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+const addRow = (locationService: LocationService, locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
     let locationsTemp = locationService.allLocationIds().map(id => locationService.locationInfo(id)!);
     if (locationId)
         locationsTemp = locationsTemp.filter(locationsTemp => locationsTemp.id !== locationId);
@@ -181,7 +204,8 @@ export const addRow = (locationService: LocationService, locationId?: number, sk
     </tr>;
 
 }
-export const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+
+const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
     return <table>
         <thead>
             {skipFrom ? null : <th>Fra</th>}
@@ -197,25 +221,4 @@ export const table = (locationService: LocationService, routes: Route[], locatio
             {addRow(locationService, locationId, skipFrom, skipTo)}
         </tbody>
     </table>
-}
-
-export const getRoutesTable = async (request: Request, locationService: LocationService): Promise<Response> => {
-    const form = parseForm(request.body);
-    const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-    const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
-    const locationId = Number.parseInt(form["locationId"]);
-
-    let routes: Route[] = [];
-
-    if (!Number.isNaN(locationId)) {
-        if (showFrom)
-            routes = routes.concat(locationService.allRoutesToLocation(locationId));
-        if (showTo)
-            routes = routes.concat(locationService.allRoutesFromLocation(locationId));
-    } else
-        routes = locationService.allRoutes();
-
-    // const routes = locationService.allRoutes();
-    const tableHTML = table(locationService, routes, locationId, !showFrom, !showTo);
-    return responses.ok(tableHTML);
 }

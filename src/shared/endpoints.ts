@@ -169,7 +169,7 @@ export const enum Endpoints {
 
     RenameLocation = "/master/renameLocation",
 
-    RenameLocationRow = "/master/renameLocationRow",
+    GetRenameLocationRow = "/master/renameLocationRow",
 
     ChangeLocationStatus = "/master/changeLocationStatus",
 

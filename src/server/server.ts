@@ -112,13 +112,13 @@ class Server {
             .route(Endpoints.MasterDeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             .route(Endpoints.MasterRoutes, UserType.Master, this.pages.routes)
-            
+
             // ================================ Route Management Endpoints ================================
             .route(Endpoints.AddRoute, UserType.Master, RouteHandler.addRoute, this.locationService)
             .route(Endpoints.DeleteRoute, UserType.Master, RouteHandler.deleteRoute, this.locationService)
             .route(Endpoints.ChangeRouteStatus, UserType.Master, RouteHandler.changeRouteStatus, this.locationService)
             .route(Endpoints.GetRouteTableRow, UserType.Master, RouteHandler.getRouteTableRow, this.locationService)
-            .route(Endpoints.GetRoutesTable, UserType.Master, RouteHandler.getRoutesTable, this.locationService)
+            .route(Endpoints.GetRoutesTable, UserType.Master, RouteHandler.getRouteTable, this.locationService)
             // ================================ Location Management Endpoints ============================
             .route(Endpoints.AddLocation, UserType.Master, LocationHandler.addLocation, this.locationService)
             .route(Endpoints.DeleteLocation, UserType.Master, LocationHandler.deleteLocation, this.locationService)
@@ -126,6 +126,8 @@ class Server {
             .route(Endpoints.GetLocationTableRow, UserType.Master, LocationHandler.getLocationTableRow, this.locationService)
             .route(Endpoints.GetLocationTable, UserType.Master, LocationHandler.getLocationTable, this.locationService)
             .route(Endpoints.GetLocationTableBody, UserType.Master, LocationHandler.getLocationTableBody, this.locationService)
+            .route(Endpoints.RenameLocation, UserType.Master, LocationHandler.renameLocation, this.locationService)
+            .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationHandler.getRenameLocationRow, this.locationService)
 
             
     }
