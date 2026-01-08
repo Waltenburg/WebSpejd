@@ -82,3 +82,7 @@ export class User {
         return this.locationId >= 0 && this.locationId !== Infinity;
     }
 }
+
+export const enum UserType {
+    None, Post, Master
+}

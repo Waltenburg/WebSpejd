@@ -8,5 +8,5 @@
         "rootDir": "./",
         "outDir": "../../target/shared"
     },
-    "include": ["./**/*.ts"]
+    "include": ["./**/*.ts", "./**/*.tsx"],
 }

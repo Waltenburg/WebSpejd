@@ -1,4 +1,4 @@
-import { User, UserCache } from "./users";
+import { User, UserCache, UserType } from "./users";
 import * as http from 'http'
 import * as responses from "./response";
 import type { ServiceBase } from "./databaseBarrel";
@@ -9,10 +9,6 @@ export interface Request {
     headers: { [key: string]: string };
     cookies: { [key: string]: string };
     body?: string;
-}
-
-export const enum UserType {
-    None, Post, Master
 }
 
 export class Router {
@@ -181,9 +177,6 @@ export class Router {
             body = Buffer.concat(chunks).toString();
         }
 
-        if (body)
-            console.log(body);
-
         return {
             user: user,
             url: url,
@@ -192,11 +185,18 @@ export class Router {
             body: body
         };
     }
-    // ...existing code...
+}
+
+export const parseForm = (body: string | null): Record<string, string> => {
+    if (!body) return {};
+    return body.split("&").reduce((acc, pair) => {
+        const [k, v] = pair.split("=");
+        if (k) acc[decodeURIComponent(k)] = decodeURIComponent(v ?? "");
+        return acc;
+    }, {} as Record<string, string>);
 }
 
 type Response = responses.Response;
-// type RouteFunction = (request: Request) => Promise<Response>;
 type RouteFunction<T extends ServiceBase[]> = (request: Request, ...services: T) => Promise<Response>;
 
 interface Route {

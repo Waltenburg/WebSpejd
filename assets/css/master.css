@@ -102,7 +102,7 @@ table {
     background: var(--panel);
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 tr:nth-child(even) {

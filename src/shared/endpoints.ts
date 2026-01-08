@@ -167,6 +167,10 @@ export const enum Endpoints {
 
     DeleteLocation = "/master/deleteLocation",
 
+    RenameLocation = "/master/renameLocation",
+
+    RenameLocationRow = "/master/renameLocationRow",
+
     ChangeLocationStatus = "/master/changeLocationStatus",
 
     GetLocationTableRow = "/master/getLocationTableRow",

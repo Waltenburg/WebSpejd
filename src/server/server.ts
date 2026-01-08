@@ -1,24 +1,32 @@
 import 'source-map-support/register';
 
 import * as http from 'http'
-import * as users from "./users";
+
+// ====== ENDPOINTS ======
+import { Endpoints } from '@shared/endpoints';
+
+// ====== Core server components ======
+import { User, UserType, UserCache } from './users';
+import {Router, parseForm, Request}  from "./request";
+import { UpdateService, AdminService, PatrolService, LocationService, Database} from "./databaseBarrel";
 import * as responses from "./response";
-import * as pages from "./pages/pages";
-import * as router from "./request";
-import { UserType, Request } from './request';
+
+// ====== Utilities ======
 import { Command } from 'commander';
 import { inspect } from 'util';
 
-// Database and data types
-import { UpdateService, AdminService, PatrolService, LocationService, Database} from "./databaseBarrel";
-import { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
+// ====== Pages and HTML generation ======
+import * as pages from "./pages/pages";
+import * as LocationHandler from './endpointHandlers/LocationHandler';
+import * as RouteHandler from    './endpointHandlers/RouteHandler';
+
+// ========== Miscenlaneous Types ========== 
+import type { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
 import { SETTINGS_TABLE } from './database/database';
-import { Endpoints } from '@shared/endpoints';
-import { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
+import type { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
 
-import { HTMLLocationTableGenerator } from './pages/HTMLLocationTableGenerator';
-import { HTMLRouteTableGenerator } from './pages/HTMLRouteTableGenerator';
 
+export type { Server };
 
 const enum SETTINGS {
     NUMBER_OF_UPDATES_SEND_TO_CLIENT = 10,
@@ -34,12 +42,9 @@ class Server {
     private patrolService: PatrolService;
     private updateService: UpdateService;
 
-    private locationTableGenerator: HTMLLocationTableGenerator; 
-    private routeTableGenerator: HTMLRouteTableGenerator;
-
-    private users: users.UserCache;
+    private users: UserCache;
     private pages: pages.Pages;
-    private router: router.Router;
+    private router: Router;
 
     /**
      * Create new server.
@@ -55,10 +60,7 @@ class Server {
         this.patrolService = patrolService;
         this.updateService = updateService;
 
-        this.locationTableGenerator = new HTMLLocationTableGenerator(this.locationService);
-        this.routeTableGenerator = new HTMLRouteTableGenerator(this.locationService);
-
-        this.users = new users.UserCache();
+        this.users = new UserCache();
         this.pages = new pages.Pages(`${assets}/html`, this.db, false,
             this.locationService, this.patrolService, this.updateService, this.adminService
         );
@@ -83,8 +85,8 @@ class Server {
             });
     }
 
-    private createRouter(address: string, port: number, assets: string, users: users.UserCache): router.Router {
-        return new router.Router(address, port, users)
+    private createRouter(address: string, port: number, assets: string, users: UserCache): Router {
+        return new Router(address, port, users)
             .assetDir("/assets", assets)
             .assetDir("/js", `${__dirname}/../client`)
             .file(Endpoints.Home, `${assets}/html/home.html`)
@@ -108,22 +110,22 @@ class Server {
             .route(Endpoints.MasterPatrol, UserType.Master, this.pages.patrol)
             .route(Endpoints.MasterPatrolStatus, UserType.Master, this.patrolStatus)
             .route(Endpoints.MasterDeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
-            .route(Endpoints.MasterPostStatus, UserType.Master, this.changeLocationStatus)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             .route(Endpoints.MasterRoutes, UserType.Master, this.pages.routes)
+            
             // ================================ Route Management Endpoints ================================
-            .route(Endpoints.AddRoute, UserType.Master, this.addRoute)
-            .route(Endpoints.DeleteRoute, UserType.Master, this.deleteRoute)
-            .route(Endpoints.ChangeRouteStatus, UserType.Master, this.changeRouteStatus)
-            .route(Endpoints.GetRouteTableRow, UserType.Master, this.getRouteTableRow)
-            .route(Endpoints.GetRoutesTable, UserType.Master, this.getRoutesTable)
+            .route(Endpoints.AddRoute, UserType.Master, RouteHandler.addRoute, this.locationService)
+            .route(Endpoints.DeleteRoute, UserType.Master, RouteHandler.deleteRoute, this.locationService)
+            .route(Endpoints.ChangeRouteStatus, UserType.Master, RouteHandler.changeRouteStatus, this.locationService)
+            .route(Endpoints.GetRouteTableRow, UserType.Master, RouteHandler.getRouteTableRow, this.locationService)
+            .route(Endpoints.GetRoutesTable, UserType.Master, RouteHandler.getRoutesTable, this.locationService)
             // ================================ Location Management Endpoints ============================
-            .route(Endpoints.AddLocation, UserType.Master, this.addLocation)
-            .route(Endpoints.DeleteLocation, UserType.Master, this.deleteLocation)
-            .route(Endpoints.ChangeLocationStatus, UserType.Master, this.changeLocationStatus)
-            .route(Endpoints.GetLocationTableRow, UserType.Master, this.getLocationTableRow)
-            .route(Endpoints.GetLocationTable, UserType.Master, this.getLocationTable)
-            .route(Endpoints.GetLocationTableBody, UserType.Master, this.getLocationTableBody)
+            .route(Endpoints.AddLocation, UserType.Master, LocationHandler.addLocation, this.locationService)
+            .route(Endpoints.DeleteLocation, UserType.Master, LocationHandler.deleteLocation, this.locationService)
+            .route(Endpoints.ChangeLocationStatus, UserType.Master, LocationHandler.changeLocationStatus, this.locationService)
+            .route(Endpoints.GetLocationTableRow, UserType.Master, LocationHandler.getLocationTableRow, this.locationService)
+            .route(Endpoints.GetLocationTable, UserType.Master, LocationHandler.getLocationTable, this.locationService)
+            .route(Endpoints.GetLocationTableBody, UserType.Master, LocationHandler.getLocationTableBody, this.locationService)
 
             
     }
@@ -301,22 +303,6 @@ class Server {
     }
 
 
-    changeLocationStatus = async(request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const locationId = Number.parseInt(form["locationId"])
-        const openText = form["open"];
-        const open = openText === "on" || openText === "true";
-
-        if(Number.isNaN(locationId) || openText == null)
-            return responses.response_code(400);
-
-        const succes = this.locationService.changeLocationStatus(locationId, open);
-        if(!succes)
-            return responses.response_code(400);
-        return responses.ok();
-    }
-
-
     patrolStatus = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
         const patrolId = Number.parseInt(params.get("patrolId"));
@@ -331,145 +317,7 @@ class Server {
         const updateId = Number.parseInt(params.get("id"));
         this.updateService.deleteUpdate(updateId);
         return responses.ok();
-    }
-
-    private parseForm(body: string | null): Record<string, string> {
-        if (!body) return {};
-        return body.split("&").reduce((acc, pair) => {
-            const [k, v] = pair.split("=");
-            if (k) acc[decodeURIComponent(k)] = decodeURIComponent(v ?? "");
-            return acc;
-        }, {} as Record<string, string>);
-    }
-
-    addRoute = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const fromId = Number.parseInt(form["fromLocationId"]);
-        const toId = Number.parseInt(form["toLocationId"]);
-        const open = form["open"] === "on" || form["open"] === "true";
-
-        if (Number.isNaN(fromId) || Number.isNaN(toId)) {
-            return responses.response_code(400);
-        }
-
-        if(this.locationService.addRoute(fromId, toId, open))
-            return responses.ok();
-        return responses.response_code(400);
-    }
-
-    changeRouteStatus = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
-        const open = (form["open"] ?? request.url.searchParams.get("open")) === "true";
-        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
-
-        if (!Number.isNaN(routeId)) {
-            const result = this.locationService.changeRouteStatus(routeId, open);
-            if(result)
-                return responses.ok();
-        }
-        return responses.response_code(400);
-    }
-
-    getRouteTableRow = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
-        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
-        if (!Number.isNaN(routeId)) {
-            const route = this.locationService.routeInfo(routeId);
-            if(route)
-                return responses.ok(this.routeTableGenerator.row(route, !showFrom, !showTo));
-        }
-        return responses.response_code(400);
-    }
-
-    getRoutesTable = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-        const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
-        const locationId = Number.parseInt(form["locationId"]);
-        
-        let routes: Route[] = [];
-        
-        if(!Number.isNaN(locationId)) {
-            if(showFrom) 
-                routes = routes.concat(this.locationService.allRoutesToLocation(locationId));
-            if(showTo)
-                routes = routes.concat(this.locationService.allRoutesFromLocation(locationId));
-            }else
-            routes = this.locationService.allRoutes();
-
-        // const routes = this.locationService.allRoutes();
-        const tableHTML = this.routeTableGenerator.table(routes, locationId, !showFrom, !showTo);
-        return responses.ok(tableHTML);
-    }
-
-    deleteRoute = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
-
-        if (!Number.isNaN(routeId)) {
-            this.locationService.deleteRoute(routeId);
-            return responses.ok();
-        }
-        return responses.response_code(400);
-    }
-
-    addLocation = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const name = form["name"];
-        const team = form["team"];
-        const openText = form["open"];
-        const open = openText === "on" || openText === "true";
-        if (!name || !team || !openText) {
-            return responses.response_code(400);
-        }
-
-        const locationId = this.locationService.addLocation(name, team, open);
-        if (locationId === null) {
-            return responses.response_code(400);
-        }
-        return responses.ok();
-    }
-
-    deleteLocation = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const locationId = Number.parseInt(form["locationId"]);
-        if(Number.isNaN(locationId))
-            return responses.response_code(400);
-
-        const succes = this.locationService.deleteLocation(locationId);
-        if(!succes)
-            return responses.response_code(400);
-
-        return responses.ok();
-    }
-
-    getLocationTableRow = async (request: Request): Promise<Response> => {
-        const form = this.parseForm(request.body);
-        const locationId = Number.parseInt(form["locationId"]);
-
-        if(Number.isNaN(locationId))
-            return responses.response_code(400);
-
-        const tableHTML = this.locationTableGenerator.row(locationId);
-        return responses.ok(tableHTML);
-    }
-
-    getLocationTable = async (request: Request): Promise<Response> => {
-        const locations = this.locationService.allLocationIds();
-        const tableHTML = this.locationTableGenerator.table(locations);
-        return responses.ok(tableHTML);
-    }
-
-    getLocationTableBody = async (request: Request): Promise<Response> => {
-        const locations = this.locationService.allLocationIds();
-        const tableHTML = this.locationTableGenerator.tableBody(locations);
-        return responses.ok(tableHTML);
-    }
-        
+    }  
 
     mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;

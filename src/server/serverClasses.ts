@@ -130,7 +130,7 @@ export namespace serverClasses{
         identifiers: string[]
         master: boolean
         lastAcces: number[]
-        static maxAge: number = 120 * 60 * 1000 //i millisekunder
+        static maxAge: number = 24 * 60 * 60 * 1000 //i millisekunder
         static deleteInterval: NodeJS.Timer
         static users: User[]
 
