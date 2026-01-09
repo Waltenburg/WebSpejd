@@ -1,5 +1,17 @@
 import * as elements from 'typed-html';
-import { LocationService, UpdateService } from "../databaseBarrel";
+import { LocationService, UpdateService, PatrolService } from "../databaseBarrel";
+import { Patrol, PatrolUpdate } from "@shared/types";
+import { Endpoints } from "@shared/endpoints";
+import * as responses from '../response';
+type Request = import('../request').Request;
+
+function patrolsUrl(sortBy: string = undefined, locationId: string = undefined, selection: string = undefined): string {
+    const params = new URLSearchParams();
+    if (sortBy) params.set('sortBy', sortBy);
+    if (locationId) params.set('locationId', locationId);
+    if (selection) params.set('selection', selection);
+    return `${Endpoints.GetPatrolStatusTable}?${params.toString()}`;
+}
 
 const renderMasterPage = (title: string, content: string) => `
 <!DOCTYPE html>

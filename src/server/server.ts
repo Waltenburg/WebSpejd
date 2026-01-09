@@ -19,6 +19,7 @@ import { inspect } from 'util';
 import * as pages from "./pages/pages";
 import * as LocationHandler from './endpointHandlers/LocationHandler';
 import * as RouteHandler from    './endpointHandlers/RouteHandler';
+import * as PatrolHandler from   './endpointHandlers/patrolHandler';
 
 // ========== Miscenlaneous Types ========== 
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
@@ -109,12 +110,13 @@ class Server {
             .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
             .route(Endpoints.MasterLocations, UserType.Master, this.pages.locations)
             .route(Endpoints.MasterLocation, UserType.Master, this.pages.locationPage)
-            .route(Endpoints.GetPatrolStatusTable, UserType.Master, this.pages.patrols)
             .route(Endpoints.SinglePatrolPage, UserType.Master, this.pages.patrol)
             .route(Endpoints.ChangePatrolStatus, UserType.Master, this.patrolStatus)
             .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             .route(Endpoints.RoutesPage, UserType.Master, this.pages.routes)
+            // ================================ Patrol Management Endpoints ================================
+            .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolHandler.getPatrolsTable, this.locationService, this.patrolService, this.updateService)
 
             // ================================ Route Management Endpoints ================================
             .route(Endpoints.AddRoute, UserType.Master, RouteHandler.addRoute, this.locationService)

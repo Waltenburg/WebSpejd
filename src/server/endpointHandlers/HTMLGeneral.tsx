@@ -1,7 +1,7 @@
 import * as elements from 'typed-html';
 
-import { Location, PatrolUpdate } from "@shared/types"
-import { LocationService } from "../databaseBarrel"
+import type { Location, PatrolUpdate } from "@shared/types"
+import type { LocationService, PatrolService } from "../databaseBarrel"
 import { Endpoints } from '@shared/endpoints';
 
 export const getElementById = (id: string): string => {
@@ -49,3 +49,16 @@ export const formatUpdateLocation = (locationService: LocationService, update: P
         </span>;
     }      
 }
+
+export const formatPatrol = (patrolId: number, patrolService: PatrolService): string => {
+    const patrol = patrolService.patrolInfo(patrolId);
+    return `#${patrol.number} ${patrol.name}`;
+};
+
+export const locationName = (locationId: number, locationService: LocationService): string => {
+    return locationService.locationInfo(locationId)?.name || "Ukendt lokation";
+};
+
+export const clock = (date: Date): string => {
+    return date.toTimeString().split(' ')[0]; // hh:mm:ss
+};
