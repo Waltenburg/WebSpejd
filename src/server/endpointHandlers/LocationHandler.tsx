@@ -73,7 +73,7 @@ export const deleteLocation = async (request: Request, locationService: Location
 
 // ========================== Getting HTML for Locations ==========================
 
-export const getLocationTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getLocationConfigTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
 
@@ -84,13 +84,13 @@ export const getLocationTableRow = async (request: Request, locationService: Loc
     return responses.ok(tableHTML);
 }
 
-export const getLocationTable = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getLocationConfigTable = async (request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds();
     const tableHTML = html_table(locationService, locations);
     return responses.ok(tableHTML);
 }
 
-export const getLocationTableBody = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getLocationConfigTableBody = async (request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds();
     const tableHTML = html_tableBody(locationService, locations);
     return responses.ok(tableHTML);

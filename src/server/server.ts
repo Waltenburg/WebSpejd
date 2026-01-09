@@ -128,10 +128,10 @@ class Server {
             .route(Endpoints.AddLocation, UserType.Master, LocationHandler.addLocation, this.locationService)
             .route(Endpoints.DeleteLocation, UserType.Master, LocationHandler.deleteLocation, this.locationService)
             .route(Endpoints.ChangeLocationStatus, UserType.Master, LocationHandler.changeLocationStatus, this.locationService)
-            .route(Endpoints.GetLocationConfigTableRow, UserType.Master, LocationHandler.getLocationTableRow, this.locationService)
-            .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationHandler.getLocationTable, this.locationService)
-            .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationHandler.getLocationTableBody, this.locationService)
             .route(Endpoints.RenameLocation, UserType.Master, LocationHandler.renameLocation, this.locationService)
+            .route(Endpoints.GetLocationConfigTableRow, UserType.Master, LocationHandler.getLocationConfigTableRow, this.locationService)
+            .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationHandler.getLocationConfigTable, this.locationService)
+            .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationHandler.getLocationConfigTableBody, this.locationService)
             .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationHandler.getRenameLocationRow, this.locationService)
 
             
