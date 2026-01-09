@@ -17,7 +17,7 @@ import { inspect } from 'util';
 
 // ====== Pages and HTML generation ======
 import * as pages from "./pages/pages";
-import * as LocationHandler from './endpointHandlers/LocationHandler';
+import * as LocationHandler from './endpointHandlers/LocationConfigHandler';
 import * as RouteHandler from    './endpointHandlers/RouteHandler';
 import * as PatrolHandler from   './endpointHandlers/patrolHandler';
 

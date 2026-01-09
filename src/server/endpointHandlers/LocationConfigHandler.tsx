@@ -109,8 +109,8 @@ export const getRenameLocationRow = async (request: Request, locationService: Lo
 
 // ========================== HTML Generation Functions ==========================
 const enum ids {
-    table = "location-table",
-    tableBody = "location-table-body"
+    configTable = "location-config-table",
+    configTableBody = "location-config-table-body",
 }
 const enum classes {
     renaming = "renaming"
@@ -159,7 +159,7 @@ const html_row = (locationService: LocationService, locationId: number): string 
 
             <button hx-post={`${Endpoints.GetRenameLocationRow}`} hx-target="closest tr"
                 hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}
-                hx-on--before-request={addClassToElement(getElementById(ids.table), classes.renaming)}>
+                hx-on--before-request={addClassToElement(getElementById(ids.configTable), classes.renaming)}>
                 {/* hx-on--before-request="console.log('Got clicked!');"> */}
                 Omdøb
             </button>
@@ -201,7 +201,7 @@ const html_renameLocationRow = (locationService: LocationService, locationId: nu
     if (!location)
         return <tr><td colspan={4}>Lokation ikke fundet</td></tr>;
 
-    const removeRenamingClassScript = removeClassFromElement(getElementById(ids.table), classes.renaming);
+    const removeRenamingClassScript = removeClassFromElement(getElementById(ids.configTable), classes.renaming);
 
     return <tr id={`rename-location-row-${locationId}`}>
         <td><input required='true' type="text" name="name" value={location.name} /></td>
@@ -241,14 +241,14 @@ const html_renameLocationRow = (locationService: LocationService, locationId: nu
 
 const html_tableBody = (locationService: LocationService, locationIds: number[]): string => {
     return <tbody
-        id="location-table-body"
+        id={ids.configTableBody}
         hx-ext="idiomorph"
         hx-get={`${Endpoints.GetLocationConfigTableBody}`}
         hx-target="this"
         hx-swap="outerHTML"
         hx-trigger="every 1s"   
         // hx-on--before-request="console.log(this.id, event.detail.elt.id)">
-        hx-on--before-request={`if (event.detail.elt.id === this.id && ${isClassOnElement(getElementById(ids.table), classes.renaming)}) {console.log("cancelled request"); event.preventDefault(); }`}>
+        hx-on--before-request={`if (event.detail.elt.id === this.id && ${isClassOnElement(getElementById(ids.configTable), classes.renaming)}) {console.log("cancelled request"); event.preventDefault(); }`}>
         {locationIds.length === 0 ?
             <tr><td colspan={4}>Ingen lokationer</td></tr>
             : null}
@@ -257,7 +257,7 @@ const html_tableBody = (locationService: LocationService, locationIds: number[])
 }
 
 const html_table = (locationService: LocationService, locationIds: number[]): string => {
-    return <table id="location-table">
+    return <table id={ids.configTable}>
         <thead>
             <th>Navn</th>
             <th>Team</th>
