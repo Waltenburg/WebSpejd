@@ -73,10 +73,6 @@ a:hover {
     text-decoration: none;
 }
 
-.bold {
-    font-weight: 700;
-}
-
 .clickable {
     cursor: pointer;
     color: var(--text);
@@ -118,10 +114,58 @@ td, th {
     word-break: break-word;
 }
 
+th {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+thead {
+    background: var(--accent);
+    color: white;
+}
+
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
     /* margin: 1rem 0; */
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--panel);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+input[type="checkbox"]:hover {
+    border-color: var(--accent);
+}
+
+input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+input[type="checkbox"]:focus {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 2px;
 }
 
 .button,

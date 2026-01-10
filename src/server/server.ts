@@ -7,8 +7,8 @@ import { Endpoints } from '@shared/endpoints';
 
 // ====== Core server components ======
 import { User, UserType, UserCache } from './users';
-import {Router, parseForm, Request}  from "./request";
-import { UpdateService, AdminService, PatrolService, LocationService, Database} from "./databaseBarrel";
+import { Router, parseForm, Request } from "./request";
+import { UpdateService, AdminService, PatrolService, LocationService, Database } from "./databaseBarrel";
 import * as responses from "./response";
 
 // ====== Utilities ======
@@ -16,15 +16,19 @@ import { Command } from 'commander';
 import { inspect } from 'util';
 
 // ====== Pages and HTML generation ======
-import * as pages from "./pages/pages";
-import * as LocationHandler from './endpointHandlers/LocationConfigHandler';
-import * as RouteHandler from    './endpointHandlers/RouteHandler';
-import * as PatrolHandler from   './endpointHandlers/patrolHandler';
+import * as OLD_pages from "./pages/pages";
+import * as pages from "./endpointHandlers/pages";
+import * as LocationConfigHandler from './endpointHandlers/LocationConfigHandler';
+import * as LocationStatusHandler from './endpointHandlers/locationStatusHandler';
+import * as RouteConfigHandler from './endpointHandlers/RouteConfigHandler';
+import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
+import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
 
 // ========== Miscenlaneous Types ========== 
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
 import { SETTINGS_TABLE } from './database/database';
 import type { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
+import { mainMasterPage } from './endpointHandlers/pages';
 
 
 export type { Server };
@@ -44,7 +48,7 @@ class Server {
     private updateService: UpdateService;
 
     private users: UserCache;
-    private pages: pages.Pages;
+    private pages: OLD_pages.Pages;
     private router: Router;
 
     /**
@@ -62,7 +66,7 @@ class Server {
         this.updateService = updateService;
 
         this.users = new UserCache();
-        this.pages = new pages.Pages(`${assets}/html`, this.db, false,
+        this.pages = new OLD_pages.Pages(`${assets}/html`, this.db, false,
             this.locationService, this.patrolService, this.updateService, this.adminService
         );
         this.router = this.createRouter(address, port, assets, this.users);
@@ -73,13 +77,13 @@ class Server {
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
-            try{
+            try {
                 // let timeStart = Date.now();
                 let response = await this.router.handleRequest(req);
                 responses.send(connection, response);
                 // let timeEnd = Date.now();
                 // console.log(`Request to ${req.url} took ${timeEnd - timeStart} ms`);
-            }catch(e) {
+            } catch (e) {
                 console.error(e);
                 responses.send(connection, responses.server_error());
             }
@@ -104,10 +108,8 @@ class Server {
             .route(Endpoints.GetMandskabData, UserType.Post, this.locationDataForMandskab)
             .route(Endpoints.SendPatrolUpdateMandskab, UserType.Post, this.makePatrolUpdate)
             .route(Endpoints.DeletePatrolUpdateMandskab, UserType.Post, this.mandskabDeleteUpdate)
-            .route(Endpoints.MainMasterPage, UserType.Master, this.pages.master)
             .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, this.pages.patrolUpdatePage)
             .route(Endpoints.MasterAddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
-            .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
             .route(Endpoints.MasterLocations, UserType.Master, this.pages.locations)
             .route(Endpoints.MasterLocation, UserType.Master, this.pages.locationPage)
             .route(Endpoints.SinglePatrolPage, UserType.Master, this.pages.patrol)
@@ -115,26 +117,39 @@ class Server {
             .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             .route(Endpoints.RoutesPage, UserType.Master, this.pages.routes)
-            // ================================ Patrol Management Endpoints ================================
-            .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolHandler.getPatrolsTable, this.locationService, this.patrolService, this.updateService)
-
-            // ================================ Route Management Endpoints ================================
-            .route(Endpoints.AddRoute, UserType.Master, RouteHandler.addRoute, this.locationService)
-            .route(Endpoints.DeleteRoute, UserType.Master, RouteHandler.deleteRoute, this.locationService)
-            .route(Endpoints.ChangeRouteStatus, UserType.Master, RouteHandler.changeRouteStatus, this.locationService)
-            .route(Endpoints.GetRouteTableRow, UserType.Master, RouteHandler.getRouteTableRow, this.locationService)
-            .route(Endpoints.GetRoutesTable, UserType.Master, RouteHandler.getRouteTable, this.locationService)
-            // ================================ Location Management Endpoints ============================
-            .route(Endpoints.AddLocation, UserType.Master, LocationHandler.addLocation, this.locationService)
-            .route(Endpoints.DeleteLocation, UserType.Master, LocationHandler.deleteLocation, this.locationService)
-            .route(Endpoints.ChangeLocationStatus, UserType.Master, LocationHandler.changeLocationStatus, this.locationService)
-            .route(Endpoints.RenameLocation, UserType.Master, LocationHandler.renameLocation, this.locationService)
-            .route(Endpoints.GetLocationConfigTableRow, UserType.Master, LocationHandler.getLocationConfigTableRow, this.locationService)
-            .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationHandler.getLocationConfigTable, this.locationService)
-            .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationHandler.getLocationConfigTableBody, this.locationService)
-            .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationHandler.getRenameLocationRow, this.locationService)
-
             
+            // ================================ Master Pages Endpoints ==================================
+            .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
+            .route(Endpoints.LocationRouteConfigPage, UserType.Master, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
+            
+            // ================================ Route Config Endpoints ================================
+            .route(Endpoints.AddRoute, UserType.Master, RouteConfigHandler.addRoute, this.locationService)
+            .route(Endpoints.DeleteRoute, UserType.Master, RouteConfigHandler.deleteRoute, this.locationService)
+            .route(Endpoints.ChangeRouteStatus, UserType.Master, RouteConfigHandler.changeRouteStatus, this.locationService)
+            .route(Endpoints.GetRouteTableRow, UserType.Master, RouteConfigHandler.getRouteConfigTableRow, this.locationService)
+            .route(Endpoints.GetRoutesTable, UserType.Master, RouteConfigHandler.getRouteConfigTable, this.locationService)
+            
+            // ================================ Patrol Update Endpoints ================================
+            // .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
+            .route(Endpoints.GetPatrolUpdatesTable, UserType.Master, PatrolUpdatesHandler.getPatrolUpdatesTable, this.updateService, this.locationService, this.patrolService)
+
+            // ================================ Patrol Status Endpoints ================================
+            .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
+
+            // ================================ Location Status Endpoints ================================
+            .route(Endpoints.GetLocationStatusTable, UserType.Master, LocationStatusHandler.getLocationStatusTable, this.locationService)
+
+            // ================================ Location Config Endpoints ============================
+            .route(Endpoints.AddLocation, UserType.Master, LocationConfigHandler.addLocation, this.locationService)
+            .route(Endpoints.DeleteLocation, UserType.Master, LocationConfigHandler.deleteLocation, this.locationService)
+            .route(Endpoints.ChangeLocationStatus, UserType.Master, LocationConfigHandler.changeLocationStatus, this.locationService)
+            .route(Endpoints.RenameLocation, UserType.Master, LocationConfigHandler.renameLocation, this.locationService)
+            .route(Endpoints.GetLocationConfigTableRow, UserType.Master, LocationConfigHandler.getLocationConfigTableRow, this.locationService)
+            .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationConfigHandler.getLocationConfigTable, this.locationService)
+            .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationConfigHandler.getLocationConfigTableBody, this.locationService)
+            .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationConfigHandler.getRenameLocationRow, this.locationService)
+
+
     }
 
     /**
@@ -143,7 +158,7 @@ class Server {
      * @param options ?
      * @param event the event that caused the cleanup
      */
-    cleanup(_options:any, event:string) {
+    cleanup(_options: any, event: string) {
         console.log("Program exiting with code: " + event);
         console.log(event);
         process.exit()
@@ -156,7 +171,7 @@ class Server {
         const password = req.headers['password'];
         const identifier = req.headers['id'];
         const locationId = this.adminService.authenticate(password);
-        if(locationId === undefined) {
+        if (locationId === undefined) {
             return responses.unauthorized();
         }
         const user = this.users.addUser(identifier, locationId);
@@ -167,7 +182,7 @@ class Server {
 
     logout = async (_request: Request): Promise<Response> => {
         let response = responses.redirect("/");
-        response.headers["Set-Cookie"] =  "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        response.headers["Set-Cookie"] = "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         return response;
     }
 
@@ -179,13 +194,13 @@ class Server {
         const user = req.user;
 
         const location = this.locationService.locationInfo(user.locationId);
-        if(location === undefined)
+        if (location === undefined)
             return responses.not_found(`post ${user.locationId} not found`);
 
         let towardsLocation = this.locationService.patrolsTowardsLocation(user.locationId);
 
         // if the location is the first location, include patrols that have no patrol update yet
-        if(location.id === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+        if (location.id === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
             const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
             towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
         }
@@ -195,13 +210,13 @@ class Server {
         const openRoutes = routesFromLocation.filter(route => route.is_open);
         const nextLocations = openRoutes.map(route => this.locationService.locationInfo(route.toLocationId));
         const latestUpdates = this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
-        .map(update => {
-            return {
-                ...update,
-                patrol: this.patrolService.patrolInfo(update.patrolId),
-                targetLocationName: this.locationService.locationInfo(update.targetLocationId)?.name || "Ukendt destination"
-            };
-        });
+            .map(update => {
+                return {
+                    ...update,
+                    patrol: this.patrolService.patrolInfo(update.patrolId),
+                    targetLocationName: this.locationService.locationInfo(update.targetLocationId)?.name || "Ukendt destination"
+                };
+            });
 
         const data: MandskabData = {
             patrolsOnLocation: onLocation.map(p => this.patrolService.patrolInfo(p)),
@@ -217,9 +232,9 @@ class Server {
         });
     }
 
-    
 
-    tryGet<In, Out> (input: In, map: (input: In) => Out | undefined, errorHandler?: (error: Error) => void): Out | undefined {
+
+    tryGet<In, Out>(input: In, map: (input: In) => Out | undefined, errorHandler?: (error: Error) => void): Out | undefined {
         try {
             const result = map(input);
             return result;
@@ -245,8 +260,8 @@ class Server {
             (upd) => JSON.parse(upd) as PatrolUpdateFromMandskab,
             (err) => console.error("Error parsing update string:", err)
         ) as PatrolUpdateFromMandskab | undefined;
-        
-        if(!update)
+
+        if (!update)
             return responses.response_code(400);
 
         const checkin: PatrolUpdateWithNoId = {
@@ -257,7 +272,7 @@ class Server {
         };
 
         const thisIsFirstLocation = user.locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID]);
-        if(!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
+        if (!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
             return responses.response_code(400);
         }
 
@@ -284,11 +299,11 @@ class Server {
         }
 
         const type = formData['type']; // "checkin" or "checkout"
-        if(type === 'checkin') {
+        if (type === 'checkin') {
             const locationId = Number.parseInt(formData['singleLocation']);
             patrolUpdate.currentLocationId = locationId;
             patrolUpdate.targetLocationId = locationId;
-        } else if(type === 'checkout') {
+        } else if (type === 'checkout') {
             const fromLocationId = Number.parseInt(formData['fromLocation']);
             const toLocationId = Number.parseInt(formData['toLocation']);
             patrolUpdate.currentLocationId = fromLocationId;
@@ -299,7 +314,7 @@ class Server {
 
 
         // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
-        if(!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true)) {
+        if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true)) {
             console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
             return responses.response_code(400);
         }
@@ -324,7 +339,7 @@ class Server {
         const updateId = Number.parseInt(params.get("id"));
         this.updateService.deleteUpdate(updateId);
         return responses.ok();
-    }  
+    }
 
     mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
@@ -335,7 +350,7 @@ class Server {
         const requestAndCheckinMatch = locationIdAtCheckin === request.user.locationId && locationIdAtCheckin != null;
         const checkinIsRecent = checkin?.time.getTime() > Date.now() - SETTINGS.MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB;
 
-        if(requestAndCheckinMatch && checkinIsRecent) {
+        if (requestAndCheckinMatch && checkinIsRecent) {
             this.updateService.deleteUpdate(checkinId);
             return responses.ok();
         }
@@ -421,7 +436,7 @@ async function main(): Promise<void> {
     const patrolService = new PatrolService(db);
     const updateService = new UpdateService(db);
 
-    if(resetDatabase){
+    if (resetDatabase) {
         console.log("Resetting database: Deleting all patrol updates");
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
     }

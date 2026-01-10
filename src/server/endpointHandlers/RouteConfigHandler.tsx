@@ -54,7 +54,7 @@ export const deleteRoute = async (request: Request, locationService: LocationSer
 
 // ========================== Getting HTML for Routes ==========================
 
-export const getRouteTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getRouteConfigTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
     const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
@@ -67,10 +67,17 @@ export const getRouteTableRow = async (request: Request, locationService: Locati
     return responses.response_code(400);
 }
 
-export const getRouteTable = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getRouteConfigTable = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
-    const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-    const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+    
+    let showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
+    let showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
+
+    if(!showFrom && !showTo){
+        showFrom = true;
+        showTo = true;
+    }
+
     const locationId = Number.parseInt(form["locationId"]);
 
     let routes: Route[] = [];
@@ -206,7 +213,10 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
 }
 
 const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
-    return <table>
+    return <table
+        hx-post={Endpoints.GetRoutesTable}
+        hx-trigger="every 30s"
+        hx-swap="outerHTML">
         <thead>
             {skipFrom ? null : <th>Fra</th>}
             {skipTo ? null : <th>Til</th>}

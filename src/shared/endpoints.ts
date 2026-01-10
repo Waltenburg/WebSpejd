@@ -40,6 +40,10 @@ export const enum Endpoints {
      */
     MainMasterPage = "/master",
 
+    LocationRouteConfigPage = "/master/locationRouteConfig",
+
+    PatrolConfigPage = "/master/patrolConfig",
+
     /**
      * Master check-in creation page.
      * Accessible to: Master administrators (UserType.Master)
@@ -138,6 +142,9 @@ export const enum Endpoints {
      */
     SendPatrolUpdateMandskab = "/sendPatrolUpdateMandskab",
 
+    // =============================== Patrol Updates table and Management Endpoints ================================
+    GetPatrolUpdatesTable = "/master/patrolUpdatesTable",
+
 
     // ================================ Patrol management Endpoints ================================
     AddPatrol = "/master/addPatrol",
@@ -160,7 +167,7 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays all patrols in the system with their current location, status, and activity history
      */
-    GetPatrolStatusTable = "/master/patrols",
+    GetPatrolStatusTable = "/master/patrolStatusTable",
 
     // ================================ Location Config Endpoints ============================
     AddLocation = "/master/addLocation",
@@ -179,6 +186,11 @@ export const enum Endpoints {
     GetLocationConfigTable = "/master/getLocationsTable",
 
     GetLocationConfigTableBody = "/master/getLocationsTableBody",
+
+    // ================================ Location status table Endpoints ================================
+    GetLocationStatusTableRow = "/master/getLocationStatusTableRow",
+    
+    GetLocationStatusTable = "/master/getLocationStatusTable",
 
     // ================================ Route Management Endpoints ================================
     

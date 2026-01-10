@@ -52,7 +52,9 @@ export const formatUpdateLocation = (locationService: LocationService, update: P
 
 export const formatPatrol = (patrolId: number, patrolService: PatrolService): string => {
     const patrol = patrolService.patrolInfo(patrolId);
-    return `#${patrol.number} ${patrol.name}`;
+    return <a href={`${Endpoints.SinglePatrolPage}?id=${patrol.id}`} class="hover-underline">
+        {`#${patrol.number} ${patrol.name}`}
+    </a>
 };
 
 export const locationName = (locationId: number, locationService: LocationService): string => {

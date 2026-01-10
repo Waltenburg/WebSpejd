@@ -21,7 +21,7 @@ const onLoadFunction = () => {
 
     (document.getElementById("loginButton") as HTMLButtonElement).addEventListener("click", () => loginClicked(false));
     (document.getElementById("loginInMandskab") as HTMLButtonElement).addEventListener("click", () => location.assign(Endpoints.Mandskab));
-    (document.getElementById("loginInMaster") as HTMLButtonElement).addEventListener("click", () => location.assign(Endpoints.Master));
+    (document.getElementById("loginInMaster") as HTMLButtonElement).addEventListener("click", () => location.assign(Endpoints.MainMasterPage));
 
     console.log("Home page loaded");
 }

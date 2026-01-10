@@ -1,9 +1,54 @@
 import * as elements from 'typed-html';
 import { LocationService, UpdateService, PatrolService } from "../databaseBarrel";
-import { Patrol, PatrolUpdate } from "@shared/types";
 import { Endpoints } from "@shared/endpoints";
 import * as responses from '../response';
+import { getPatrolStatusTable } from './patrolStatusHandler';
+import { getLocationStatusTable as getLocationStatusTable } from './locationStatusHandler';
+import { getPatrolUpdatesTable } from './patrolUpdatesHandler';
+import { getLocationConfigTable } from './LocationConfigHandler';
+import { getRouteConfigTable } from './RouteConfigHandler';
 type Request = import('../request').Request;
+
+// ========================== Endpoint Handler for Pages ==========================
+export const mainMasterPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
+    const [locationStatusRes, patrolStatusRes, patrolUpdatesRes] = await Promise.all([
+        getLocationStatusTable(request, locationService),
+        getPatrolStatusTable(request, locationService, patrolService, updateService),
+        getPatrolUpdatesTable(request, updateService, locationService, patrolService)
+    ]);
+    
+    const content = <div id="content">
+        <h1>Status på lokationer</h1>
+        {locationStatusRes.content}
+        <a class="button" href={Endpoints.LocationRouteConfigPage}>Konfigurer Lokationer og Ruter</a>
+        <h1>Status på patruljer</h1>
+        {patrolStatusRes.content}
+        <h1>Seneste patruljeopdateringer</h1>
+        {patrolUpdatesRes.content}
+    </div>
+    const html = renderMasterPage("Master Oversigt", content);
+    return responses.ok(html);
+}
+
+export const locatonAndRouteConfigPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
+    const [llocationConfigRes, routeConfigRes] = await Promise.all([
+        getLocationConfigTable(request, locationService),
+        getRouteConfigTable(request, locationService)
+    ]);
+    
+    const content = <div id="content">
+        <h1>Konfiguration af lokationer og ruter</h1>
+        <h2>Lokationer</h2>
+        {llocationConfigRes.content}
+        <h2>Ruter</h2>
+        {routeConfigRes.content}
+    </div>;
+    const html = renderMasterPage("Master Lokationer og Ruter", content);
+    return responses.ok(html);
+}
+
+
+// ========================== HTML Generation Functions ==========================
 
 function patrolsUrl(sortBy: string = undefined, locationId: string = undefined, selection: string = undefined): string {
     const params = new URLSearchParams();

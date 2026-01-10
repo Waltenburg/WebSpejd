@@ -12,6 +12,8 @@ export class PatrolService extends ServiceBase {
         const patrol = this.prepare("SELECT * FROM patrol WHERE id = ?").get(patrolId) as Patrol | undefined;
         if(!patrol)
             throw new PatrolNotFoundError(patrolId);
+        // @ts-expect-error - converting from integer to boolean
+        patrol.udgået = patrol.udgået === 1;
         return patrol;
     }
 
