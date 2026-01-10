@@ -48,7 +48,7 @@ class Server {
     private updateService: UpdateService;
 
     private users: UserCache;
-    private pages: OLD_pages.Pages;
+    private OLDpages: OLD_pages.Pages;
     private router: Router;
 
     /**
@@ -66,7 +66,7 @@ class Server {
         this.updateService = updateService;
 
         this.users = new UserCache();
-        this.pages = new OLD_pages.Pages(`${assets}/html`, this.db, false,
+        this.OLDpages = new OLD_pages.Pages(`${assets}/html`, this.db, false,
             this.locationService, this.patrolService, this.updateService, this.adminService
         );
         this.router = this.createRouter(address, port, assets, this.users);
@@ -108,15 +108,10 @@ class Server {
             .route(Endpoints.GetMandskabData, UserType.Post, this.locationDataForMandskab)
             .route(Endpoints.SendPatrolUpdateMandskab, UserType.Post, this.makePatrolUpdate)
             .route(Endpoints.DeletePatrolUpdateMandskab, UserType.Post, this.mandskabDeleteUpdate)
-            .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, this.pages.patrolUpdatePage)
             .route(Endpoints.MasterAddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
-            .route(Endpoints.MasterLocations, UserType.Master, this.pages.locations)
-            .route(Endpoints.MasterLocation, UserType.Master, this.pages.locationPage)
-            .route(Endpoints.SinglePatrolPage, UserType.Master, this.pages.patrol)
             .route(Endpoints.ChangePatrolStatus, UserType.Master, this.patrolStatus)
             .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
-            .route(Endpoints.RoutesPage, UserType.Master, this.pages.routes)
             
             // ================================ Master Pages Endpoints ==================================
             .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)

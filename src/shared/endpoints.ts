@@ -51,35 +51,20 @@ export const enum Endpoints {
      */
     MasterAddPatrolUpdatePage = "/master/updatePage",
 
-    /**
-     * Master check-ins list page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays a comprehensive list of all patrol check-ins in the system with history and status
-     */
-    MasterPatrolUpdates = "/master/patrolUpdates",
-
-    /**
-     * Master posts (locations) list page.
-     * Accessible to: Master administrators (UserType.Master)
-     * Purpose: Displays all posts/locations in the system with their current status and occupancy information
-     */
-    MasterLocations = "/master/locations",
 
     /**
      * Master single location detail page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific location including patrols present and incoming
      */
-    MasterLocation = "/master/location",
+    MasterLocationPage = "/master/location",
 
     /**
      * Master single patrol detail page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific patrol including location history and status timeline
      */
-    SinglePatrolPage = "/master/patrol",
-    
-    RoutesPage = "/master/routes",
+    MasterPatrolPage = "/master/patrol",
 
     /**
      * Home page - public landing page.\

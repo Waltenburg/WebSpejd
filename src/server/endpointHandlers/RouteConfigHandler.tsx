@@ -106,12 +106,12 @@ const row = (locationService: LocationService, route: Route, skipFrom?: boolean,
 
     return <tr>
         {skipFrom ? null :
-            <td><a href={`${Endpoints.MasterLocation}?locationId=${route.fromLocationId}`}>
+            <td><a href={`${Endpoints.MasterLocationPage}?locationId=${route.fromLocationId}`}>
                 {locationService.locationInfo(route.fromLocationId)?.name}
             </a></td>}
 
         {skipTo ? null :
-            <td><a href={`${Endpoints.MasterLocation}?locationId=${route.toLocationId}`}>
+            <td><a href={`${Endpoints.MasterLocationPage}?locationId=${route.toLocationId}`}>
                 {locationService.locationInfo(route.toLocationId)?.name}
             </a></td>}
         <td>{route.is_open ? "Åben" : "Lukket"}</td>

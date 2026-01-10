@@ -28,7 +28,7 @@ export const formatLocationAnchor = (location: Location | null): string => {
     if (location == null)
         return "Ukendt lokation";
 
-    return <a href={`${Endpoints.MasterLocation}?id=${location.id}`}
+    return <a href={`${Endpoints.MasterLocationPage}?id=${location.id}`}
         class="hover-underline">
         {location.name}
     </a>;
@@ -52,7 +52,7 @@ export const formatUpdateLocation = (locationService: LocationService, update: P
 
 export const formatPatrol = (patrolId: number, patrolService: PatrolService): string => {
     const patrol = patrolService.patrolInfo(patrolId);
-    return <a href={`${Endpoints.SinglePatrolPage}?id=${patrol.id}`} class="hover-underline">
+    return <a href={`${Endpoints.MasterPatrolPage}?id=${patrol.id}`} class="hover-underline">
         {`#${patrol.number} ${patrol.name}`}
     </a>
 };
