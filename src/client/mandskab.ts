@@ -126,7 +126,7 @@ class Mandskab {
                     ["Genindlæs side", () => this.reloadData()]
                 );
             }
-            sendRequest(Endpoints.SendPatrolUpdateMandskab, header, succesReciever, onFail);
+            sendRequest(Endpoints.MandskabSendPatrolUpdate, header, succesReciever, onFail);
         }
 
         const nextLocationName = this.nextLocationSelector.options[this.nextLocationSelector.selectedIndex].text;
@@ -142,7 +142,7 @@ class Mandskab {
             return;
 
         const onConfirm = (): void => {
-            sendRequest(`${Endpoints.DeletePatrolUpdateMandskab}?id=${lastActionId}`, null, (status, headers) => {
+            sendRequest(`${Endpoints.MandskabDeletePatrolUpdate}?id=${lastActionId}`, null, (status, headers) => {
                 this.recentActions.pop();
                 this.reloadData();
             }, err => {

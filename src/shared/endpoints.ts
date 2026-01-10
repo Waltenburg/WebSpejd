@@ -104,7 +104,7 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Processes and saves manually created patrol check-ins from master administrators
      */
-    MasterAddPatrolUpdate = "/master/addPatrolUpdate",
+    AddPatrolUpdate = "/master/addPatrolUpdate",
 
     /**
      * Master delete check-in endpoint.
@@ -118,25 +118,31 @@ export const enum Endpoints {
      * Accessible to: Users logged in as Mandskab.\
      * Purpose: Allows deletion of recent patrol updates from their own location
      */
-    DeletePatrolUpdateMandskab = "/deletePatrolUpdateMandskab",
+    MandskabDeletePatrolUpdate = "/deletePatrolUpdateMandskab",
 
     /**
      * Submit patrol update endpoint.\
      * Accessible to: Users logged in as Mandskab.\
      * Purpose: Records a patrol check-in or movement from current location to target location
      */
-    SendPatrolUpdateMandskab = "/sendPatrolUpdateMandskab",
+    MandskabSendPatrolUpdate = "/sendPatrolUpdateMandskab",
 
     // =============================== Patrol Updates table and Management Endpoints ================================
     GetPatrolUpdatesTable = "/master/patrolUpdatesTable",
 
 
-    // ================================ Patrol management Endpoints ================================
+    // ================================ Patrol config Endpoints ================================
     AddPatrol = "/master/addPatrol",
 
     DeletePatrol = "/master/deletePatrol",
 
-    RenamePatrol = "/master/renamePatrol",
+    AlterPatrol = "/master/renamePatrol",
+
+    GetPatrolConfigTable = "/master/getPatrolConfigTable",
+
+    GetPatrolConfigTableRow = "/master/getPatrolConfigTableRow",
+
+    GetPatrolConfigTableRenameRow = "/master/getPatrolConfigTableRenameRow",
 
     /**
      * Master patrol status update endpoint.

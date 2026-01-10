@@ -16,7 +16,6 @@ import { Command } from 'commander';
 import { inspect } from 'util';
 
 // ====== Pages and HTML generation ======
-import * as OLD_pages from "./pages/pages";
 import * as pages from "./endpointHandlers/pages";
 import * as LocationConfigHandler from './endpointHandlers/LocationConfigHandler';
 import * as LocationStatusHandler from './endpointHandlers/locationStatusHandler';
@@ -25,10 +24,9 @@ import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
 import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
 
 // ========== Miscenlaneous Types ========== 
-import type { PatrolUpdate, PatrolUpdateWithNoId, Route } from '@shared/types';
-import { SETTINGS_TABLE } from './database/database';
+import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
 import type { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
-import { mainMasterPage } from './endpointHandlers/pages';
+import { SETTINGS_TABLE } from './database/database';
 
 
 export type { Server };
@@ -48,7 +46,6 @@ class Server {
     private updateService: UpdateService;
 
     private users: UserCache;
-    private OLDpages: OLD_pages.Pages;
     private router: Router;
 
     /**
@@ -66,9 +63,6 @@ class Server {
         this.updateService = updateService;
 
         this.users = new UserCache();
-        this.OLDpages = new OLD_pages.Pages(`${assets}/html`, this.db, false,
-            this.locationService, this.patrolService, this.updateService, this.adminService
-        );
         this.router = this.createRouter(address, port, assets, this.users);
 
         const numberOfPosts = locationService.allLocationIds().length;
@@ -95,27 +89,30 @@ class Server {
 
     private createRouter(address: string, port: number, assets: string, users: UserCache): Router {
         return new Router(address, port, users)
+            // ================================ Asset and script directories ==================================
             .assetDir("/assets", assets)
             .assetDir("/js", `${__dirname}/../client`)
+
+            // ================================ Static File Endpoints ==================================
             .file(Endpoints.Home, `${assets}/html/home.html`)
             .file(Endpoints.HomeAlias, `${assets}/html/home.html`)
-            // .file("/plot", `${assets}/html/patruljePlot.html`)
             .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
             .file(Endpoints.Contact, `${assets}/html/contact.html`)
             .file('/favicon.ico', `${assets}/favicon.ico`)
+
+            // ================================ Authentication Endpoints ==================================
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
+            
+            // ================================ Mandskab Endpoints ==================================
+            .route(Endpoints.MandskabDeletePatrolUpdate, UserType.Post, this.mandskabDeleteUpdate)
+            .route(Endpoints.MandskabSendPatrolUpdate, UserType.Post, this.makePatrolUpdate)
             .route(Endpoints.GetMandskabData, UserType.Post, this.locationDataForMandskab)
-            .route(Endpoints.SendPatrolUpdateMandskab, UserType.Post, this.makePatrolUpdate)
-            .route(Endpoints.DeletePatrolUpdateMandskab, UserType.Post, this.mandskabDeleteUpdate)
-            .route(Endpoints.MasterAddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
-            .route(Endpoints.ChangePatrolStatus, UserType.Master, this.patrolStatus)
-            .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
-            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             
             // ================================ Master Pages Endpoints ==================================
             .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.LocationRouteConfigPage, UserType.Master, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
+            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             
             // ================================ Route Config Endpoints ================================
             .route(Endpoints.AddRoute, UserType.Master, RouteConfigHandler.addRoute, this.locationService)
@@ -125,11 +122,21 @@ class Server {
             .route(Endpoints.GetRoutesTable, UserType.Master, RouteConfigHandler.getRouteConfigTable, this.locationService)
             
             // ================================ Patrol Update Endpoints ================================
-            // .route(Endpoints.MasterPatrolUpdates, UserType.Master, this.pages.patrolUpdates)
             .route(Endpoints.GetPatrolUpdatesTable, UserType.Master, PatrolUpdatesHandler.getPatrolUpdatesTable, this.updateService, this.locationService, this.patrolService)
-
+            .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
+            .route(Endpoints.AddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
+            
             // ================================ Patrol Status Endpoints ================================
             .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
+            .route(Endpoints.ChangePatrolStatus, UserType.Master, this.patrolStatus)
+
+            // ================================= Patrol config Endpoints ================================
+            /** TODO
+             * ADD patrol + row for it
+             * DELETE patrol
+             * RENAME patrol + row for it
+             * 
+             *  */ 
 
             // ================================ Location Status Endpoints ================================
             .route(Endpoints.GetLocationStatusTable, UserType.Master, LocationStatusHandler.getLocationStatusTable, this.locationService)
@@ -143,6 +150,15 @@ class Server {
             .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationConfigHandler.getLocationConfigTable, this.locationService)
             .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationConfigHandler.getLocationConfigTableBody, this.locationService)
             .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationConfigHandler.getRenameLocationRow, this.locationService)
+
+            // =============================== Location password Endpoints ================================
+            /** TODO
+             * Get passwords html widget
+             * ADD patrol + row for it
+             * DELETE patrol
+             * RENAME patrol + row for it
+             * 
+             *  */ 
 
 
     }
