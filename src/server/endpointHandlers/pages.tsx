@@ -7,6 +7,7 @@ import { getLocationStatusTable as getLocationStatusTable } from './locationStat
 import { getPatrolUpdatesTable } from './patrolUpdatesHandler';
 import { getLocationConfigTable } from './LocationConfigHandler';
 import { getRouteConfigTable } from './RouteConfigHandler';
+import { getPatrolConfigTable } from './patrolConfigHandler';
 type Request = import('../request').Request;
 
 // ========================== Endpoint Handler for Pages ==========================
@@ -23,6 +24,7 @@ export const mainMasterPage = async (request: Request, locationService: Location
         <a class="button" href={Endpoints.LocationRouteConfigPage}>Konfigurer Lokationer og Ruter</a>
         <h1>Status på patruljer</h1>
         {patrolStatusRes.content}
+        <a class="button" href={Endpoints.PatrolConfigPage}>Konfigurer Patruljer</a>
         <h1>Seneste patruljeopdateringer</h1>
         {patrolUpdatesRes.content}
     </div>
@@ -40,10 +42,30 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
         <h1>Konfiguration af lokationer og ruter</h1>
         <h2>Lokationer</h2>
         {llocationConfigRes.content}
+        For at en lokation kan slettes, må der ikke være nogle ruter til eller fra lokationen.
+        <br />
+        Derudover må der ikke være nogle check ind eller ud på lokationen.
+        <br />
+        Lokationen kan altid omdøbes, også selvom der er patruljer på lokationen.
         <h2>Ruter</h2>
         {routeConfigRes.content}
+        Ruter kan altid slettes eller ændres, også selvom der er patruljer på ruten.
+        <br />
+        Lokationer kan kun tjekke patruljer ud imod de lokationer, der har en åben rute fra den. 
     </div>;
     const html = renderMasterPage("Master Lokationer og Ruter", content);
+    return responses.ok(html);
+}
+
+export const patrolConfigPage = async (request: Request, patrolService: PatrolService): Promise<responses.Response> => {
+    const patrolConfigRes = await getPatrolConfigTable(request, patrolService);
+    
+    const content = <div id="content">
+        <h1>Konfiguration af patruljer</h1>
+        {patrolConfigRes.content}
+        For at en patrulje kan slettes, skal alle patruljens check ind og ud slettes først.
+    </div>;
+    const html = renderMasterPage("Master Patruljer", content);
     return responses.ok(html);
 }
 

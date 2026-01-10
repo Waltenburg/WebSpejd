@@ -31,6 +31,16 @@ export class AdminService extends ServiceBase {
         return user.locationId;
     }
 
+    addUser(locationId: number, password: string): number {
+        const result = this.prepare("INSERT INTO user (locationId, password) VALUES (?, ?)").run(locationId, password);
+        return result.lastInsertRowid as number;
+    }
+
+    deleteUser(userId: number): boolean {
+        const runResults = this.prepare("DELETE FROM user WHERE id = ?").run(userId);
+        return runResults.changes > 0;
+    }
+
     /**
      * Get list of all user ids.
      * 

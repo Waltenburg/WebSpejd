@@ -140,6 +140,8 @@ export const enum Endpoints {
 
     GetPatrolConfigTable = "/master/getPatrolConfigTable",
 
+    GetPatrolConfigTableBody = "/master/getPatrolConfigTableBody",
+
     GetPatrolConfigTableRow = "/master/getPatrolConfigTableRow",
 
     GetPatrolConfigTableRenameRow = "/master/getPatrolConfigTableRenameRow",

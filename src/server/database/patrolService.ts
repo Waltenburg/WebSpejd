@@ -1,3 +1,5 @@
+import { RunResult } from "better-sqlite3";
+import { deletePatrol } from "../endpointHandlers/patrolConfigHandler";
 import { PatrolNotFoundError } from "../error";
 import { PATROL_TABLE, PATROL_UPDATE_TABLE, ServiceBase } from "./database";
 import { PatrolLocationType, Patrol } from "@shared/types";
@@ -29,44 +31,28 @@ export class PatrolService extends ServiceBase {
             throw new PatrolNotFoundError(patrolId);
     }
 
-    // /**
-    //  * Get current location of patrol.
-    //  * 
-    //  * @param patrolId the id of the patrol
-    //  * @returns the location as `PatrolLocation` object of the patrol or `undefined` if patrol does not exist.
-    //  * If the patrol is udgået, the locationId will be the last location that the patrol was at.
-    //  */
-    // locationOfPatrol(patrolId: number): PatrolLocation | undefined {
-    //     // Check if patrol is udgået
-    //     const patrol = this.patrolInfo(patrolId);
-    //     if(!patrol)
-    //         throw new PatrolNotFoundError(patrolId);
-        
-    //     const row = this.prepare(
-    //         `SELECT lpu.currentLocationId, lpu.targetLocationId
-    //         FROM LatestPatrolUpdates lpu
-    //         WHERE lpu.patrolId = ?`
-    //     ).get(patrolId) as { currentLocationId: number, targetLocationId: number } | undefined;
+    addPatrol(number: string, name: string): number {
+        const result = this.prepare("INSERT INTO patrol (number, name, udgået) VALUES (?, ?, 0)").run(number, name);
+        return result.lastInsertRowid as number;
+    }
 
-    //     const patrolHasUpdates = row !== undefined;
-    //     const patrolIsActive = !patrol.udgået;
+    deletePatrol(patrolId: number): boolean {
+        const result = this.prepare("DELETE FROM patrol WHERE id = ?").run(patrolId);
+        return result.changes > 0;
+    }
 
-    //     const locationType = row === undefined ? PatrolLocationType.NoLocationUpdates : 
-    //         (row.currentLocationId === row.targetLocationId ? PatrolLocationType.OnLocation : PatrolLocationType.GoingToLocation);
-
-    //     if(row.currentLocationId === row.targetLocationId) {
-    //         return {
-    //             type: PatrolLocationType.OnLocation,
-    //             locationId: row.currentLocationId
-    //         };
-    //     }
-    //     else{
-    //         return {
-    //             type: PatrolLocationType.GoingToLocation,
-    //             locationId: row.targetLocationId
-    //         };
-    //     }
-    // }
+    alterPatrolNumberAndName(patrolId: number, number?: string, name?: string): boolean {
+        let result: RunResult;
+        if (number && name) 
+            result = this.prepare("UPDATE patrol SET number = ?, name = ? WHERE id = ?").run(number, name, patrolId);
+        else if (number)
+            result = this.prepare("UPDATE patrol SET number = ? WHERE id = ?").run(number, patrolId);
+        else if (name)
+            result = this.prepare("UPDATE patrol SET name = ? WHERE id = ?").run(name, patrolId);
+        else
+            return false;
+        return result.changes > 0;
+    }
 
     /**
      * Get list of all patrol ids.
@@ -74,7 +60,7 @@ export class PatrolService extends ServiceBase {
      * @returns a list of all patrol ids
      */
     allPatrolIds(): number[]{
-        const rows = this.prepare("SELECT id FROM patrol").all() as { id: number }[];
+        const rows = this.prepare("SELECT id FROM patrol ORDER BY number").all() as { id: number }[];
         return rows.map((row) => row.id);
     }
 

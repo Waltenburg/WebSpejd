@@ -203,5 +203,6 @@ document.addEventListener("confirm", (evt: Event) => {
 });
 
 (window as any).showDialog = showDialog;
+//Other places in the codebase rely on this name. Dont change.
 (window as any).isErrorDialogOpen = isErrorDialogOpen;
 (window as any).confirmDialog = confirmDialog;

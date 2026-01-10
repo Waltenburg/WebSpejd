@@ -113,6 +113,7 @@ class Server {
             // ================================ Master Pages Endpoints ==================================
             .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.LocationRouteConfigPage, UserType.Master, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
+            .route(Endpoints.PatrolConfigPage, UserType.Master, pages.patrolConfigPage, this.patrolService)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             
             // ================================ Route Config Endpoints ================================
@@ -132,6 +133,13 @@ class Server {
             .route(Endpoints.ChangePatrolStatus, UserType.Master, PatrolConfigHandler.changePatrolStatus, this.patrolService)
 
             // ================================= Patrol config Endpoints ================================
+            .route(Endpoints.AddPatrol, UserType.Master, PatrolConfigHandler.addPatrol, this.patrolService)
+            .route(Endpoints.DeletePatrol, UserType.Master, PatrolConfigHandler.deletePatrol, this.patrolService)
+            .route(Endpoints.AlterPatrol, UserType.Master, PatrolConfigHandler.alterPatrolNumberAndName, this.patrolService)
+            .route(Endpoints.GetPatrolConfigTable, UserType.Master, PatrolConfigHandler.getPatrolConfigTable, this.patrolService)
+            .route(Endpoints.GetPatrolConfigTableBody, UserType.Master, PatrolConfigHandler.getPatrolConfigTableBody, this.patrolService)
+            .route(Endpoints.GetPatrolConfigTableRow, UserType.Master, PatrolConfigHandler.getPatrolConfigTableRow, this.patrolService)
+            .route(Endpoints.GetPatrolConfigTableRenameRow, UserType.Master, PatrolConfigHandler.getRenamePatrolRow, this.patrolService)
             /** TODO
              * ADD patrol + row for it
              * DELETE patrol
