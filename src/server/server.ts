@@ -22,6 +22,7 @@ import * as LocationStatusHandler from './endpointHandlers/locationStatusHandler
 import * as RouteConfigHandler from './endpointHandlers/RouteConfigHandler';
 import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
 import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
+import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler';
 
 // ========== Miscenlaneous Types ========== 
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
@@ -128,7 +129,7 @@ class Server {
             
             // ================================ Patrol Status Endpoints ================================
             .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
-            .route(Endpoints.ChangePatrolStatus, UserType.Master, this.patrolStatus)
+            .route(Endpoints.ChangePatrolStatus, UserType.Master, PatrolConfigHandler.changePatrolStatus, this.patrolService)
 
             // ================================= Patrol config Endpoints ================================
             /** TODO
@@ -336,14 +337,7 @@ class Server {
     }
 
 
-    patrolStatus = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const patrolId = Number.parseInt(params.get("patrolId"));
-        const status = params.get("status");
-        const isOut = status === "out";
-        this.patrolService.changePatrolStatus(patrolId, isOut);
-        return responses.redirect(`/master/patrol?id=${patrolId}`);
-    }
+
 
     masterDeletePatrolUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
