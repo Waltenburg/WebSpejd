@@ -89,6 +89,7 @@ const renderMasterPage = (title: string, content: string) => `
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${title}</title>
         <script src="/js/master/base.js" type="module"></script>
+        <script src="/js/master/locationPasswords.js" type="module"></script>
         <script src="/js/dialog.js" type="module"></script>
         <link rel="stylesheet" href="/assets/css/master.css">
     </head>

@@ -23,6 +23,7 @@ import * as RouteConfigHandler from './endpointHandlers/RouteConfigHandler';
 import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
 import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
 import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler';
+import * as LocationPasswordHandler from './endpointHandlers/locationPasswordHandler';
 
 // ========== Miscenlaneous Types ========== 
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
@@ -161,13 +162,9 @@ class Server {
             .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationConfigHandler.getRenameLocationRow, this.locationService)
 
             // =============================== Location password Endpoints ================================
-            /** TODO
-             * Get passwords html widget
-             * ADD patrol + row for it
-             * DELETE patrol
-             * RENAME patrol + row for it
-             * 
-             *  */ 
+            .route(Endpoints.GetLocationPasswords, UserType.Master, LocationPasswordHandler.getLocationPasswords, this.adminService, this.locationService)
+            .route(Endpoints.AddLocationPassword, UserType.Master, LocationPasswordHandler.addLocationPassword, this.adminService)
+            .route(Endpoints.DeleteLocationPassword, UserType.Master, LocationPasswordHandler.deleteLocationPassword, this.adminService)
 
 
     }

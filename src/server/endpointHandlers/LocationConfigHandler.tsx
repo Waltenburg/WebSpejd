@@ -143,6 +143,14 @@ const html_row = (locationService: LocationService, locationId: number): string 
                 hx-vals={hxVals}>
                 {location.open ? "Luk" : "Åbn"}
             </button>
+            <button
+                type="button"
+                class="location-passwords-button"
+                data-location-id={location.id}
+                data-location-name={location.name}
+                data-location-team={location.team}>
+                Kodeord
+            </button>
             <span
                 hx-trigger={hxTriggers.fetchLocationsRow}
                 hx-target="closest tr"

@@ -180,6 +180,13 @@ export const enum Endpoints {
 
     GetLocationConfigTableBody = "/master/getLocationsTableBody",
 
+    // ================================ Location password Endpoints ================================
+    GetLocationPasswords = "/master/getLocationPasswords",
+
+    AddLocationPassword = "/master/addLocationPassword",
+
+    DeleteLocationPassword = "/master/deleteLocationPassword",
+
     // ================================ Location status table Endpoints ================================
     GetLocationStatusTableRow = "/master/getLocationStatusTableRow",
     

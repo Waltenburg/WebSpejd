@@ -52,6 +52,18 @@ export class AdminService extends ServiceBase {
     }
 
     /**
+     * Get all passwords registered for a location.
+     *
+     * @param locationId the location to fetch passwords for
+     * @returns list of { id, password } rows
+     */
+    passwordsForLocation(locationId: number): { id: number, password: string }[] {
+        const rows = this.prepare("SELECT id, password FROM user WHERE locationId = ? ORDER BY id")
+            .all(locationId) as { id: number, password: string }[];
+        return rows;
+    }
+
+    /**
      * Get all settings as key-value pairs.
      *
      * @returns dictionary with all settings
