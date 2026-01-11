@@ -31,6 +31,7 @@ import { LogService } from './database/logService';
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
 import type { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
 import { SETTINGS_TABLE } from './database/database';
+import { readFileSync } from 'fs';
 
 
 export type { Server };
@@ -439,55 +440,15 @@ class Server {
 
 }
 
-/**
- * Read command line arguments to get address and port.
- * @return binding address and port
- */
-const readArguments = (): Command => {
-    let command = new Command()
-        .option(
-            "-a, --address <address>",
-            "Address the server is hosted on",
-            // "127.0.0.1"
-            "192.168.1.138"
-        )
-        .option(
-            "-p, --port <port>",
-            "Port the server is listening on",
-            "3000"
-        )
-        .option(
-            "--assets <assets>",
-            "Assets file directory",
-            `assets`
-        )
-        .option(
-            "--db, --database <file>",
-            "File to store data in",
-            "SQLite/webspejd.db"
-        )
-        .option(
-            "--databaseInMemory", //Boolean flag
-            "Whether to save the database or keep it in memory",
-        )
-        .option(
-            "--resetDatabase", //Boolean flag
-            "Whether to start all patrols at first post"
-        );
-    command.parse();
-    return command;
-};
-
-
 async function main(): Promise<void> {
-    const command = readArguments();
-    const options = command.opts();
-    const port = Number.parseInt(options["port"]);
-    const address = options["address"] as string;
-    const database = options["database"] as string;
-    const assets = options["assets"] as string;
-    const inMemory = options["databaseInMemory"] === true;
-    const resetDatabase = options["resetDatabase"] === true;
+    const config = JSON.parse(readFileSync(`${__dirname}/server.config.json`, 'utf-8'));
+
+    const port = Number.parseInt(config["port"]);
+    const address = config["address"] as string;
+    const database = config["databasePath"] as string;
+    const assets = config["assetsPath"] as string;
+    const inMemory = config["inMemory"] as boolean ?? false;
+    const resetDatabase = config["resetDatabase"] as boolean ?? false;
 
     console.log(`Starting server with options: ${inspect(
         {

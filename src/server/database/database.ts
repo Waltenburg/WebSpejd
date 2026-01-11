@@ -71,7 +71,6 @@ export class Database {
         if(resetCheckins) {
             this.db.prepare("DELETE FROM PatrolUpdates").run();
         }
-        this.db.transaction
     }
 
     /** Get the database `prepare` and `transaction` methods for executing queries and transactions.

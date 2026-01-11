@@ -15,7 +15,7 @@
         "typescript": "latest"
     },
     "dependencies": {
-        "better-sqlite3": "^11.9.1",
+        "better-sqlite3": "^12.6.0",
         "commander": "^12.1.0",
         "nunjucks": "^3.2.4",
         "rimraf": "^6.0.1",
