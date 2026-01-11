@@ -9,6 +9,7 @@ import { getLocationConfigTable } from './LocationConfigHandler';
 import { getRouteConfigTable } from './RouteConfigHandler';
 import { getPatrolConfigTable } from './patrolConfigHandler';
 import { anchorToAddPatrolUpdatePage } from './HTMLGeneral';
+import { table as html_RouteTable } from './RouteConfigHandler';
 type Request = import('../request').Request;
 
 // ========================== Endpoint Handler for Pages ==========================
@@ -113,17 +114,21 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
 
     const patrolOptions = patrolService.allPatrolIds().map(id => {
         const patrol = patrolService.patrolInfo(id);
+        const patrolStr = `#${patrol.number} ${patrol.name}`;
         if (patrol.id === patrolId) {
             // @ts-expect-error
-            return <option value={patrol.id.toString()} selected>{`#${patrol.number} ${patrol.name}`}</option>;
+            return <option value={patrol.id.toString()} selected>{patrolStr}</option>;
         }
-        return <option value={patrol.id.toString()}>{`#${patrol.number} ${patrol.name}`}</option>;
+        return <option value={patrol.id.toString()}>{patrolStr}</option>;
     });
 
     const locationOptions = locationService.allLocationIds().map(id => {
         const location = locationService.locationInfo(id);
-        return <option value={location.id.toString()} selected={location.id === locationId ? "true" : "false"}>
-            {location.name}
+        if (location.id === locationId) {
+            // @ts-expect-error
+            return <option value={location.id.toString()} selected>{location.name}</option>
+        }
+        return <option value={location.id.toString()}>{location.name}
         </option>;
     });
 
@@ -196,6 +201,47 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
     </script>`;
 
     const html = renderMasterPage("Tilføj Patruljeopdatering", content, script);
+    return responses.ok(html);
+}
+
+export const locationPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
+    const locationId = Number.parseInt(request.url.searchParams.get("locationId"));
+    if (Number.isNaN(locationId))
+        return responses.response_code(400, "Invalid location id");
+    const location = locationService.locationInfo(locationId);
+    if (!location)
+        return responses.not_found("Location not found");
+
+    const content = <div id="content">
+        <h1>Lokation: {location.name}</h1>
+        <span class={`status-badge  ${location.open ? "status-active" : "status-out"}`}>
+            {location.open ? "Åben" : "Lukket"}
+        </span>
+        <div class="button-group">
+            {anchorToAddPatrolUpdatePage(null, location.id)}
+            <button hx-post={Endpoints.ChangeLocationStatus} class="button button-secondary"
+                hx-vals={JSON.stringify({ locationId: location.id, open: !location.open })}
+                hx-swap="none"
+                hx-on--after-request={`window.location.replace('${Endpoints.MasterLocationPage}?locationId=${location.id}')`}>
+                {location.open ? "Luk post" : "Åben post"}
+            </button>
+        </div>
+        <h2>Status</h2>
+        {await getLocationStatusTable(request, locationService).then(res => res.content)}
+
+        <h2>Ruter til lokationen</h2>
+        {html_RouteTable(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true)}
+
+        <h2>Ruter fra lokationen</h2>
+        {html_RouteTable(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false)}
+
+        <h2>Patruljeopdateringer</h2>
+        <div>
+            {await getPatrolUpdatesTable(request, updateService, locationService, patrolService).then(res => res.content)}
+        </div>
+    </div>;
+
+    const html = renderMasterPage(`Lokation: ${location.name}`, content);
     return responses.ok(html);
 }
 

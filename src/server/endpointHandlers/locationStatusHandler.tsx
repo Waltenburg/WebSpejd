@@ -10,8 +10,17 @@ type Response = responses.Response;
 
 // ========================== Endpoint Handler for Location Status ==========================
 export const getLocationStatusTable = async (request: Request, locationService: LocationService): Promise<Response> => {
-    const locationIds = locationService.allLocationIds();
-    const tableHTML = html_locationStatusTable(locationService, locationIds);
+    const locationId = Number.parseInt(request.url.searchParams.get("locationId") ?? "");
+
+    let locationIds: number[];
+    if (!Number.isNaN(locationId)) {
+        locationIds = [locationId];
+    } else
+        locationIds = locationService.allLocationIds();
+    
+
+    const searchParamStr = request.url.searchParams.toString();
+    const tableHTML = html_locationStatusTable(locationService, locationIds, searchParamStr);
     return responses.ok(tableHTML);
 };
 
@@ -61,10 +70,10 @@ const html_locationRow = (locationService: LocationService, locationId: number):
 };
 
 // Internal function for the locations table
-export const html_locationStatusTable = (locationService: LocationService, locationIds: number[]): string => {
+export const html_locationStatusTable = (locationService: LocationService, locationIds: number[], searchParamStr: string): string => {
     return <table
         id={ids.table}
-        hx-post={Endpoints.GetLocationStatusTable}
+        hx-post={Endpoints.GetLocationStatusTable + "?" + searchParamStr}
         hx-trigger="every 10s"
         hx-swap="outerHTML"
         hx-target="this">

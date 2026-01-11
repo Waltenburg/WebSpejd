@@ -117,6 +117,7 @@ class Server {
             .route(Endpoints.PatrolConfigPage, UserType.Master, pages.patrolConfigPage, this.patrolService)
             .route(Endpoints.MasterPatrolPage, UserType.Master, pages.patrolPage, this.patrolService, this.locationService, this.updateService)
             .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, pages.addPatrolUpdatePage, this.patrolService, this.locationService)
+            .route(Endpoints.MasterLocationPage, UserType.Master, pages.locationPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             
             // ================================ Route Config Endpoints ================================
@@ -387,11 +388,8 @@ const readArguments = (): Command => {
         .option(
             "-a, --address <address>",
             "Address the server is hosted on",
-            // "10.209.229.186"
-            "127.0.0.1"
-            // "192.168.128.1"
-            // "192.168.1.138"
-            // "10.34.158.253"
+            // "127.0.0.1"
+            "192.168.1.138"
         )
         .option(
             "-p, --port <port>",

@@ -18,7 +18,6 @@ export const getPatrolUpdatesTable = async (request: Request, updateService: Upd
 
     if (!Number.isNaN(locationId)) {
         updates = updateService.updatesAtLocation(locationId);
-        skipLocation = true;
     }
     else if (!Number.isNaN(patrolId)) {
         updates = updateService.updatesOfPatrol(patrolId);

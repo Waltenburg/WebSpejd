@@ -212,7 +212,7 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
 
 }
 
-const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+export const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
     return <table
         hx-post={Endpoints.GetRoutesTable}
         hx-trigger="every 30s"
