@@ -226,7 +226,7 @@ class Server {
             towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
         }
 
-        const onLocation = this.locationService.patrolsOnLocation(user.locationId);
+        const patrolsOnLocation = this.locationService.patrolsOnLocation(user.locationId);
         const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId)
         const openRoutes = routesFromLocation.filter(route => route.is_open);
         const nextLocations = openRoutes.map(route => this.locationService.locationInfo(route.toLocationId));
@@ -240,7 +240,7 @@ class Server {
             });
 
         const data: MandskabData = {
-            patrolsOnLocation: onLocation.map(p => this.patrolService.patrolInfo(p)),
+            patrolsOnLocation: patrolsOnLocation.map(p => this.patrolService.patrolInfo(p)),
             patrolsTowardsLocation: towardsLocation.map(p => this.patrolService.patrolInfo(p)),
             location: location,
             routesTo: nextLocations,

@@ -23,7 +23,9 @@ CREATE TABLE Patrol (
   id INTEGER PRIMARY KEY,
   number TEXT NOT NULL,
   name TEXT NOT NULL,
-  udgået BOOLEAN NOT NULL DEFAULT 0
+  udgået BOOLEAN NOT NULL DEFAULT 0,
+
+  CONSTRAINT uniqueNumberAndName UNIQUE (number, name)
 );
 
 -- Users

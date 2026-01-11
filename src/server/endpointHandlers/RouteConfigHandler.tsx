@@ -15,7 +15,7 @@ export const addRoute = async (request: Request, locationService: LocationServic
     const form = parseForm(request.body);
     const fromId = Number.parseInt(form["fromLocationId"]);
     const toId = Number.parseInt(form["toLocationId"]);
-    const open = form["open"] === "on" || form["open"] === "true";
+    const open = form["isOpen"] === "on" || form["isOpen"] === "true";
 
     if (Number.isNaN(fromId) || Number.isNaN(toId)) {
         return responses.response_code(400);
@@ -78,7 +78,7 @@ export const getRouteConfigTable = async (request: Request, locationService: Loc
         showTo = true;
     }
 
-    const locationId = Number.parseInt(form["locationId"]);
+    const locationId = Number.parseInt(form["locationId"] ?? request.url.searchParams.get("locationId"));
 
     let routes: Route[] = [];
 
@@ -213,9 +213,16 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
 }
 
 export const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+    const hxVals = JSON.stringify({
+        locationId: locationId,
+        showFrom: !skipFrom,
+        showTo: !skipTo
+    });
+    
     return <table
         hx-post={Endpoints.GetRoutesTable}
         hx-trigger="every 30s"
+        hx-vals={hxVals}
         hx-swap="outerHTML">
         <thead>
             {skipFrom ? null : <th>Fra</th>}

@@ -129,7 +129,12 @@ class Mandskab {
             sendRequest(Endpoints.MandskabSendPatrolUpdate, header, succesReciever, onFail);
         }
 
-        const nextLocationName = this.nextLocationSelector.options[this.nextLocationSelector.selectedIndex].text;
+        if(this.nextLocationSelector.selectedIndex === -1 && action === Action.checkoutFromLocation){
+            alert("Der er ingen tilgængelige næste poster at checke ud imod. Kontakt en administrator hvis dette virker forkert.");
+            return;
+        }
+
+        const nextLocationName = this.nextLocationSelector.options[this.nextLocationSelector.selectedIndex]?.text;
         const message = `Vil du checke #${patrolNumber} ${patrolName} ${action === Action.checkinToLocation ? ("ind på denne post") : ("ud imod " + nextLocationName)}?`;
         showDialog(message,
             [`Ja, check patrulje ${action === Action.checkinToLocation ? "ind" : "ud"}`, onConfirm],
@@ -142,7 +147,7 @@ class Mandskab {
             return;
 
         const onConfirm = (): void => {
-            sendRequest(`${Endpoints.MandskabDeletePatrolUpdate}?id=${lastActionId}`, null, (status, headers) => {
+            sendRequest(`${Endpoints.MandskabDeletePatrolUpdate}?patrolUpdateId=${lastActionId}`, null, (status, headers) => {
                 this.recentActions.pop();
                 this.reloadData();
             }, err => {
