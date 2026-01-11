@@ -65,3 +65,19 @@ CREATE TABLE settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+CREATE TABLE Logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time INTEGER NOT NULL,
+    method TEXT,
+    path TEXT,
+    headers TEXT,
+    duration INTEGER,
+    status INTEGER,
+    severity TEXT,
+    message TEXT
+);
+
+CREATE INDEX idx_logs_time ON Logs(time);
+CREATE INDEX idx_logs_severity ON Logs(severity);
+CREATE INDEX idx_logs_status ON Logs(status);

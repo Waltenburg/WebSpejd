@@ -24,6 +24,8 @@ import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
 import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
 import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler';
 import * as LocationPasswordHandler from './endpointHandlers/locationPasswordHandler';
+import * as LogsHandler from './endpointHandlers/logsHandler';
+import { LogService } from './database/logService';
 
 // ========== Miscenlaneous Types ========== 
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
@@ -47,6 +49,8 @@ class Server {
     private patrolService: PatrolService;
     private updateService: UpdateService;
 
+    private logService: LogService;
+
     private users: UserCache;
     private router: Router;
 
@@ -64,6 +68,8 @@ class Server {
         this.patrolService = patrolService;
         this.updateService = updateService;
 
+        this.logService = new LogService(db);
+
         this.users = new UserCache();
         this.router = this.createRouter(address, port, assets, this.users);
 
@@ -73,15 +79,65 @@ class Server {
         console.log(`Alle filer succesfuldt loadet. Loadet ${numberOfPosts} poster, ${numberOfUsers} brugere og ${numberOfPatrols} patruljer`);
 
         http.createServer(async (req, connection) => {
+            const startTime = Date.now();
+            let response: responses.Response;
+            let errorMessage = "";
+            let severity = "info";
+
             try {
-                // let timeStart = Date.now();
-                let response = await this.router.handleRequest(req);
+                response = await this.router.handleRequest(req);
                 responses.send(connection, response);
-                // let timeEnd = Date.now();
-                // console.log(`Request to ${req.url} took ${timeEnd - timeStart} ms`);
-            } catch (e) {
-                console.error(e);
-                responses.send(connection, responses.server_error());
+            } catch (softError) {
+                console.error(softError);
+                errorMessage = softError instanceof Error ? softError.message : String(softError);
+                severity = "error";
+                try{
+                    if(!connection.headersSent)
+                        connection.writeHead(500);
+                    connection.end();
+                } catch(hardError){
+                    errorMessage += `; Additionally, failed to send error response: ${hardError instanceof Error ? hardError.message : String(hardError)}`;
+                    connection.destroy();
+                    severity = "critical";
+                }
+            }
+
+            try {
+                const status = response.status_code ?? 0;
+
+                const sensitiveHeaders = new Set([
+                    "password",
+                    "authorization",
+                    "cookie",
+                    "set-cookie",
+                    "update",
+                ]);
+
+                const filteredHeaders: { [key: string]: string } = {};
+                for (const [key, value] of Object.entries(req.headers)) {
+                    if (sensitiveHeaders.has(key.toLowerCase())) {
+                        continue;
+                    }
+
+                    if (Array.isArray(value)) {
+                        filteredHeaders[key] = value.join(",");
+                    } else if (value != null) {
+                        filteredHeaders[key] = String(value);
+                    }
+                }
+
+                this.logService.addLog({
+                    time: startTime,
+                    method: req.method ?? "",
+                    path: req.url ?? "",
+                    headers: JSON.stringify(filteredHeaders),
+                    duration: Date.now() - startTime,
+                    status,
+                    severity,
+                    message: errorMessage,
+                });
+            } catch (logError) {
+                console.error("Failed to log request:", logError);
             }
         })
             .listen(port, address, () => {
@@ -169,6 +225,9 @@ class Server {
             .route(Endpoints.GetLocationPasswords, UserType.Master, LocationPasswordHandler.getLocationPasswords, this.adminService, this.locationService)
             .route(Endpoints.AddLocationPassword, UserType.Master, LocationPasswordHandler.addLocationPassword, this.adminService)
             .route(Endpoints.DeleteLocationPassword, UserType.Master, LocationPasswordHandler.deleteLocationPassword, this.adminService)
+
+                // ================================ Logs Endpoints ================================
+                .route(Endpoints.GetLogs, UserType.Master, LogsHandler.getLogs, this.logService)
 
 
     }

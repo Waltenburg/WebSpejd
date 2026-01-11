@@ -206,4 +206,7 @@ export const enum Endpoints {
     
     GetRoutesTable = "/master/getRoutesTable",
 
+    // ================================ Logs Endpoints ================================
+    GetLogs = "/master/getLogs",
+
 }

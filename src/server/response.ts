@@ -87,16 +87,9 @@ export function response_code(status_code: number, content?: any): Response {
  * @param response the response to send to the client
  */
 export function send(connection: http.ServerResponse, response: Response) {
-    try{
-        for(let header in response.headers) {
-            connection.setHeader(header, response.headers[header]);
-        }
-        connection.writeHead(response.status_code);
-        connection.end(response.content);
+    for(let header in response.headers) {
+        connection.setHeader(header, response.headers[header]);
     }
-    catch(e) {
-        console.error(e);
-        connection.statusCode = 500;
-        connection.end();
-    }
+    connection.writeHead(response.status_code);
+    connection.end(response.content);
 }
