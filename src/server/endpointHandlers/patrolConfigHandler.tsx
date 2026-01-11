@@ -254,7 +254,7 @@ const tableBody = (patrolService: PatrolService, patrols: Patrol[]): string => {
             hx-get={`${Endpoints.GetPatrolConfigTableBody}`}
             hx-target="this"
             hx-swap="outerHTML"
-            hx-trigger="every 1s"
+            hx-trigger="every 30s"
             hx-on--before-request={cancelCondition}>
             {patrols.length === 0 ?
                 <tr><td colspan={4}>Ingen patruljer</td></tr>

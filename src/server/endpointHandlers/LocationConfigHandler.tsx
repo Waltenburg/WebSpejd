@@ -71,6 +71,14 @@ export const deleteLocation = async (request: Request, locationService: Location
     return responses.ok();
 }
 
+export const makeLocationFirstLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    if (Number.isNaN(locationId))
+        return responses.response_code(400);
+    locationService.setFirstLocationId(locationId);
+    return responses.ok();
+}
 // ========================== Getting HTML for Locations ==========================
 
 export const getLocationConfigTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
@@ -254,9 +262,9 @@ const html_tableBody = (locationService: LocationService, locationIds: number[])
         hx-get={`${Endpoints.GetLocationConfigTableBody}`}
         hx-target="this"
         hx-swap="outerHTML"
-        hx-trigger="every 1s"   
+        hx-trigger="every 30s"   
         // hx-on--before-request="console.log(this.id, event.detail.elt.id)">
-        hx-on--before-request={`if (event.detail.elt.id === this.id && ${isClassOnElement(getElementById(ids.configTable), classes.renaming)}) {console.log("cancelled request"); event.preventDefault(); }`}>
+        hx-on--before-request={`if (event.detail.elt.id === this.id && ${isClassOnElement(getElementById(ids.configTable), classes.renaming)} || isErrorDialogOpen()) {console.log("cancelled request"); event.preventDefault(); }`}>
         {locationIds.length === 0 ?
             <tr><td colspan={4}>Ingen lokationer</td></tr>
             : null}

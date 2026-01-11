@@ -171,6 +171,8 @@ export const enum Endpoints {
     RenameLocation = "/master/renameLocation",
     
     ChangeLocationStatus = "/master/changeLocationStatus",
+
+    MakeLocationFirstLocation = "/master/makeLocationFirstLocation",
     
     // ================================ Location config table Endpoints ================================
     GetRenameLocationRow = "/master/renameLocationRow",

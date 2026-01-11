@@ -175,6 +175,23 @@ export class LocationService extends ServiceBase {
         return result.changes > 0;
     }
 
+    getFirstLocationId(): number | null {
+        const row = this.prepare(`SELECT value FROM ${SETTINGS_TABLE.TABLE_NAME} WHERE ${SETTINGS_TABLE.KEY} = ?`).get(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID) as { value: string } | undefined;
+        if (!row) {
+            return null;
+        }
+        return parseInt(row.value);
+    }
+
+    setFirstLocationId(locationId: number | null): void {
+        if (locationId === null) {
+            this.prepare(`DELETE FROM ${SETTINGS_TABLE.TABLE_NAME} WHERE ${SETTINGS_TABLE.KEY} = ?`).run(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID);
+        } else {
+            this.prepare(`
+                INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)`).run(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID, locationId.toString());
+        }
+    }
+
     /**
      * Get all ids of locations.
      *

@@ -17,7 +17,7 @@ export const addRoute = async (request: Request, locationService: LocationServic
     const toId = Number.parseInt(form["toLocationId"]);
     const open = form["isOpen"] === "on" || form["isOpen"] === "true";
 
-    if (Number.isNaN(fromId) || Number.isNaN(toId)) {
+    if (Number.isNaN(fromId) || Number.isNaN(toId) || fromId === toId) {
         return responses.response_code(400);
     }
 
@@ -69,11 +69,14 @@ export const getRouteConfigTableRow = async (request: Request, locationService: 
 
 export const getRouteConfigTable = async (request: Request, locationService: LocationService): Promise<Response> => {
     const form = parseForm(request.body);
-    
+
     let showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
     let showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
 
-    if(!showFrom && !showTo){
+    const selectedFrom = Number.parseInt(form["fromLocationId"])
+    const selectedTo = Number.parseInt(form["toLocationId"])
+
+    if (!showFrom && !showTo) {
         showFrom = true;
         showTo = true;
     }
@@ -91,11 +94,15 @@ export const getRouteConfigTable = async (request: Request, locationService: Loc
         routes = locationService.allRoutes();
 
     // const routes = locationService.allRoutes();
-    const tableHTML = table(locationService, routes, locationId, !showFrom, !showTo);
+    const tableHTML = table(locationService, routes, locationId, !showFrom, !showTo, selectedFrom, selectedTo);
     return responses.ok(tableHTML);
 }
 
 // ========================== HTML Generators for Routes ==========================
+enum ids {
+    addRouteRow = "addRouteRow",
+}
+
 const row = (locationService: LocationService, route: Route, skipFrom?: boolean, skipTo?: boolean): string => {
     const hxVals = JSON.stringify({
         routeId: route.id,
@@ -138,7 +145,7 @@ const row = (locationService: LocationService, route: Route, skipFrom?: boolean,
     </tr>
 }
 
-const addRow = (locationService: LocationService, locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+const addRow = (locationService: LocationService, locationId?: number, skipFrom?: boolean, skipTo?: boolean, selectedFrom?: number, selectedTo?: number): string => {
     let locationsTemp = locationService.allLocationIds().map(id => locationService.locationInfo(id)!);
     if (locationId)
         locationsTemp = locationsTemp.filter(locationsTemp => locationsTemp.id !== locationId);
@@ -156,15 +163,29 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
     if (skipTo)
         locationIdObj.toLocationId = locationId!.toString();
 
+    const fromLocationsOptions = locations.map(location => {
+        if (selectedFrom && selectedFrom === location.id) {
+            // @ts-expect-error
+            return <option value={location.id.toString()} selected>{location.name}</option>
+        }
+        return <option value={location.id.toString()}>{location.name}</option>
+    });
 
-    return <tr>
+    const toLocationsOptions = locations.map(location => {
+        if (selectedTo && selectedTo === location.id) {
+            // @ts-expect-error
+            return <option value={location.id.toString()} selected>{location.name}</option>
+        }
+        return <option value={location.id.toString()}>{location.name}</option>
+    });
+
+
+    return <tr id={ids.addRouteRow}>
         {skipFrom ? null :
             <td>
                 <select required='true' name="fromLocationId">
                     <option value="" disabled='true' selected='true'>Vælg post</option>
-                    {locations.map(location =>
-                        <option value={location.id.toString()}>{location.name}</option>
-                    )}
+                    {fromLocationsOptions}
                 </select>
             </td>}
 
@@ -172,9 +193,7 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
             <td>
                 <select required='true' name="toLocationId">
                     <option value="" disabled='true' selected='true'>Vælg post</option>
-                    {locations.map(location =>
-                        <option value={location.id.toString()}>{location.name}</option>
-                    )}
+                    {toLocationsOptions}
                 </select>
             </td>}
         <td>
@@ -212,17 +231,18 @@ const addRow = (locationService: LocationService, locationId?: number, skipFrom?
 
 }
 
-export const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean): string => {
+export const table = (locationService: LocationService, routes: Route[], locationId?: number, skipFrom?: boolean, skipTo?: boolean, selectedFrom?: number, selectedTo?: number): string => {
     const hxVals = JSON.stringify({
         locationId: locationId,
         showFrom: !skipFrom,
         showTo: !skipTo
     });
-    
+
     return <table
         hx-post={Endpoints.GetRoutesTable}
         hx-trigger="every 30s"
         hx-vals={hxVals}
+        hx-include={`#${ids.addRouteRow}`}
         hx-swap="outerHTML">
         <thead>
             {skipFrom ? null : <th>Fra</th>}
@@ -235,7 +255,7 @@ export const table = (locationService: LocationService, routes: Route[], locatio
                 <tr><td colspan={skipFrom || skipTo ? 3 : 4}>Ingen ruter</td></tr>
                 : null}
             {routes.map(route => row(locationService, route, skipFrom, skipTo))}
-            {addRow(locationService, locationId, skipFrom, skipTo)}
+            {addRow(locationService, locationId, skipFrom, skipTo, selectedFrom, selectedTo)}
         </tbody>
     </table>
 }

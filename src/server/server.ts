@@ -220,6 +220,7 @@ class Server {
             .route(Endpoints.GetLocationConfigTable, UserType.Master, LocationConfigHandler.getLocationConfigTable, this.locationService)
             .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationConfigHandler.getLocationConfigTableBody, this.locationService)
             .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationConfigHandler.getRenameLocationRow, this.locationService)
+            .route(Endpoints.MakeLocationFirstLocation, UserType.Master, LocationConfigHandler.makeLocationFirstLocation, this.locationService)
 
             // =============================== Location password Endpoints ================================
             .route(Endpoints.GetLocationPasswords, UserType.Master, LocationPasswordHandler.getLocationPasswords, this.adminService, this.locationService)

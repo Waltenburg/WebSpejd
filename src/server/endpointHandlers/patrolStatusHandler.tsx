@@ -67,7 +67,7 @@ const html_patrolsStatusTable = (patrols: (Patrol & { lastUpdate: PatrolUpdate |
 
     return <div id ={ids.tableContainer}
                 hx-post={Endpoints.GetPatrolStatusTable}
-                hx-trigger={`every 5s, ${triggers.fetchPatrolsTable}`}
+                hx-trigger={`every 10s, ${triggers.fetchPatrolsTable}`}
                 hx-swap="outerHTML"
                 hx-include={`#${ids.includeInactivePatrolsCheckbox}`}>
 

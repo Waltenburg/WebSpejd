@@ -45,11 +45,13 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
         <h1>Konfiguration af lokationer og ruter</h1>
         <h2>Lokationer</h2>
         {llocationConfigRes.content}
-        For at en lokation kan slettes, må der ikke være nogle ruter til eller fra lokationen.
-        <br />
-        Derudover må der ikke være nogle check ind eller ud på lokationen.
-        <br />
-        Lokationen kan altid omdøbes, også selvom der er patruljer på lokationen.
+        For at en lokation kan slettes, må der ikke være nogle:
+        <ul>
+            <li>Patruljeopdateringer på lokationen</li>
+            <li>Ruter til eller fra lokationen.</li>
+            <li>Kodeord oprettet til lokationen</li>
+        </ul>
+        Lokationen kan altid omdøbes.
         <h2>Ruter</h2>
         {routeConfigRes.content}
         Ruter kan altid slettes eller ændres, også selvom der er patruljer på ruten.
@@ -209,6 +211,9 @@ export const locationPage = async (request: Request, locationService: LocationSe
     if (Number.isNaN(locationId))
         return responses.response_code(400, "Invalid location id");
     const location = locationService.locationInfo(locationId);
+
+    const locationIsFirstLocation = locationService.getFirstLocationId() === locationId;
+
     if (!location)
         return responses.not_found("Location not found");
 
@@ -217,14 +222,29 @@ export const locationPage = async (request: Request, locationService: LocationSe
         <span class={`status-badge  ${location.open ? "status-active" : "status-out"}`}>
             {location.open ? "Åben" : "Lukket"}
         </span>
+
+        <span class={`status-badge  ${locationIsFirstLocation ? "status-active" : "status-out"}`}>
+            {locationIsFirstLocation ? "Første Lokation" : "Ikke Første Lokation"}
+        </span>
+
         <div class="button-group">
             {anchorToAddPatrolUpdatePage(null, location.id)}
+
             <button hx-post={Endpoints.ChangeLocationStatus} class="button button-secondary"
                 hx-vals={JSON.stringify({ locationId: location.id, open: !location.open })}
                 hx-swap="none"
                 hx-on--after-request={`window.location.replace('${Endpoints.MasterLocationPage}?locationId=${location.id}')`}>
                 {location.open ? "Luk post" : "Åben post"}
             </button>
+
+            {locationIsFirstLocation ? null : 
+            <button hx-post={Endpoints.MakeLocationFirstLocation} class="button button-secondary"
+                hx-vals={JSON.stringify({ locationId: location.id })}
+                hx-swap="none"
+                hx-on--after-request={`window.location.replace('${Endpoints.MasterLocationPage}?locationId=${location.id}')`}>
+                Gør til første lokation
+            </button>
+            }
         </div>
         <h2>Status</h2>
         {await getLocationStatusTable(request, locationService).then(res => res.content)}
@@ -277,43 +297,3 @@ const renderMasterPage = (title: string, content: string, script?: string) => `
         <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     </body>
 </html>`;
-
-// export const locationPage = (locationService: LocationService, updateService: UpdateService, locationId: number): string => {
-//     const patrolsOnTheirWay = locationService.patrolsTowardsLocation(locationId);
-//     const patrolsOnLocation = locationService.patrolsOnLocation(locationId);
-//     const patrolsCheckedOut = locationService.patrolsCheckedOutFromLocation(locationId);
-//     const updates = updateService.updatesAtLocation(locationId);
-//     const location = locationService.locationInfo(locationId);
-
-//     const body = <div id="content">
-//         <h1>{location.name}</h1>
-//         <h2>Team: {location.team}</h2>
-//         {/* <a class="button" href={`/master/updatePage?locationId=${location.id}`}>Check ind</a> */}
-//         {location.open ?
-//             <a class="button"
-//                 href="/master/locationStatus?location={{location.id}}&status=close">Luk post</a>
-//             :
-//             <a class="button"
-//                 href="/master/locationStatus?location={{location.id}}&status=open">Åben post</a>
-//         }
-//         <h2>Går mod post</h2>
-
-//     </div>;
-// }
-
-//     {{ utils.patrols(patrolsOnTheirWay, locationId=location.id, selection="patrolsOnTheirWay") }}
-//     <h2>På post</h2>
-//     {{ utils.patrols(patrolsOnPost, locationId=location.id, selection="patrolsOnPost") }}
-//     <h2>Har forladt post</h2>
-//     {{ utils.patrols(patrolsCheckedOut, locationId=location.id, selection="patrolsCheckedOut") }}
-//     <h2>Patruljeopdateringer</h2>
-//     <div hx-get="/master/patrolUpdates?locationId={{location.id}}" hx-trigger="every 5s">
-//         {{ utils.updates(updates) }}
-//     </div>
-
-//     <h2>Ruter til denne post</h2>
-//     {{utils.routes(location.id, showFrom=true, showTo=false)}}
-//     <h2>Ruter fra denne post</h2>
-//     {{utils.routes(location.id, showFrom=false, showTo=true)}}
-
-// }

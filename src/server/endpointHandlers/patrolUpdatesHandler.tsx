@@ -72,7 +72,7 @@ const PatrolUpdateTable = (updates: PatrolUpdate[], searchParamStr: string, skip
     
     return <table id={ids.table}
         hx-post={Endpoints.GetPatrolUpdatesTable + "?" + searchParamStr}
-        hx-trigger="every 5s"
+        hx-trigger="every 10s"
         hx-swap="outerHTML"
         hx-on--before-request={cancelCondition}>
 
