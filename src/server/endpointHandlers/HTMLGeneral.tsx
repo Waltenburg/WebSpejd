@@ -28,7 +28,7 @@ export const formatLocationAnchor = (location: Location | null): string => {
     if (location == null)
         return "Ukendt lokation";
 
-    return <a href={`${Endpoints.MasterLocationPage}?id=${location.id}`}
+    return <a href={`${Endpoints.MasterLocationPage}?locationId=${location.id}`}
         class="hover-underline">
         {location.name}
     </a>;
@@ -52,14 +52,23 @@ export const formatUpdateLocation = (locationService: LocationService, update: P
 
 export const formatPatrol = (patrolId: number, patrolService: PatrolService): string => {
     const patrol = patrolService.patrolInfo(patrolId);
-    return <a href={`${Endpoints.MasterPatrolPage}?id=${patrol.id}`} class="hover-underline">
+    return <a href={`${Endpoints.MasterPatrolPage}?patrolId=${patrol.id}`} class="hover-underline">
         {`#${patrol.number} ${patrol.name}`}
     </a>
 };
 
-export const locationName = (locationId: number, locationService: LocationService): string => {
-    return locationService.locationInfo(locationId)?.name || "Ukendt lokation";
-};
+export const anchorToAddPatrolUpdatePage = (patrolId?: number, locationId?: number): string => {
+    const params = new URLSearchParams();
+    if (patrolId != undefined)
+        params.append("patrolId", patrolId.toString());
+    if (locationId != undefined)
+        params.append("locationId", locationId.toString());
+    return <a
+        href={`${Endpoints.MasterAddPatrolUpdatePage}?${params.toString()}`} class="button"
+        onclick="document.setCookie('referer', window.location.href, 1);">
+        Lav patruljeopdatering
+    </a>
+}
 
 export const clock = (date: Date): string => {
     return date.toTimeString().split(' ')[0]; // hh:mm:ss

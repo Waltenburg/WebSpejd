@@ -115,6 +115,8 @@ class Server {
             .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.LocationRouteConfigPage, UserType.Master, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.PatrolConfigPage, UserType.Master, pages.patrolConfigPage, this.patrolService)
+            .route(Endpoints.MasterPatrolPage, UserType.Master, pages.patrolPage, this.patrolService, this.locationService, this.updateService)
+            .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, pages.addPatrolUpdatePage, this.patrolService, this.locationService)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
             
             // ================================ Route Config Endpoints ================================
@@ -132,6 +134,7 @@ class Server {
             // ================================ Patrol Status Endpoints ================================
             .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
             .route(Endpoints.ChangePatrolStatus, UserType.Master, PatrolConfigHandler.changePatrolStatus, this.patrolService)
+
 
             // ================================= Patrol config Endpoints ================================
             .route(Endpoints.AddPatrol, UserType.Master, PatrolConfigHandler.addPatrol, this.patrolService)
@@ -303,13 +306,12 @@ class Server {
     }
 
     makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
-        const formData = request.body.split("&").map(pair => pair.split("=")).reduce((acc, [key, value]) => {
-            acc[decodeURIComponent(key)] = decodeURIComponent(value);
-            return acc;
-        }, {} as { [key: string]: string });
+        const formData = parseForm(request.body);
+        const dateStr = formData['date']; // "YYYY-MM-DD"
+        const timeStr = formData['time']; // "HH:MM"
 
         let patrolUpdate: PatrolUpdateWithNoId = {
-            time: new Date(),
+            time: new Date(dateStr + "T" + timeStr + ":00"),
             patrolId: Number.parseInt(formData['patrol']),
             currentLocationId: 0,
             targetLocationId: 0
@@ -336,24 +338,27 @@ class Server {
             return responses.response_code(400);
         }
 
-        this.updateService.updatePatrol(patrolUpdate);
+        this.updateService.updatePatrolWithTime(patrolUpdate);
 
-        return responses.redirect("/master");
+        return responses.ok();
     }
 
 
 
 
     masterDeletePatrolUpdate = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const updateId = Number.parseInt(params.get("id"));
-        this.updateService.deleteUpdate(updateId);
+        const form = parseForm(request.body);
+        const updateId = Number.parseInt(form["patrolUpdateId"]);
+        const succes = this.updateService.deleteUpdate(updateId);
+        if (!succes) {
+            return responses.not_found("Patrol update not found");
+        }
         return responses.ok();
     }
 
     mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
         const params = request.url.searchParams;
-        const checkinId = Number.parseInt(params.get("id"));
+        const checkinId = Number.parseInt(params.get("patrolUpdateId"));
         const checkin = this.updateService.updateById(checkinId);
         const locationIdAtCheckin = checkin?.currentLocationId;
 

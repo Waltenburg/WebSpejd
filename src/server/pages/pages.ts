@@ -129,7 +129,7 @@ export class Pages {
         let patrolId = params.get("patrolId");
         let locationId = params.get("locationId");
         if (patrolId != undefined) {
-            patrolUpdates = this.updateService.latestUpdatesOfPatrol(Number.parseInt(patrolId), 0);
+            patrolUpdates = this.updateService.updatesOfPatrol(Number.parseInt(patrolId), 0);
         }
         else if (locationId != undefined) {
             patrolUpdates = this.updateService.updatesAtLocation(Number.parseInt(locationId)).reverse();
@@ -181,7 +181,7 @@ export class Pages {
         const patrolId = Number.parseInt(request.url.searchParams.get("id"));
         return this.response(PATROL, {
             patrol: this.patrolService.patrolInfo(patrolId),
-            updates: this.updateService.latestUpdatesOfPatrol(patrolId, 0),
+            updates: this.updateService.updatesOfPatrol(patrolId, 0),
             //location: this.patrolService.locationOfPatrol(patrolId),
         });
     }

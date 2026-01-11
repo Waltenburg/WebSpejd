@@ -21,3 +21,7 @@ export function deleteCookie(cname: string) {
     var expires = "expires="+d.toUTCString();
     document.cookie = cname + "=;" + expires + ";path=/";
 }
+
+(document as any).getCookie = getCookie;
+(document as any).setCookie = setCookie;
+(document as any).deleteCookie = deleteCookie;

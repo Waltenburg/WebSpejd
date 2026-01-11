@@ -72,13 +72,13 @@ export class UpdateService extends ServiceBase {
     /**
      * Find the latest `PatrolUpdates` of the specified patrol.
      * @param patrol the patrol to get the latest `PatrolUpdates` of
-     * @param amount the number of `PatrolUpdates` to get. If set to 0, all updates will be returned.
+     * @param amount the number of `PatrolUpdates` to get. If not specified, all updates will be returned.
      * @return the latest `PatrolUpdates` of the patrol or `null` if none exist
      */
-    latestUpdatesOfPatrol(patrol: number, amount: number): PatrolUpdate[]{
+    updatesOfPatrol(patrol: number, amount?: number): PatrolUpdate[]{
         const fetchStmt = "SELECT * FROM PatrolUpdates WHERE patrolId = ? ORDER BY timeStr DESC"; 
         let patrolUpdates: DatabasePatrolUpdate[];
-        if (amount === 0)
+        if (amount == null)
             patrolUpdates = this.prepare(fetchStmt).all(patrol) as DatabasePatrolUpdate[];
         else 
             patrolUpdates = this.prepare(fetchStmt + " LIMIT ?").all(patrol, amount) as DatabasePatrolUpdate[];
@@ -92,7 +92,7 @@ export class UpdateService extends ServiceBase {
      * @returns A `PatrolUpdate` object representing the latest update of the patrol or `null` if no updates exist or the patrol does not exist
      */
     latestUpdateOfPatrol(patrol: number): PatrolUpdate | null{
-        return this.latestUpdatesOfPatrol(patrol, 1)[0] || null;
+        return this.updatesOfPatrol(patrol, 1)[0] || null;
     }
 
     /** Check patrol in or out of post.
@@ -102,6 +102,14 @@ export class UpdateService extends ServiceBase {
     updatePatrol(patrolUpdate: PatrolUpdateWithNoId): number{
         this.prepare("INSERT INTO PatrolUpdates (patrolId, currentLocationId, targetLocationId) VALUES (?, ?, ?)")
         .run(patrolUpdate.patrolId, patrolUpdate.currentLocationId, patrolUpdate.targetLocationId);
+
+        const id = (this.prepare("SELECT last_insert_rowid() as id").get() as DatabasePatrolUpdate).id;
+        return id;
+    }
+
+    updatePatrolWithTime(patrolUpdate: PatrolUpdateWithNoId): number{
+        this.prepare("INSERT INTO PatrolUpdates (patrolId, currentLocationId, targetLocationId, timeStr) VALUES (?, ?, ?, ?)")
+        .run(patrolUpdate.patrolId, patrolUpdate.currentLocationId, patrolUpdate.targetLocationId, this.db.toUTCString(patrolUpdate.time));
 
         const id = (this.prepare("SELECT last_insert_rowid() as id").get() as DatabasePatrolUpdate).id;
         return id;
@@ -126,8 +134,9 @@ export class UpdateService extends ServiceBase {
      *
      * @param patrolUpdateId the id of the patrol update to delete
      */
-    deleteUpdate(patrolUpdateId: number): void{
-        this.prepare("DELETE FROM PatrolUpdates WHERE id = ?").run(patrolUpdateId);
+    deleteUpdate(patrolUpdateId: number): boolean{
+        const runResults = this.prepare("DELETE FROM PatrolUpdates WHERE id = ?").run(patrolUpdateId);
+        return runResults.changes > 0;
     }
 
     /**

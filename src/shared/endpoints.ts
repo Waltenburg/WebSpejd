@@ -57,14 +57,14 @@ export const enum Endpoints {
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific location including patrols present and incoming
      */
-    MasterLocationPage = "/master/location",
+    MasterLocationPage = "/master/location_page",
 
     /**
      * Master single patrol detail page.
      * Accessible to: Master administrators (UserType.Master)
      * Purpose: Displays detailed information about a specific patrol including location history and status timeline
      */
-    MasterPatrolPage = "/master/patrol",
+    MasterPatrolPage = "/master/patrol_page",
 
     /**
      * Home page - public landing page.\
@@ -161,6 +161,7 @@ export const enum Endpoints {
      * Purpose: Displays all patrols in the system with their current location, status, and activity history
      */
     GetPatrolStatusTable = "/master/patrolStatusTable",
+    
 
     // ================================ Location Config Endpoints ============================
     AddLocation = "/master/addLocation",

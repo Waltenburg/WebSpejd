@@ -92,6 +92,12 @@ export class Database {
         const localDate = new Date(new Date(date).getTime() - this.timeZoneOffset * 60 * 1000);
         return localDate;
     }
+
+    /** Converts local `Date` object to ISO string in UTC */
+    public toUTCString(date: Date): string {
+        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
+        return utcDate.toISOString();
+    }
 }
 
 

@@ -22,7 +22,7 @@ export const getPatrolStatusTable = async (request: Request, locationService: Lo
     if (!includeInactivePatrols)
         patrols = patrols.filter(patrol => patrol.udgået === false);
 
-    const html = patrolsStatusTable(patrols, includeInactivePatrols, locationService, patrolService);
+    const html = html_patrolsStatusTable(patrols, includeInactivePatrols, locationService, patrolService);
     return responses.ok(html);
 };
 
@@ -39,7 +39,7 @@ enum triggers {
     fetchPatrolsTable = "fetchPatrolStatusTable"
 }
 
-const patrolRow = (patrol: Patrol & { lastUpdate: PatrolUpdate | null }, includeInactivePatrols: boolean, locationService: LocationService, patrolService: PatrolService): string => {
+const html_patrolRow = (patrol: Patrol & { lastUpdate: PatrolUpdate | null }, includeInactivePatrols: boolean, locationService: LocationService, patrolService: PatrolService): string => {
     if (!patrol) {
         return <tr class="hover-grey">
             <td>Ukendt patrulje</td>
@@ -60,7 +60,7 @@ const patrolRow = (patrol: Patrol & { lastUpdate: PatrolUpdate | null }, include
     </tr>;
 };
 
-const patrolsStatusTable = (patrols: (Patrol & { lastUpdate: PatrolUpdate | null })[], includeInactivePatrols: boolean, locationService: LocationService, patrolService: PatrolService): string => {
+const html_patrolsStatusTable = (patrols: (Patrol & { lastUpdate: PatrolUpdate | null })[], includeInactivePatrols: boolean, locationService: LocationService, patrolService: PatrolService): string => {
     if (patrols.length === 0) {
         return <div>Ingen patruljer</div>;
     }
@@ -86,7 +86,7 @@ const patrolsStatusTable = (patrols: (Patrol & { lastUpdate: PatrolUpdate | null
                 {includeInactivePatrols ? <th>Status</th> : null}
                 <th>Sidste ændring</th>
             </thead>
-            {patrols.map(patrol => patrolRow(patrol, includeInactivePatrols, locationService, patrolService))}
+            {patrols.map(patrol => html_patrolRow(patrol, includeInactivePatrols, locationService, patrolService))}
         </table>
     </div>;
 };
