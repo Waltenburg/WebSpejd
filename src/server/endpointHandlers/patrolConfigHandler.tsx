@@ -264,16 +264,18 @@ const tableBody = (patrolService: PatrolService, patrols: Patrol[]): string => {
 }
 
 const table = (patrolService: PatrolService, patrols: Patrol[]): string => {
-    return <table id={ids.table}>
-        <thead>
-            <th>Patruljenummer</th>
-            <th>Patruljenavn</th>
-            <th>Status</th>
-            <th>Handling</th>
-        </thead>
-        {tableBody(patrolService, patrols)}
-        <tfoot>
-            {addRow()}
-        </tfoot>
-    </table>
+    return <div class="table-wrapper">
+        <table id={ids.table}>
+            <thead>
+                <th>Patruljenummer</th>
+                <th>Patruljenavn</th>
+                <th>Status</th>
+                <th>Handling</th>
+            </thead>
+            {tableBody(patrolService, patrols)}
+            <tfoot>
+                {addRow()}
+            </tfoot>
+        </table>
+    </div>
 }

@@ -70,23 +70,24 @@ const html_patrolsStatusTable = (patrols: (Patrol & { lastUpdate: PatrolUpdate |
                 hx-trigger={`every 10s, ${triggers.fetchPatrolsTable}`}
                 hx-swap="outerHTML"
                 hx-include={`#${ids.includeInactivePatrolsCheckbox}`}>
-
-        <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1rem;">
-            <label for={ids.includeInactivePatrolsCheckbox} style="font-weight: bold; margin-right: 0.5rem;">Inkluder udgåede patruljer</label>
+        <div class="filter-bar">
+            <label for={ids.includeInactivePatrolsCheckbox} style="font-weight: bold;">Inkluder udgåede patruljer</label>
             <input  type="checkbox" 
                     id={ids.includeInactivePatrolsCheckbox}
                     checked={includeInactivePatrols ? true : false}
                     name="includeInactivePatrols"
                     hx-on:change={`htmx.trigger(${getElementById(ids.tableContainer)}, '${triggers.fetchPatrolsTable}')`}/>
         </div>
-        <table id={ids.table}>
-            <thead>
-                <th>Patrulje</th>
-                <th>Lokation</th>
-                {includeInactivePatrols ? <th>Status</th> : null}
-                <th>Sidste ændring</th>
-            </thead>
-            {patrols.map(patrol => html_patrolRow(patrol, includeInactivePatrols, locationService, patrolService))}
-        </table>
+        <div class="table-wrapper">
+            <table id={ids.table}>
+                <thead>
+                    <th>Patrulje</th>
+                    <th>Lokation</th>
+                    {includeInactivePatrols ? <th>Status</th> : null}
+                    <th>Sidste ændring</th>
+                </thead>
+                {patrols.map(patrol => html_patrolRow(patrol, includeInactivePatrols, locationService, patrolService))}
+            </table>
+        </div>
     </div>;
 };

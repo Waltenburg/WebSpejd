@@ -70,18 +70,21 @@ const html_patrolUpdateRow = (update: PatrolUpdate, skipLocation: boolean, skipP
 const PatrolUpdateTable = (updates: PatrolUpdate[], searchParamStr: string, skipLocation: boolean, skipPatrol: boolean, locationService: LocationService, patrolService: PatrolService): string => {
     const cancelCondition = `if (event.detail.elt.id === this.id && isErrorDialogOpen()) {console.log("cancelled request"); event.preventDefault(); }`;
     
-    return <table id={ids.table}
+    return <div
+        class="table-wrapper"
+        id={ids.table}
         hx-post={Endpoints.GetPatrolUpdatesTable + "?" + searchParamStr}
         hx-trigger="every 10s"
         hx-swap="outerHTML"
         hx-on--before-request={cancelCondition}>
-
-        <thead>
-            {skipPatrol ? null : <th>Patrulje</th>}
-            {skipLocation ? null : <th>Lokation</th>}
-            <th>Tidspunkt</th>
-            <th>Handling</th>
-        </thead>
-        {updates.map(update => html_patrolUpdateRow(update, skipLocation, skipPatrol, locationService, patrolService))}
-    </table>;
+        <table>
+            <thead>
+                {skipPatrol ? null : <th>Patrulje</th>}
+                {skipLocation ? null : <th>Lokation</th>}
+                <th>Tidspunkt</th>
+                <th>Handling</th>
+            </thead>
+            {updates.map(update => html_patrolUpdateRow(update, skipLocation, skipPatrol, locationService, patrolService))}
+        </table>
+    </div>;
 }

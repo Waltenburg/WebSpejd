@@ -41,13 +41,6 @@ const enum ids {
     table = "location-status-table",
     tableBody = "location-status-table-body",
 }
-const enum classes {
-    renaming = "renaming"
-}
-const enum hxTriggers {
-    fetchLocationsRow = "fetchLocationStatusRow",
-    fetchLocationTable = "fetchLocationStatusTable"
-}
 
 // Internal function for a single location row
 const html_locationRow = (locationService: LocationService, locationId: number): string => {
@@ -71,20 +64,23 @@ const html_locationRow = (locationService: LocationService, locationId: number):
 
 // Internal function for the locations table
 export const html_locationStatusTable = (locationService: LocationService, locationIds: number[], searchParamStr: string): string => {
-    return <table
+    return <div
+        class="table-wrapper"
         id={ids.table}
         hx-post={Endpoints.GetLocationStatusTable + "?" + searchParamStr}
         hx-trigger="every 10s"
         hx-swap="outerHTML"
         hx-target="this">
-        <thead>
-            <th>Post</th>
-            <th>På vej</th>
-            <th>På post</th>
-            <th>Forladt post</th>
-        </thead>
-        <tbody id={ids.tableBody}>
-            {locationIds.map(locationId => html_locationRow(locationService, locationId))}
-        </tbody>
-    </table>;
+        <table>
+            <thead>
+                <th>Post</th>
+                <th>På vej</th>
+                <th>På post</th>
+                <th>Forladt post</th>
+            </thead>
+            <tbody id={ids.tableBody}>
+                {locationIds.map(locationId => html_locationRow(locationService, locationId))}
+            </tbody>
+        </table>
+    </div>;
 };

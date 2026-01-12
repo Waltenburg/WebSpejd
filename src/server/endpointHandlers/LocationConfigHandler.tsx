@@ -5,7 +5,6 @@ import { formatLocationAnchor, getElementById, addClassToElement, removeClassFro
 import * as responses from '../response';
 import { parseForm } from '../request';
 import { Request } from '../request';
-import { table } from 'console';
 
 type Response = responses.Response;
 
@@ -153,7 +152,7 @@ const html_row = (locationService: LocationService, locationId: number): string 
             </button>
             <button
                 type="button"
-                class="location-passwords-button"
+                class="button location-passwords-button"
                 data-location-id={location.id}
                 data-location-name={location.name}
                 data-location-team={location.team}>
@@ -170,7 +169,7 @@ const html_row = (locationService: LocationService, locationId: number): string 
             <button hx-post={`${Endpoints.DeleteLocation}`} hx-target="closest tr"
                 hx-swap="outerHTML" hx-vals={JSON.stringify({ locationId: location.id })}
                 hx-confirm={`Er du sikker på, at du vil slette lokationen "${location.name}"? Dette kan ikke fortrydes.\nHvis der er ruter til/fra denne lokation, eller patruljer der er checket imod/ind/ud fra denne lokation, kan lokationen ikke slettes.`}>
-                Slet lokation
+                Slet
             </button>
 
             <button hx-post={`${Endpoints.GetRenameLocationRow}`} hx-target="closest tr"
@@ -273,16 +272,18 @@ const html_tableBody = (locationService: LocationService, locationIds: number[])
 }
 
 const html_table = (locationService: LocationService, locationIds: number[]): string => {
-    return <table id={ids.configTable}>
-        <thead>
-            <th>Navn</th>
-            <th>Team</th>
-            <th>Status</th>
-            <th>Handling</th>
-        </thead>
-        {html_tableBody(locationService, locationIds)}
-        <tfoot>
-            {html_addRow()}
-        </tfoot>
-    </table>
+    return <div class="table-wrapper">
+        <table id={ids.configTable}>
+            <thead>
+                <th>Navn</th>
+                <th>Team</th>
+                <th>Status</th>
+                <th>Handling</th>
+            </thead>
+            {html_tableBody(locationService, locationIds)}
+            <tfoot>
+                {html_addRow()}
+            </tfoot>
+        </table>
+    </div>
 }

@@ -63,6 +63,11 @@ export class AdminService extends ServiceBase {
         return rows;
     }
 
+    setMasterPassword(newPassword: string): void {
+        this.prepare("UPDATE settings SET value = ? WHERE key = 'master_password'").run(newPassword);
+        this.settings["master_password"] = newPassword;
+    }
+
     /**
      * Get all settings as key-value pairs.
      *

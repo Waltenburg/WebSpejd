@@ -250,10 +250,14 @@ export const locationPage = async (request: Request, locationService: LocationSe
         {await getLocationStatusTable(request, locationService).then(res => res.content)}
 
         <h2>Ruter til lokationen</h2>
-        {html_RouteTable(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true)}
+        <div class="table-wrapper">
+            {html_RouteTable(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true)}
+        </div>
 
         <h2>Ruter fra lokationen</h2>
-        {html_RouteTable(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false)}
+        <div class="table-wrapper">
+            {html_RouteTable(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false)}
+        </div>
 
         <h2>Patruljeopdateringer</h2>
         <div>
