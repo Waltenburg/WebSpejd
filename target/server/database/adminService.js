@@ -35,6 +35,10 @@ class AdminService extends database_1.ServiceBase {
             .all(locationId);
         return rows;
     }
+    setMasterPassword(newPassword) {
+        this.prepare("UPDATE settings SET value = ? WHERE key = 'master_password'").run(newPassword);
+        this.settings["master_password"] = newPassword;
+    }
     getAllSettings() {
         const rows = this.prepare(`SELECT * FROM ${"settings"}`).all();
         const settings = {};

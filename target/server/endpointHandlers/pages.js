@@ -207,9 +207,9 @@ const locationPage = async (request, locationService, updateService, patrolServi
         elements.createElement("h2", null, "Status"),
         await (0, locationStatusHandler_1.getLocationStatusTable)(request, locationService).then(res => res.content),
         elements.createElement("h2", null, "Ruter til lokationen"),
-        (0, RouteConfigHandler_2.table)(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true),
+        elements.createElement("div", { class: "table-wrapper" }, (0, RouteConfigHandler_2.table)(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true)),
         elements.createElement("h2", null, "Ruter fra lokationen"),
-        (0, RouteConfigHandler_2.table)(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false),
+        elements.createElement("div", { class: "table-wrapper" }, (0, RouteConfigHandler_2.table)(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false)),
         elements.createElement("h2", null, "Patruljeopdateringer"),
         elements.createElement("div", null, await (0, patrolUpdatesHandler_1.getPatrolUpdatesTable)(request, updateService, locationService, patrolService).then(res => res.content)));
     const html = renderMasterPage(`Lokation: ${location.name}`, content);

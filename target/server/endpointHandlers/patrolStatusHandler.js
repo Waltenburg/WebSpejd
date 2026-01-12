@@ -72,15 +72,16 @@ const html_patrolsStatusTable = (patrols, includeInactivePatrols, locationServic
         return elements.createElement("div", null, "Ingen patruljer");
     }
     return elements.createElement("div", { id: ids.tableContainer, "hx-post": "/master/patrolStatusTable", "hx-trigger": `every 10s, ${triggers.fetchPatrolsTable}`, "hx-swap": "outerHTML", "hx-include": `#${ids.includeInactivePatrolsCheckbox}` },
-        elements.createElement("div", { style: "display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1rem;" },
-            elements.createElement("label", { for: ids.includeInactivePatrolsCheckbox, style: "font-weight: bold; margin-right: 0.5rem;" }, "Inkluder udg\u00E5ede patruljer"),
+        elements.createElement("div", { class: "filter-bar" },
+            elements.createElement("label", { for: ids.includeInactivePatrolsCheckbox, style: "font-weight: bold;" }, "Inkluder udg\u00E5ede patruljer"),
             elements.createElement("input", { type: "checkbox", id: ids.includeInactivePatrolsCheckbox, checked: includeInactivePatrols ? true : false, name: "includeInactivePatrols", "hx-on:change": `htmx.trigger(${(0, HTMLGeneral_1.getElementById)(ids.tableContainer)}, '${triggers.fetchPatrolsTable}')` })),
-        elements.createElement("table", { id: ids.table },
-            elements.createElement("thead", null,
-                elements.createElement("th", null, "Patrulje"),
-                elements.createElement("th", null, "Lokation"),
-                includeInactivePatrols ? elements.createElement("th", null, "Status") : null,
-                elements.createElement("th", null, "Sidste \u00E6ndring")),
-            patrols.map(patrol => html_patrolRow(patrol, includeInactivePatrols, locationService, patrolService))));
+        elements.createElement("div", { class: "table-wrapper" },
+            elements.createElement("table", { id: ids.table },
+                elements.createElement("thead", null,
+                    elements.createElement("th", null, "Patrulje"),
+                    elements.createElement("th", null, "Lokation"),
+                    includeInactivePatrols ? elements.createElement("th", null, "Status") : null,
+                    elements.createElement("th", null, "Sidste \u00E6ndring")),
+                patrols.map(patrol => html_patrolRow(patrol, includeInactivePatrols, locationService, patrolService)))));
 };
 //# sourceMappingURL=patrolStatusHandler.js.map

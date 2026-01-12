@@ -70,12 +70,13 @@ const html_patrolUpdateRow = (update, skipLocation, skipPatrol, locationService,
 };
 const PatrolUpdateTable = (updates, searchParamStr, skipLocation, skipPatrol, locationService, patrolService) => {
     const cancelCondition = `if (event.detail.elt.id === this.id && isErrorDialogOpen()) {console.log("cancelled request"); event.preventDefault(); }`;
-    return elements.createElement("table", { id: ids.table, "hx-post": "/master/patrolUpdatesTable" + "?" + searchParamStr, "hx-trigger": "every 10s", "hx-swap": "outerHTML", "hx-on--before-request": cancelCondition },
-        elements.createElement("thead", null,
-            skipPatrol ? null : elements.createElement("th", null, "Patrulje"),
-            skipLocation ? null : elements.createElement("th", null, "Lokation"),
-            elements.createElement("th", null, "Tidspunkt"),
-            elements.createElement("th", null, "Handling")),
-        updates.map(update => html_patrolUpdateRow(update, skipLocation, skipPatrol, locationService, patrolService)));
+    return elements.createElement("div", { class: "table-wrapper", id: ids.table, "hx-post": "/master/patrolUpdatesTable" + "?" + searchParamStr, "hx-trigger": "every 10s", "hx-swap": "outerHTML", "hx-on--before-request": cancelCondition },
+        elements.createElement("table", null,
+            elements.createElement("thead", null,
+                skipPatrol ? null : elements.createElement("th", null, "Patrulje"),
+                skipLocation ? null : elements.createElement("th", null, "Lokation"),
+                elements.createElement("th", null, "Tidspunkt"),
+                elements.createElement("th", null, "Handling")),
+            updates.map(update => html_patrolUpdateRow(update, skipLocation, skipPatrol, locationService, patrolService))));
 };
 //# sourceMappingURL=patrolUpdatesHandler.js.map

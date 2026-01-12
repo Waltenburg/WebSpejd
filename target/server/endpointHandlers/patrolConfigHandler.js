@@ -185,13 +185,14 @@ const tableBody = (patrolService, patrols) => {
         patrols.map(patrol => row(patrol)));
 };
 const table = (patrolService, patrols) => {
-    return elements.createElement("table", { id: ids.table },
-        elements.createElement("thead", null,
-            elements.createElement("th", null, "Patruljenummer"),
-            elements.createElement("th", null, "Patruljenavn"),
-            elements.createElement("th", null, "Status"),
-            elements.createElement("th", null, "Handling")),
-        tableBody(patrolService, patrols),
-        elements.createElement("tfoot", null, addRow()));
+    return elements.createElement("div", { class: "table-wrapper" },
+        elements.createElement("table", { id: ids.table },
+            elements.createElement("thead", null,
+                elements.createElement("th", null, "Patruljenummer"),
+                elements.createElement("th", null, "Patruljenavn"),
+                elements.createElement("th", null, "Status"),
+                elements.createElement("th", null, "Handling")),
+            tableBody(patrolService, patrols),
+            elements.createElement("tfoot", null, addRow())));
 };
 //# sourceMappingURL=patrolConfigHandler.js.map

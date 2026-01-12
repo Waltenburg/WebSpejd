@@ -44,8 +44,6 @@ const changeRouteStatus = async (request, locationService) => {
     const form = (0, request_1.parseForm)(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
     const open = (form["open"] ?? request.url.searchParams.get("open")) === "true";
-    const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
-    const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
     if (!Number.isNaN(routeId)) {
         const result = locationService.changeRouteStatus(routeId, open);
         if (result)

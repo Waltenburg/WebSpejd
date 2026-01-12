@@ -255,7 +255,7 @@ class Server {
             .file("/home", `${assets}/html/home.html`)
             .file("/mandskab", `${assets}/html/mandskab.html`)
             .file("/contact", `${assets}/html/contact.html`)
-            .file('/favicon.ico', `${assets}/favicon.ico`)
+            .file('/favicon.ico', `${assets}/images/favicon.ico`)
             .route("/login", 0, this.login)
             .route("/logout", 0, this.logout)
             .route("/deletePatrolUpdateMandskab", 1, this.mandskabDeleteUpdate)
@@ -344,6 +344,9 @@ async function main() {
         console.log("Resetting database: Deleting all patrol updates");
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
     }
+    const masterPassword = config["master_password"];
+    if (masterPassword)
+        adminService.setMasterPassword(masterPassword);
     const server = new Server(address, port, assets, db, adminService, locationService, patrolService, updateService);
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));

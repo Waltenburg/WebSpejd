@@ -138,9 +138,9 @@ const html_row = (locationService, locationId) => {
         elements.createElement("td", null, location.open ? "Åben" : "Lukket"),
         elements.createElement("td", null,
             elements.createElement("button", { "hx-post": `${"/master/changeLocationStatus"}`, "hx-on--after-request": `htmx.trigger(this.nextElementSibling, '${"fetchLocationsRow"}')`, "hx-swap": "none", "hx-vals": hxVals }, location.open ? "Luk" : "Åbn"),
-            elements.createElement("button", { type: "button", class: "location-passwords-button", "data-location-id": location.id, "data-location-name": location.name, "data-location-team": location.team }, "Kodeord"),
+            elements.createElement("button", { type: "button", class: "button location-passwords-button", "data-location-id": location.id, "data-location-name": location.name, "data-location-team": location.team }, "Kodeord"),
             elements.createElement("span", { "hx-trigger": "fetchLocationsRow", "hx-target": "closest tr", "hx-swap": "outerHTML", "hx-vals": hxVals, "hx-post": `${"/master/getLocationTableRow"}` }),
-            elements.createElement("button", { "hx-post": `${"/master/deleteLocation"}`, "hx-target": "closest tr", "hx-swap": "outerHTML", "hx-vals": JSON.stringify({ locationId: location.id }), "hx-confirm": `Er du sikker på, at du vil slette lokationen "${location.name}"? Dette kan ikke fortrydes.\nHvis der er ruter til/fra denne lokation, eller patruljer der er checket imod/ind/ud fra denne lokation, kan lokationen ikke slettes.` }, "Slet lokation"),
+            elements.createElement("button", { "hx-post": `${"/master/deleteLocation"}`, "hx-target": "closest tr", "hx-swap": "outerHTML", "hx-vals": JSON.stringify({ locationId: location.id }), "hx-confirm": `Er du sikker på, at du vil slette lokationen "${location.name}"? Dette kan ikke fortrydes.\nHvis der er ruter til/fra denne lokation, eller patruljer der er checket imod/ind/ud fra denne lokation, kan lokationen ikke slettes.` }, "Slet"),
             elements.createElement("button", { "hx-post": `${"/master/renameLocationRow"}`, "hx-target": "closest tr", "hx-swap": "outerHTML", "hx-vals": JSON.stringify({ locationId: location.id }), "hx-on--before-request": (0, HTMLGeneral_1.addClassToElement)((0, HTMLGeneral_1.getElementById)("location-config-table"), "renaming") }, "Omd\u00F8b")));
 };
 const html_addRow = () => {
@@ -183,13 +183,14 @@ const html_tableBody = (locationService, locationIds) => {
         locationIds.map(locationId => html_row(locationService, locationId)));
 };
 const html_table = (locationService, locationIds) => {
-    return elements.createElement("table", { id: "location-config-table" },
-        elements.createElement("thead", null,
-            elements.createElement("th", null, "Navn"),
-            elements.createElement("th", null, "Team"),
-            elements.createElement("th", null, "Status"),
-            elements.createElement("th", null, "Handling")),
-        html_tableBody(locationService, locationIds),
-        elements.createElement("tfoot", null, html_addRow()));
+    return elements.createElement("div", { class: "table-wrapper" },
+        elements.createElement("table", { id: "location-config-table" },
+            elements.createElement("thead", null,
+                elements.createElement("th", null, "Navn"),
+                elements.createElement("th", null, "Team"),
+                elements.createElement("th", null, "Status"),
+                elements.createElement("th", null, "Handling")),
+            html_tableBody(locationService, locationIds),
+            elements.createElement("tfoot", null, html_addRow())));
 };
 //# sourceMappingURL=LocationConfigHandler.js.map

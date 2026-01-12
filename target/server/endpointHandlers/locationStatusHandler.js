@@ -64,13 +64,14 @@ const html_locationRow = (locationService, locationId) => {
         elements.createElement("td", null, location.patrolsCheckedOut));
 };
 const html_locationStatusTable = (locationService, locationIds, searchParamStr) => {
-    return elements.createElement("table", { id: "location-status-table", "hx-post": "/master/getLocationStatusTable" + "?" + searchParamStr, "hx-trigger": "every 10s", "hx-swap": "outerHTML", "hx-target": "this" },
-        elements.createElement("thead", null,
-            elements.createElement("th", null, "Post"),
-            elements.createElement("th", null, "P\u00E5 vej"),
-            elements.createElement("th", null, "P\u00E5 post"),
-            elements.createElement("th", null, "Forladt post")),
-        elements.createElement("tbody", { id: "location-status-table-body" }, locationIds.map(locationId => html_locationRow(locationService, locationId))));
+    return elements.createElement("div", { class: "table-wrapper", id: "location-status-table", "hx-post": "/master/getLocationStatusTable" + "?" + searchParamStr, "hx-trigger": "every 10s", "hx-swap": "outerHTML", "hx-target": "this" },
+        elements.createElement("table", null,
+            elements.createElement("thead", null,
+                elements.createElement("th", null, "Post"),
+                elements.createElement("th", null, "P\u00E5 vej"),
+                elements.createElement("th", null, "P\u00E5 post"),
+                elements.createElement("th", null, "Forladt post")),
+            elements.createElement("tbody", { id: "location-status-table-body" }, locationIds.map(locationId => html_locationRow(locationService, locationId)))));
 };
 exports.html_locationStatusTable = html_locationStatusTable;
 //# sourceMappingURL=locationStatusHandler.js.map
