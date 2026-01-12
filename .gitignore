@@ -1,3 +1,6 @@
 *.ts
 *js.map
 .tsbuildinfo
+*.db
+*.db-journal
+*.db-wal
