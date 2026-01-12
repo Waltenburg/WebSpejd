@@ -1,6 +1,4 @@
 #My addings
-/target
-/test
 
 # Logs
 logs
@@ -130,11 +128,13 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+*.ts
+*.tsx
+*.js.map
+
 #Added with github Desktop
-Deployed/data/ppMatrix.json
 *.txt
 *.db-wal
 *.db-shm
 SQLite/webspejd.db
-SQLite/data.csv
-SQLite/data.tsv
+
