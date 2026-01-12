@@ -22,3 +22,5 @@ export function createDatabase(dbPath: string, masterPassword: string): SQLite.D
 }
 
 createDatabase(dbPath, "master");
+console.log("Database created at " + dbPath);
+console.warn("Default master password is 'master'. Please change it!");
