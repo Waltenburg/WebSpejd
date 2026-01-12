@@ -157,7 +157,7 @@ class Server {
             .file(Endpoints.HomeAlias, `${assets}/html/home.html`)
             .file(Endpoints.Mandskab, `${assets}/html/mandskab.html`)
             .file(Endpoints.Contact, `${assets}/html/contact.html`)
-            .file('/favicon.ico', `${assets}/favicon.ico`)
+            .file('/favicon.ico', `${assets}/images/favicon.ico`)
 
             // ================================ Authentication Endpoints ==================================
             .route(Endpoints.Login, UserType.None, this.login)
@@ -474,6 +474,10 @@ async function main(): Promise<void> {
         console.log("Resetting database: Deleting all patrol updates");
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
     }
+
+    const masterPassword = config[SETTINGS_TABLE.SETTING_MASTER_PASSWORD] as string;
+    if(masterPassword)
+        adminService.setMasterPassword(masterPassword);
 
     const server = new Server(address, port, assets, db,
         adminService, locationService, patrolService, updateService
