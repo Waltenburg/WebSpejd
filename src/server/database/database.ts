@@ -86,16 +86,29 @@ export class Database {
         return utcDate.toISOString();
     }
     
-    /** Converts UTC time ISO string to local `Date()` object */
+    /** Converts UTC time ISO string to local `Date()` object
+     * @param date ISO string in YYYY-MM-DD HH:mm:ss UTC format
+     * @return local `Date` object
+    */
     public toLocalDateObject(date: string): Date {
         const localDate = new Date(new Date(date).getTime() - this.timeZoneOffset * 60 * 1000);
         return localDate;
     }
 
-    /** Converts local `Date` object to ISO string in UTC */
+    /** Converts local `Date` object to string in UTC YYYY-MM-DD HH:mm:ss format
+     * @param date local `Date` object
+     * @return string in YYYY-MM-DD HH:mm:ss UTC format
+     */
     public toUTCString(date: Date): string {
-        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
-        return utcDate.toISOString();
+        // const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
+        const utcDate = new Date(date.getTime());
+        const year = utcDate.getUTCFullYear();
+        const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const hours = String(utcDate.getUTCHours()).padStart(2, '0');
+        const minutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(utcDate.getUTCSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 }
 
