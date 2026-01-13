@@ -43,8 +43,14 @@ class Database {
         return localDate;
     }
     toUTCString(date) {
-        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
-        return utcDate.toISOString();
+        const utcDate = new Date(date.getTime());
+        const year = utcDate.getUTCFullYear();
+        const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const hours = String(utcDate.getUTCHours()).padStart(2, '0');
+        const minutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(utcDate.getUTCSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 }
 exports.Database = Database;
