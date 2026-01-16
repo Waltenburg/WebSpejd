@@ -4,6 +4,7 @@
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 node_modules/
 target/server/server.config.json
 *.tsbuildinfo
