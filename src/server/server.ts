@@ -309,9 +309,7 @@ class Server {
 
         };
 
-        return responses.ok("", {
-            data: JSON.stringify(data)
-        });
+        return responses.ok(JSON.stringify(data));
     }
 
 

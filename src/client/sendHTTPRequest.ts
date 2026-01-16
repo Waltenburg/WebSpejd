@@ -1,41 +1,54 @@
 import { getCookie } from "./cookie.js";
 
-export const identifier = getCookie("identifier")
+export const identifier = getCookie("identifier");
 
-export const sendRequest = (url: string, dataHeaders: Headers | null, succesReciever: doubleParamCallback<number, Headers>, onFail?: singleParamCallback<number>, dontSendID?: boolean): void =>
-{
-    if(dataHeaders == null)
-        dataHeaders = new Headers()
-    if(!dontSendID){
-        if(identifier == null)
-            throw new Error("No identifier cookie set")
-        dataHeaders.append("id", identifier)
+export const sendRequest = (
+    url: string,
+    dataHeaders: Headers | null,
+    succesReciever: SuccessCallback,
+    onFail?: FailCallback,
+    dontSendID?: boolean
+): void => {
+    const headersToSend = dataHeaders ?? new Headers();
+
+    if (!dontSendID) {
+        if (identifier == null)
+            throw new Error("No identifier cookie set");
+        headersToSend.append("id", identifier);
     }
+
     fetch(url, {
         method: "GET",
-        headers: dataHeaders
+        headers: headersToSend
     })
-    .then(response => {
-        if(response.ok)
-            succesReciever(response.status, response.headers)
-        else if(onFail != null)
-            onFail(response.status)    
-        else
-            console.log("Response was not OK. Status: " + response.status)
-    })
-    .catch(err => {
-        console.log("Error in communication with server.")
-        console.error(err)
-        if(onFail != null)
-            onFail(err)    
-    })
-}
-export interface singleParamCallback<Type> {
-    (a: Type): void
-}
-export interface doubleParamCallback<Type, Type2> {
-    (a: Type, b: Type2): void
-}
+        .then(async response => {
+            let body = "";
+            try {
+                body = await response.text();
+            } catch (err) {
+                console.error("Failed to read response body", err);
+            }
+
+            if (response.ok) {
+                succesReciever(response.status, response.headers, body);
+            }
+            else if (onFail != null) {
+                onFail(response.status, body);
+            }
+            else {
+                console.log("Response was not OK. Status: " + response.status + " Body: " + body);
+            }
+        })
+        .catch(err => {
+            console.log("Error in communication with server.");
+            console.error(err);
+            if (onFail != null)
+                onFail(err);
+        });
+};
+
+export type SuccessCallback = (status: number, headers: Headers, body: string) => void;
+export type FailCallback = (statusOrError: number | unknown, body?: string) => void;
 
 //Returns a tuple with the first value being all values in Arr1 that arent in Arr2
 //and second value being all values in Arr2 that arent in Arr1

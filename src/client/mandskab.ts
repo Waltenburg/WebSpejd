@@ -59,8 +59,8 @@ class Mandskab {
     }
 
     private reloadData = (): void => {
-        const success = (status: number, headers: Headers) => {
-            const data = JSON.parse(headers.get("data") as string) as MandskabData;
+        const success = (_status: number, _headers: Headers, body: string) => {
+            const data = JSON.parse(body) as MandskabData;
             this.patrolsOnLocation = data.patrolsOnLocation;
             this.patrolsTowardsLocation = data.patrolsTowardsLocation;
             this.currentLocationId = data.location.id;
@@ -76,7 +76,7 @@ class Mandskab {
             this.locationNameHeader.innerHTML = data.location.name;
         }
 
-        const fail = (err: number) => {
+        const fail = (_err: number | unknown, _body?: string) => {
             window.clearInterval(this.reloadDataInterval);
             showDialog(
                 "Der skete en fejl ved hentning af patruljer. Hvis fejlen fortsætter, kontroller internetforbindelsen eller log ind igen.",
@@ -108,7 +108,7 @@ class Mandskab {
                 targetLocationId: targetLocationId
             }
             const header = new Headers({ update: JSON.stringify(patrolUpdate) });
-            const succesReciever = (status: number, headers: Headers) => {
+            const succesReciever = (_status: number, headers: Headers, _body: string) => {
                 const checkinID = headers.get("checkinID");
                 if (checkinID == null) {
                     alert("Mulig fejl ved opdaternig. Kontroller at opdateringen er registreret korrekt.");
@@ -119,7 +119,7 @@ class Mandskab {
                 this.undoButton.disabled = false;
                 this.reloadData();
             };
-            const onFail = (err: number) => {
+            const onFail = (_err: number | unknown, _body?: string) => {
                 showDialog(
                     "Der skete en fejl ved afsendelse af opdatering. Du kan prøve igen eller genindlæse siden.",
                     ["Prøv igen", () => onConfirm()],
@@ -147,7 +147,7 @@ class Mandskab {
             return;
 
         const onConfirm = (): void => {
-            sendRequest(`${Endpoints.MandskabDeletePatrolUpdate}?patrolUpdateId=${lastActionId}`, null, (status, headers) => {
+            sendRequest(`${Endpoints.MandskabDeletePatrolUpdate}?patrolUpdateId=${lastActionId}`, null, (_status, _headers, _body) => {
                 this.recentActions.pop();
                 this.reloadData();
             }, err => {

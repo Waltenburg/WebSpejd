@@ -34,7 +34,7 @@ const loginClicked = (existingUser?: boolean) => {
         "id": identifier,
         "password": kode.value,
     })
-    const loginSucces = (status: number, headers: Headers) => {
+    const loginSucces = (status: number, headers: Headers, _body: string) => {
         setCookie("identifier", identifier, 2)
         if(headers.get("ismaster") == "true"){
             setCookie("master", "true", 1)
