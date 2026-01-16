@@ -14,8 +14,8 @@ class Mandskab {
         this.errorDialogOpen = false;
         this.firstLoad = true;
         this.reloadData = () => {
-            const success = (status, headers) => {
-                const data = JSON.parse(headers.get("data"));
+            const success = (_status, _headers, body) => {
+                const data = JSON.parse(body);
                 this.patrolsOnLocation = data.patrolsOnLocation;
                 this.patrolsTowardsLocation = data.patrolsTowardsLocation;
                 this.currentLocationId = data.location.id;
@@ -28,7 +28,7 @@ class Mandskab {
                 this.addRecentActionsTable(data.latestUpdates, this.currentLocationId);
                 this.locationNameHeader.innerHTML = data.location.name;
             };
-            const fail = (err) => {
+            const fail = (_err, _body) => {
                 window.clearInterval(this.reloadDataInterval);
                 showDialog("Der skete en fejl ved hentning af patruljer. Hvis fejlen fortsætter, kontroller internetforbindelsen eller log ind igen.", ["Prøv igen", () => this.reloadData()], ["Log ud", () => this.logout()]);
             };
@@ -53,7 +53,7 @@ class Mandskab {
                     targetLocationId: targetLocationId
                 };
                 const header = new Headers({ update: JSON.stringify(patrolUpdate) });
-                const succesReciever = (status, headers) => {
+                const succesReciever = (_status, headers, _body) => {
                     const checkinID = headers.get("checkinID");
                     if (checkinID == null) {
                         alert("Mulig fejl ved opdaternig. Kontroller at opdateringen er registreret korrekt.");
@@ -64,7 +64,7 @@ class Mandskab {
                     this.undoButton.disabled = false;
                     this.reloadData();
                 };
-                const onFail = (err) => {
+                const onFail = (_err, _body) => {
                     showDialog("Der skete en fejl ved afsendelse af opdatering. Du kan prøve igen eller genindlæse siden.", ["Prøv igen", () => onConfirm()], ["Genindlæs side", () => this.reloadData()]);
                 };
                 sendRequest("/sendPatrolUpdateMandskab", header, succesReciever, onFail);
@@ -83,7 +83,7 @@ class Mandskab {
             if (lastActionId == null)
                 return;
             const onConfirm = () => {
-                sendRequest(`${"/deletePatrolUpdateMandskab"}?patrolUpdateId=${lastActionId}`, null, (status, headers) => {
+                sendRequest(`${"/deletePatrolUpdateMandskab"}?patrolUpdateId=${lastActionId}`, null, (_status, _headers, _body) => {
                     this.recentActions.pop();
                     this.reloadData();
                 }, err => {

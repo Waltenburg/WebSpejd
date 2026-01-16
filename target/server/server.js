@@ -89,9 +89,7 @@ class Server {
                 routesTo: nextLocations,
                 latestUpdates: latestUpdates
             };
-            return responses.ok("", {
-                data: JSON.stringify(data)
-            });
+            return responses.ok(JSON.stringify(data));
         };
         this.makePatrolUpdate = async (request) => {
             const user = request.user;

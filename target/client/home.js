@@ -29,7 +29,7 @@ const loginClicked = (existingUser) => {
         "id": identifier,
         "password": kode.value,
     });
-    const loginSucces = (status, headers) => {
+    const loginSucces = (status, headers, _body) => {
         setCookie("identifier", identifier, 2);
         if (headers.get("ismaster") == "true") {
             setCookie("master", "true", 1);
