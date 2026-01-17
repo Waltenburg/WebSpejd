@@ -367,11 +367,10 @@ class Server {
 
     makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
         const formData = parseForm(request.body);
-        const dateStr = formData['date']; // "YYYY-MM-DD"
-        const timeStr = formData['time']; // "HH:MM"
+        const datetimeStr = formData['datetime'];
 
         let patrolUpdate: PatrolUpdateWithNoId = {
-            time: new Date(dateStr + "T" + timeStr + ":00"),
+            time: new Date(datetimeStr),
             patrolId: Number.parseInt(formData['patrol']),
             currentLocationId: 0,
             targetLocationId: 0

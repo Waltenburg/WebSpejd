@@ -134,10 +134,6 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
         </option>;
     });
 
-    const now = new Date()
-    const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().split(' ')[0].substring(0, 5); // hh:mm
-
     const content = <div id="content">
         <h1>Tilføj Patruljeopdatering</h1>
         <form id="add-patrol-update-form">
@@ -171,16 +167,25 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
 
             <div>
                 <label>Dato:</label>
-                <input type="date" name="date" value={date} required="true" />
+                <input id="date_local" type="date" name="date_local" required="true"
+                        hx-trigger="load" hx-target="this"
+                        hx-on="htmx:load: this" />
             </div>
             <div>
                 <label>Tidspunkt:</label>
-                <input type="time" name="time" value={time} required="true" />
+                <input id="time_local" type="time" name="time_local" required="true" />
             </div>
 
             <input hx-post={Endpoints.AddPatrolUpdate} type="button" value="Tilføj Opdatering" class="button button-primary"
                 hx-include="#add-patrol-update-form"
-                hx-on--after-request="afterRequestHandler(event)"></input>
+                hx-on--after-request="afterRequestHandler(event)"
+                hx-on--config-request="
+                    const dateLocal = document.getElementById('date_local').value;
+                    const timeLocal = document.getElementById('time_local').value;
+                    const localDateTime = new Date(dateLocal + 'T' + timeLocal);
+                    event.detail.parameters['datetime'] = localDateTime.toISOString();
+                ">
+            </input>
             <a href={userCameFrom} class="button button-secondary">Annuller</a>
         </form>
     </div>
@@ -200,6 +205,12 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
             }
         }
         toggle('checkin');
+
+        const now = new Date();
+        const date = now.getFullYear() + "-" + (now.getMonth() + 1).toString().padStart(2, '0') + "-" + now.getDate().toString().padStart(2, '0'); // yyyy-mm-dd
+        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0'); // HH:MM
+        document.getElementById('date_local').value = date;
+        document.getElementById('time_local').value = time;
     </script>`;
 
     const html = renderMasterPage("Tilføj Patruljeopdatering", content, script);
