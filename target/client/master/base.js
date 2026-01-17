@@ -1,3 +1,4 @@
+import { getTime } from '../time.js';
 let lastUpdateTime = new Date();
 const STALE_THRESHOLD_MS = 8000;
 document.addEventListener("DOMContentLoaded", () => {
@@ -48,8 +49,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3100);
     updateFunction();
 });
-const getTime = (date) => {
-    const leadingZero = (num) => num < 10 ? '0' + num : num;
-    return leadingZero(date.getHours()) + ":" + leadingZero(date.getMinutes()) + ":" + leadingZero(date.getSeconds());
-};
 //# sourceMappingURL=base.js.map

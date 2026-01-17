@@ -14,7 +14,6 @@ class ServiceBase {
 exports.ServiceBase = ServiceBase;
 class Database {
     constructor(dbPath, tempoary, resetCheckins = false) {
-        this.timeZoneOffset = new Date().getTimezoneOffset();
         if (tempoary) {
             const dbDisk = new better_sqlite3_1.default(dbPath, { fileMustExist: true });
             dbDisk.pragma('journal_mode = DELETE');
@@ -33,14 +32,6 @@ class Database {
     }
     getConnection() {
         return [this.db.prepare.bind(this.db), this.db.transaction.bind(this.db)];
-    }
-    toDataBaseTimeString(date) {
-        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
-        return utcDate.toISOString();
-    }
-    toLocalDateObject(date) {
-        const localDate = new Date(new Date(date).getTime() - this.timeZoneOffset * 60 * 1000);
-        return localDate;
     }
     toUTCString(date) {
         const utcDate = new Date(date.getTime());

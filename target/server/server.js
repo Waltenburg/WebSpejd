@@ -137,7 +137,7 @@ class Server {
             else {
                 return responses.response_code(400);
             }
-            if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true)) {
+            if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
                 console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
                 return responses.response_code(400);
             }

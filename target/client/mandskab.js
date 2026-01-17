@@ -1,6 +1,7 @@
 import { sendRequest } from "./sendHTTPRequest.js";
 import { deleteCookie } from "./cookie.js";
 import { showDialog, isErrorDialogOpen } from "./dialog.js";
+import { getDateTimeString } from "./time.js";
 const secondsBetweenDataReload = 5;
 window.onload = () => {
     new Mandskab();
@@ -16,6 +17,7 @@ class Mandskab {
         this.reloadData = () => {
             const success = (_status, _headers, body) => {
                 const data = JSON.parse(body);
+                console.log(data);
                 this.patrolsOnLocation = data.patrolsOnLocation;
                 this.patrolsTowardsLocation = data.patrolsTowardsLocation;
                 this.currentLocationId = data.location.id;
@@ -161,8 +163,8 @@ class Mandskab {
                 const patrol = update.patrol;
                 const row = document.createElement("tr");
                 const timeCell = document.createElement("td");
-                const updateTime = new Date(update.time);
-                timeCell.textContent = updateTime.toLocaleTimeString();
+                const updateTime = getDateTimeString(update.time);
+                timeCell.textContent = updateTime;
                 row.appendChild(timeCell);
                 const patrolCell = document.createElement("td");
                 patrolCell.textContent = `#${patrol.number} ${patrol.name}`;

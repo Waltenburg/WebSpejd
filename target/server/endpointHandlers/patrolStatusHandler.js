@@ -61,11 +61,15 @@ const html_patrolRow = (patrol, includeInactivePatrols, locationService, patrolS
             elements.createElement("td", null, "-"),
             elements.createElement("td", null, "-"));
     }
+    const datetime = patrol.lastUpdate ? patrol.lastUpdate.time.toISOString() : "";
+    const ISO_UTCString = patrol.lastUpdate ? patrol.lastUpdate.time.toTimeString() : "-";
     return elements.createElement("tr", { class: "hover-grey" },
         elements.createElement("td", null, (0, HTMLGeneral_1.formatPatrol)(patrol.id, patrolService)),
         elements.createElement("td", null, patrol.lastUpdate ? (0, HTMLGeneral_1.formatUpdateLocation)(locationService, patrol.lastUpdate) : "Ikke startet løb."),
         includeInactivePatrols ? elements.createElement("td", null, patrol.udgået ? "Udgået" : "Aktiv") : null,
-        elements.createElement("td", null, patrol.lastUpdate ? (0, HTMLGeneral_1.clock)(patrol.lastUpdate.time) : "-"));
+        elements.createElement("td", null,
+            " ",
+            elements.createElement("time", { class: "ts", datetime: datetime }, ISO_UTCString)));
 };
 const html_patrolsStatusTable = (patrols, includeInactivePatrols, locationService, patrolService) => {
     if (patrols.length === 0) {

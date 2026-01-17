@@ -61,10 +61,14 @@ const html_patrolUpdateRow = (update, skipLocation, skipPatrol, locationService,
         return elements.createElement("tr", { class: "hover-grey" },
             elements.createElement("td", { colspan: 4 }, "Ukendt Patruljeopdatering"));
     }
+    const datetime = update ? update.time.toISOString() : "";
+    const ISO_UTCString = update ? update.time.toTimeString() : "-";
     return elements.createElement("tr", { class: "hover-grey" },
         skipPatrol ? null : elements.createElement("td", null, (0, HTMLGeneral_1.formatPatrol)(update.patrolId, patrolService)),
         skipLocation ? null : elements.createElement("td", null, (0, HTMLGeneral_1.formatUpdateLocation)(locationService, update)),
-        elements.createElement("td", null, (0, HTMLGeneral_1.clock)(update.time)),
+        elements.createElement("td", null,
+            " ",
+            elements.createElement("time", { class: "ts", datetime: datetime }, ISO_UTCString)),
         elements.createElement("td", null,
             elements.createElement("button", { class: "button button-danger small-button", "hx-post": "/master/deletePatrolUpdate", "hx-vals": `{"patrolUpdateId": ${update.id}}`, "hx-confirm": "Er du sikker p\u00E5, at du vil slette denne patruljeopdatering?", "hx-on--after-request": "console.log('Patrol update deleted');", "hx-target": "closest tr", "hx-swap": "delete" }, "Slet")));
 };

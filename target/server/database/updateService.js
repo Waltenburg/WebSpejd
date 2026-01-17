@@ -10,11 +10,11 @@ class UpdateService extends database_1.ServiceBase {
                 patrolId: patrolUpdate.patrolId,
                 currentLocationId: patrolUpdate.currentLocationId,
                 targetLocationId: patrolUpdate.targetLocationId,
-                time: this.db.toLocalDateObject(patrolUpdate.timeStr),
+                time: new Date(patrolUpdate.timeStr + "Z")
             };
         });
     }
-    isPatrolUpdateValid(newUpdate, includeRouteValidation = true, includeCurrentEqualsTargetCheck = true, isTargetFirstLocation = false) {
+    isPatrolUpdateValid(newUpdate, includeRouteValidation = true, includeCurrentEqualsTargetCheck = true, isTargetFirstLocation = false, includeNoImmediateIdenticalUpdateCheck = true) {
         const patrolExists = this.prepare(`SELECT 1 FROM ${"Patrol"} WHERE id = ?`).get(newUpdate.patrolId) != undefined;
         const currentLocationExists = this.prepare(`SELECT 1 FROM ${"Location"} WHERE id = ?`).get(newUpdate.currentLocationId) != undefined;
         const targetLocationExists = this.prepare(`SELECT 1 FROM ${"Location"} WHERE id = ?`).get(newUpdate.targetLocationId) != undefined;
@@ -31,6 +31,10 @@ class UpdateService extends database_1.ServiceBase {
         if (lastUpdate) {
             if (includeCurrentEqualsTargetCheck && lastUpdate.targetLocationId !== newUpdate.currentLocationId) {
                 console.error("Invalid patrol update: current location does not match last target location");
+                return false;
+            }
+            if (includeNoImmediateIdenticalUpdateCheck && lastUpdate.currentLocationId === newUpdate.currentLocationId && lastUpdate.targetLocationId === newUpdate.targetLocationId) {
+                console.error("Invalid patrol update: current and target locations are the same as the last update");
                 return false;
             }
         }

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clock = exports.anchorToAddPatrolUpdatePage = exports.formatPatrol = exports.formatUpdateLocation = exports.formatLocationAnchor = exports.hxTrigger = exports.isClassOnElement = exports.removeClassFromElement = exports.addClassToElement = exports.getElementById = void 0;
+exports.anchorToAddPatrolUpdatePage = exports.formatPatrol = exports.formatUpdateLocation = exports.formatLocationAnchor = exports.hxTrigger = exports.isClassOnElement = exports.removeClassFromElement = exports.addClassToElement = exports.getElementById = void 0;
 const elements = __importStar(require("typed-html"));
 const getElementById = (id) => {
     return `document.getElementById('${id}')`;
@@ -82,8 +82,4 @@ const anchorToAddPatrolUpdatePage = (patrolId, locationId) => {
     return elements.createElement("a", { href: `${"/master/updatePage"}?${params.toString()}`, class: "button", onclick: "document.setCookie('referer', window.location.href, 1);" }, "Lav patruljeopdatering");
 };
 exports.anchorToAddPatrolUpdatePage = anchorToAddPatrolUpdatePage;
-const clock = (date) => {
-    return date.toTimeString().split(' ')[0];
-};
-exports.clock = clock;
 //# sourceMappingURL=HTMLGeneral.js.map
