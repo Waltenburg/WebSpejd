@@ -134,9 +134,6 @@ const addPatrolUpdatePage = async (request, patrolService, locationService) => {
         }
         return elements.createElement("option", { value: location.id.toString() }, location.name);
     });
-    const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().split(' ')[0].substring(0, 5);
     const content = elements.createElement("div", { id: "content" },
         elements.createElement("h1", null, "Tilf\u00F8j Patruljeopdatering"),
         elements.createElement("form", { id: "add-patrol-update-form" },
@@ -159,11 +156,11 @@ const addPatrolUpdatePage = async (request, patrolService, locationService) => {
                 elements.createElement("select", { name: "toLocation" }, locationOptions)),
             elements.createElement("div", null,
                 elements.createElement("label", null, "Dato:"),
-                elements.createElement("input", { type: "date", name: "date", value: date, required: "true" })),
+                elements.createElement("input", { id: "date_local", type: "date", name: "date_local", required: "true", "hx-trigger": "load", "hx-target": "this", "hx-on": "htmx:load: this" })),
             elements.createElement("div", null,
                 elements.createElement("label", null, "Tidspunkt:"),
-                elements.createElement("input", { type: "time", name: "time", value: time, required: "true" })),
-            elements.createElement("input", { "hx-post": "/master/addPatrolUpdate", type: "button", value: "Tilf\u00F8j Opdatering", class: "button button-primary", "hx-include": "#add-patrol-update-form", "hx-on--after-request": "afterRequestHandler(event)" }),
+                elements.createElement("input", { id: "time_local", type: "time", name: "time_local", required: "true" })),
+            elements.createElement("input", { "hx-post": "/master/addPatrolUpdate", type: "button", value: "Tilf\u00F8j Opdatering", class: "button button-primary", "hx-include": "#add-patrol-update-form", "hx-on--after-request": "afterRequestHandler(event)", "hx-on--config-request": "\r\n                    const dateLocal = document.getElementById('date_local').value;\r\n                    const timeLocal = document.getElementById('time_local').value;\r\n                    const localDateTime = new Date(dateLocal + 'T' + timeLocal);\r\n                    event.detail.parameters['datetime'] = localDateTime.toISOString();\r\n                " }),
             elements.createElement("a", { href: userCameFrom, class: "button button-secondary" }, "Annuller")));
     const script = `<script>
         function toggle(type) {
@@ -180,6 +177,12 @@ const addPatrolUpdatePage = async (request, patrolService, locationService) => {
             }
         }
         toggle('checkin');
+
+        const now = new Date();
+        const date = now.getFullYear() + "-" + (now.getMonth() + 1).toString().padStart(2, '0') + "-" + now.getDate().toString().padStart(2, '0'); // yyyy-mm-dd
+        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0'); // HH:MM
+        document.getElementById('date_local').value = date;
+        document.getElementById('time_local').value = time;
     </script>`;
     const html = renderMasterPage("Tilføj Patruljeopdatering", content, script);
     return responses.ok(html);
