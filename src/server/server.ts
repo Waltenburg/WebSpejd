@@ -393,7 +393,7 @@ class Server {
 
 
         // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
-        if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true)) {
+        if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
             console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
             return responses.response_code(400);
         }

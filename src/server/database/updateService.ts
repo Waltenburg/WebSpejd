@@ -37,7 +37,8 @@ export class UpdateService extends ServiceBase {
         newUpdate: PatrolUpdateWithNoId, 
         includeRouteValidation = true,
         includeCurrentEqualsTargetCheck = true,
-        isTargetFirstLocation = false
+        isTargetFirstLocation = false,
+        includeNoImmediateIdenticalUpdateCheck = true
     ): boolean {
         const patrolExists = this.prepare(`SELECT 1 FROM ${PATROL_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.patrolId) != undefined;
         const currentLocationExists = this.prepare(`SELECT 1 FROM ${LOCATION_TABLE.TABLE_NAME} WHERE id = ?`).get(newUpdate.currentLocationId) != undefined;
@@ -57,6 +58,10 @@ export class UpdateService extends ServiceBase {
         if(lastUpdate) {
             if(includeCurrentEqualsTargetCheck && lastUpdate.targetLocationId !== newUpdate.currentLocationId) {
                 console.error("Invalid patrol update: current location does not match last target location");
+                return false;
+            }
+            if(includeNoImmediateIdenticalUpdateCheck && lastUpdate.currentLocationId === newUpdate.currentLocationId && lastUpdate.targetLocationId === newUpdate.targetLocationId){
+                console.error("Invalid patrol update: current and target locations are the same as the last update");
                 return false;
             }
         }else{
