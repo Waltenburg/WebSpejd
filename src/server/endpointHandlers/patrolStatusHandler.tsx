@@ -5,7 +5,7 @@ import { Endpoints } from "@shared/endpoints";
 import * as responses from '../response';
 import { parseForm, Request } from '../request';
 
-import { formatPatrol, formatUpdateLocation, clock, getElementById } from './HTMLGeneral';
+import { formatPatrol, formatUpdateLocation, getElementById } from './HTMLGeneral';
 
 // ========================== Endpoint Handler for Patrol Status ==========================
 export const getPatrolStatusTable = async (request: Request, locationService: LocationService, patrolService: PatrolService, updateService: UpdateService): Promise<responses.Response> => {
@@ -48,6 +48,9 @@ const html_patrolRow = (patrol: Patrol & { lastUpdate: PatrolUpdate | null }, in
         </tr>;
     }
 
+    const datetime = patrol.lastUpdate ? patrol.lastUpdate.time.toISOString() : "";
+    const ISO_UTCString = patrol.lastUpdate ? patrol.lastUpdate.time.toTimeString() : "-";
+
     return <tr class="hover-grey">
         <td>
             {formatPatrol(patrol.id, patrolService)}
@@ -56,7 +59,7 @@ const html_patrolRow = (patrol: Patrol & { lastUpdate: PatrolUpdate | null }, in
             {patrol.lastUpdate ? formatUpdateLocation(locationService, patrol.lastUpdate) : "Ikke startet løb."}
         </td>
         {includeInactivePatrols ? <td>{patrol.udgået ? "Udgået" : "Aktiv"}</td> : null}
-        <td>{patrol.lastUpdate ? clock(patrol.lastUpdate.time) : "-"}</td>
+        <td> <time class="ts" datetime={datetime}>{ISO_UTCString}</time></td>
     </tr>;
 };
 

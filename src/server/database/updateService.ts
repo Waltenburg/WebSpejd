@@ -21,7 +21,7 @@ export class UpdateService extends ServiceBase {
                 patrolId: patrolUpdate.patrolId,
                 currentLocationId: patrolUpdate.currentLocationId,
                 targetLocationId: patrolUpdate.targetLocationId,
-                time: this.db.toLocalDateObject(patrolUpdate.timeStr),
+                time: new Date(patrolUpdate.timeStr + "Z") // Append 'Z' to indicate UTC time,
             };
         });
     }

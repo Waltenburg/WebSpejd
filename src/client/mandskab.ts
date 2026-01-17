@@ -1,7 +1,3 @@
-/** TODO
- * - Currently, if no next locations are available, the user cannot check patrols in.
- */
-
 import type { FullPatrolUpdateInfo, PatrolInfoToMandskab } from "@shared/responseTypes";
 import { sendRequest } from "./sendHTTPRequest.js";
 // import { PatrolUpdateWithNoId } from "../database/types";
@@ -10,6 +6,7 @@ import type { PatrolUpdateFromMandskab, MandskabData } from "@shared/responseTyp
 import type { Location, PatrolUpdate } from "@shared/types";
 import { deleteCookie } from "./cookie.js";
 import { showDialog, isErrorDialogOpen} from "./dialog.js";
+import { formatTimestamps, getDateTimeString } from "./time.js";
 
 const enum Action {
     checkinToLocation,
@@ -61,6 +58,7 @@ class Mandskab {
     private reloadData = (): void => {
         const success = (_status: number, _headers: Headers, body: string) => {
             const data = JSON.parse(body) as MandskabData;
+            console.log(data);
             this.patrolsOnLocation = data.patrolsOnLocation;
             this.patrolsTowardsLocation = data.patrolsTowardsLocation;
             this.currentLocationId = data.location.id;
@@ -258,12 +256,12 @@ class Mandskab {
 
         latestUpdates.forEach(update => {
             const patrol = update.patrol;
-
+            
             const row = document.createElement("tr");
 
             const timeCell = document.createElement("td");
-            const updateTime = new Date(update.time);
-            timeCell.textContent = updateTime.toLocaleTimeString();
+            const updateTime = getDateTimeString(update.time as unknown as string);
+            timeCell.textContent = updateTime;
             row.appendChild(timeCell);
 
             const patrolCell = document.createElement("td");

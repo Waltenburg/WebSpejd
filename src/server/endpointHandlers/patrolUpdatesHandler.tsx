@@ -1,7 +1,7 @@
 import * as elements from "typed-html"
 import type { Patrol, PatrolUpdate } from "@shared/types"
 import { PatrolService, LocationService, UpdateService } from "../databaseBarrel"
-import { addClassToElement, clock, formatPatrol, formatUpdateLocation, getElementById, isClassOnElement } from "./HTMLGeneral";
+import { addClassToElement, formatPatrol, formatUpdateLocation, getElementById, isClassOnElement } from "./HTMLGeneral";
 import { Endpoints } from "@shared/endpoints";
 
 type Request = import('../request').Request;
@@ -48,10 +48,13 @@ const html_patrolUpdateRow = (update: PatrolUpdate, skipLocation: boolean, skipP
         </tr>;
     }
 
+    const datetime = update ? update.time.toISOString() : "";
+    const ISO_UTCString = update ? update.time.toTimeString() : "-";
+
     return <tr class="hover-grey">
         {skipPatrol ? null : <td>{formatPatrol(update.patrolId, patrolService)}</td>}
         {skipLocation ? null : <td>{formatUpdateLocation(locationService, update)}</td>}
-        <td>{clock(update.time)}</td>
+        <td> <time class="ts" datetime={datetime}>{ISO_UTCString}</time></td>
         <td>
             <button class="button button-danger small-button"
                 hx-post={Endpoints.DeletePatrolUpdate}

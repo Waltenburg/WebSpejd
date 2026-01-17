@@ -69,7 +69,3 @@ export const anchorToAddPatrolUpdatePage = (patrolId?: number, locationId?: numb
         Lav patruljeopdatering
     </a>
 }
-
-export const clock = (date: Date): string => {
-    return date.toTimeString().split(' ')[0]; // hh:mm:ss
-};

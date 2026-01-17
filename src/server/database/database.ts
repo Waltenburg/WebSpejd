@@ -28,8 +28,6 @@ export abstract class ServiceBase {
  * - expose a typed connection (see `getConnection`) for services to run
  *   prepared statements and transactions without exposing the entire
  *   raw SQLite instance everywhere
- * - provide time conversion helpers `toDataBaseTimeString` and
- *   `toLocalDateObject` so timestamps are handled consistently
  *
  * Intended usage: create a single `Database` instance at application
  * startup and pass it to service classes (via `ServiceBase`) which should
@@ -39,16 +37,11 @@ export class Database {
     // private readonly dbPath: string;
     private readonly db: SQLite.Database;
     
-    private timeZoneOffset: number; // Timezone offset in minutes
-    
     /** Creates a new SQLite database wrapper.
      * @param dbPath the path to the SQLite database file. Value `:memory:` for in-memory database.
      * @param resetCheckins if `true`, all checkins will be deleted from the database
     */
    constructor(dbPath: string, tempoary: boolean, resetCheckins: boolean = false) {
-       // this.dbPath = dbPath;
-       this.timeZoneOffset = new Date().getTimezoneOffset(); // Get the timezone offset in minutes
-       
        // Temporary database in RAM
        if(tempoary) {
            const dbDisk = new SQLite(dbPath, { fileMustExist: true });
@@ -78,21 +71,6 @@ export class Database {
      */
     public getConnection(): [SQLite.Database['prepare'], SQLite.Database['transaction']] {
         return [this.db.prepare.bind(this.db), this.db.transaction.bind(this.db)];
-    }
-
-    /** Converts from local `Date()` object to UTC time ISO string ready to be stored in DB */
-    public toDataBaseTimeString(date: Date): string {
-        const utcDate = new Date(date.getTime() + this.timeZoneOffset * 60 * 1000);
-        return utcDate.toISOString();
-    }
-    
-    /** Converts UTC time ISO string to local `Date()` object
-     * @param date ISO string in YYYY-MM-DD HH:mm:ss UTC format
-     * @return local `Date` object
-    */
-    public toLocalDateObject(date: string): Date {
-        const localDate = new Date(new Date(date).getTime() - this.timeZoneOffset * 60 * 1000);
-        return localDate;
     }
 
     /** Converts local `Date` object to string in UTC YYYY-MM-DD HH:mm:ss format
