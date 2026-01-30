@@ -3,7 +3,11 @@ import SQLite from 'better-sqlite3';
 import readline from "readline";
 import { SETTINGS_TABLE } from './database';
 
-const config = JSON.parse(readFileSync(`./server.config.json`, 'utf-8'));
+if (!existsSync('./server.config.json')) {
+    console.error('Missing server.config.json. Please create it from the sample or provide a valid configuration file.');
+    process.exit(1);
+}
+const config = JSON.parse(readFileSync('./server.config.json', 'utf-8'));
 console.log(__dirname);
 
 const SQLPath = "./SQLite/dbSchema.sql";
