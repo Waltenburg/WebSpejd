@@ -10,7 +10,7 @@ This project includes Typescript source code for a Node JS server found within `
 When running, the server host multiple sites:
 - a login page
 - a check-in and out page for each location
-- a master page that can see which check-in and -outs for all patrols on all locations
+- Master page to manage locations, patrols and check‑ins / ‑outs
 
 ## Dependencies
 * [NodeJS](https://nodejs.org)
@@ -20,6 +20,7 @@ When running, the server host multiple sites:
 1. Install [NodeJS](https://nodejs.org) if not already on system.
 2. Run `npm install` in root of project
 3. Compile the project by running `npm run build` in root of project.
+4. Setup configuration file and database as described in [Setup of server](##setup-of-server)
 4. Run the server `npm run start`
 5. Acces server at `localhost:3000`
 These instructions are for windows only. 

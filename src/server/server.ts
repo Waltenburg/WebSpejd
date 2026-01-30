@@ -438,7 +438,7 @@ class Server {
 }
 
 async function main(): Promise<void> {
-    const config = JSON.parse(readFileSync(`${__dirname}/server.config.json`, 'utf-8'));
+    const config = JSON.parse(readFileSync(`./server.config.json`, 'utf-8'));
 
     const port = Number.parseInt(config["port"]);
     const address = config["address"] as string;
@@ -446,6 +446,7 @@ async function main(): Promise<void> {
     const assets = config["assetsPath"] as string;
     const inMemory = config["inMemory"] as boolean ?? false;
     const resetDatabase = config["resetDatabase"] as boolean ?? false;
+    const masterPassword = config[SETTINGS_TABLE.SETTING_MASTER_PASSWORD] as string;
 
     console.log(`Starting server with options: ${inspect(
         {
@@ -454,13 +455,11 @@ async function main(): Promise<void> {
             database: database,
             assets: assets,
             inMemory: inMemory,
-            resetDatabase: resetDatabase
+            resetDatabase: resetDatabase,
+            master_password: masterPassword ? masterPassword : "<Inherited from existing database>",
         },
         { colors: true, depth: null })}`);
 
-    //Be aware that different databases have different indices for the first post
-    //In SQLite the first post is 1, in JSON it is 0
-    //This is changed in the database wrapper field firstPostId
     const db = new Database(database, inMemory, resetDatabase);
     const adminService = new AdminService(db);
     const locationService = new LocationService(db);
@@ -472,7 +471,6 @@ async function main(): Promise<void> {
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
     }
 
-    const masterPassword = config[SETTINGS_TABLE.SETTING_MASTER_PASSWORD] as string;
     if(masterPassword)
         adminService.setMasterPassword(masterPassword);
 
