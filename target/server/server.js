@@ -317,20 +317,22 @@ class Server {
     }
 }
 async function main() {
-    const config = JSON.parse((0, fs_1.readFileSync)(`${__dirname}/server.config.json`, 'utf-8'));
+    const config = JSON.parse((0, fs_1.readFileSync)(`./server.config.json`, 'utf-8'));
     const port = Number.parseInt(config["port"]);
     const address = config["address"];
     const database = config["databasePath"];
     const assets = config["assetsPath"];
     const inMemory = config["inMemory"] ?? false;
     const resetDatabase = config["resetDatabase"] ?? false;
+    const masterPassword = config["master_password"];
     console.log(`Starting server with options: ${(0, util_1.inspect)({
         address: address,
         port: port,
         database: database,
         assets: assets,
         inMemory: inMemory,
-        resetDatabase: resetDatabase
+        resetDatabase: resetDatabase,
+        master_password: masterPassword ? masterPassword : "<Inherited from existing database>",
     }, { colors: true, depth: null })}`);
     const db = new databaseBarrel_1.Database(database, inMemory, resetDatabase);
     const adminService = new databaseBarrel_1.AdminService(db);
@@ -341,7 +343,6 @@ async function main() {
         console.log("Resetting database: Deleting all patrol updates");
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
     }
-    const masterPassword = config["master_password"];
     if (masterPassword)
         adminService.setMasterPassword(masterPassword);
     const server = new Server(address, port, assets, db, adminService, locationService, patrolService, updateService);
