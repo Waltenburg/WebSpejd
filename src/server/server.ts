@@ -159,6 +159,9 @@ class Server {
             .file(Endpoints.Contact, `${assets}/html/contact.html`)
             .file('/favicon.ico', `${assets}/images/favicon.ico`)
 
+            // ================================ Mandskab info ==============================
+            .route(Endpoints.GetMandskabPageInfo, UserType.Post, this.infoForMandskab)
+
             // ================================ Authentication Endpoints ==================================
             .route(Endpoints.Login, UserType.None, this.login)
             .route(Endpoints.Logout, UserType.None, this.logout)
@@ -216,14 +219,15 @@ class Server {
             .route(Endpoints.GetLocationConfigTableBody, UserType.Master, LocationConfigHandler.getLocationConfigTableBody, this.locationService)
             .route(Endpoints.GetRenameLocationRow, UserType.Master, LocationConfigHandler.getRenameLocationRow, this.locationService)
             .route(Endpoints.MakeLocationFirstLocation, UserType.Master, LocationConfigHandler.makeLocationFirstLocation, this.locationService)
+            .route(Endpoints.SetInfoOnMandskabPage, UserType.Master, LocationConfigHandler.setInfoOnMandskabPage, this.locationService)
 
             // =============================== Location password Endpoints ================================
             .route(Endpoints.GetLocationPasswords, UserType.Master, LocationPasswordHandler.getLocationPasswords, this.adminService, this.locationService)
             .route(Endpoints.AddLocationPassword, UserType.Master, LocationPasswordHandler.addLocationPassword, this.adminService)
             .route(Endpoints.DeleteLocationPassword, UserType.Master, LocationPasswordHandler.deleteLocationPassword, this.adminService)
 
-                // ================================ Logs Endpoints ================================
-                .route(Endpoints.GetLogs, UserType.Master, LogsHandler.getLogs, this.logService)
+            // ================================ Logs Endpoints ================================
+            .route(Endpoints.GetLogs, UserType.Master, LogsHandler.getLogs, this.logService)
 
 
     }
@@ -306,7 +310,10 @@ class Server {
         return responses.ok(JSON.stringify(data));
     }
 
-
+    infoForMandskab = async (_req: Request): Promise<Response> => {
+        const info = this.locationService.getParsedMandskabPageInfo();
+        return responses.ok(info);
+    }
 
     tryGet<In, Out>(input: In, map: (input: In) => Out | undefined, errorHandler?: (error: Error) => void): Out | undefined {
         try {

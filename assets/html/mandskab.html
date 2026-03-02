@@ -19,8 +19,12 @@
             </div>
         </div>
     </header>
-
+    
     <main class="main-content">
+        <h2>Info fra HQ:</h2>
+        <div id="mandskabPageInfoFromMaster" hx-get="/getMandskabPageInfo" hx-trigger="load" hx-swap="innerHTML"></div>
+        <br>
+        <h2>Check ind og ud</h2>
         <section class="location-selector-section">
             <label for="nextLocationSelector">Næste post:</label>
             <select id="nextLocationSelector">
@@ -62,6 +66,7 @@
     <!-- Load dependencies -->
     <!-- <script type="module" src="/js/sendHTTPRequest.js"></script> -->
     <script type="module" src="/js/mandskab.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 
     <!-- <a class="contact-chip" href="/assets/html/contact.html" target="_blank" rel="noopener">WebSpejd til jeres konkurrence?</a> -->
 </body>

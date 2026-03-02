@@ -1,3 +1,4 @@
+import { Marked, Token, Tokens } from "marked";
 import { LOCATION_TABLE, ServiceBase, SETTINGS_TABLE } from "./database";
 import { Location, Route } from "@shared/types";
 
@@ -368,8 +369,43 @@ export class LocationService extends ServiceBase {
                 }
             }
         }
-        
+
         this.topologicalSortCache = sortedIds;
         return sortedIds
+    }
+
+    setMandskabPageInfo(info: string): void {
+        const sanitizedInfo = info.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const mdParser = new Marked();
+
+        mdParser.use({
+            walkTokens(token){
+                if(token.type === "link")
+                    token.href = token.href.replace(/javascript:/gi, ""); // Basic XSS prevention for links
+                if(token.type === 'heading'){
+                    const header = token as Tokens.Heading;
+                    header.depth = Math.min(header.depth + 2, 6);
+                }
+            }
+        })
+
+        const parsedInfo = mdParser.parse(info, {gfm: true, breaks: true});
+        [[SETTINGS_TABLE.SETTING_PARSED_MANDSKAB_PAGE_INFO, parsedInfo], [SETTINGS_TABLE.SETTING_MANDSKAB_PAGE_INFO, info]].forEach(([key, value]) => {
+            this.prepare(`
+                INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)
+                ON CONFLICT(${SETTINGS_TABLE.KEY}) DO UPDATE SET ${SETTINGS_TABLE.VALUE} = excluded.${SETTINGS_TABLE.VALUE}
+            `).run(key, value);
+        });
+
+    }
+
+    getMandskabPageInfo(){
+        const result = this.prepare(`select value from ${SETTINGS_TABLE.TABLE_NAME} where ${SETTINGS_TABLE.KEY} = ?`).get(SETTINGS_TABLE.SETTING_MANDSKAB_PAGE_INFO) as { value: string } | undefined;
+        return result?.value || "";
+    }
+
+    getParsedMandskabPageInfo(){
+        const result = this.prepare(`select value from ${SETTINGS_TABLE.TABLE_NAME} where ${SETTINGS_TABLE.KEY} = ?`).get(SETTINGS_TABLE.SETTING_PARSED_MANDSKAB_PAGE_INFO) as { value: string } | undefined;
+        return result?.value || "";
     }
 }

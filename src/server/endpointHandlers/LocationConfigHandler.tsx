@@ -79,6 +79,16 @@ export const makeLocationFirstLocation = async (request: Request, locationServic
     locationService.setFirstLocationId(locationId);
     return responses.ok();
 }
+
+export const setInfoOnMandskabPage = async (request: Request, locationService: LocationService): Promise<Response> => {
+    const form = parseForm(request.body);
+    const info = form["info"];
+    if(info == null)
+        return responses.response_code(400);
+    
+    locationService.setMandskabPageInfo(info);
+    return responses.ok();
+}
 // ========================== Getting HTML for Locations ==========================
 
 export const getLocationConfigTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {

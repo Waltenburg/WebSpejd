@@ -32,6 +32,20 @@ export const enum Endpoints {
      */
     GetMandskabData = "/getData",
 
+    /**
+     * Fetch info shown on all mandskab pages, such as alerts or important messages from master.\
+     * Accessible to: Users logged in as Mandskab.\
+     * Purpose: Provides a channel for master users to communicate important information or alerts to all mandskab users, displayed prominently on their pages.
+     */
+    GetMandskabPageInfo = "/getMandskabPageInfo",
+
+    /**
+     * Set info shown on all mandskab pages, such as alerts or important messages from master.\
+     * Accessible to: Master administrators (UserType.Master).\
+     * Purpose: Allows master users to set or update the information displayed on all mandskab pages.
+     */
+    SetInfoOnMandskabPage = "/master/setMandskabPageInfo",
+
     // =============================== Pages Endpoints (returning entire pages) ================================
     /**
      * Master dashboard page.

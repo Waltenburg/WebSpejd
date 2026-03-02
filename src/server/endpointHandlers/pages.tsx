@@ -44,6 +44,17 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
 
     const content = <div id="content">
         <h1>Konfiguration af lokationer og ruter</h1>
+        <p>Tekst der vises til alle lokationer</p>
+        <p>Anvend markdown-format. **Fed**, *kursiv*, # Overskrift</p>
+        <div>
+            <form id="set-mandskab-page-info-form">
+                <textarea name="info" rows={'4'} cols={'50'}>{locationService.getMandskabPageInfo()}</textarea><br></br>
+                <input hx-post={Endpoints.SetInfoOnMandskabPage} type="button" value="Opdater info på mandskabssider" class="button button-primary"
+                    hx-include="#set-mandskab-page-info-form"
+                    hx-on--after-request="window.location.reload()">
+                </input>
+            </form>
+        </div>
         <h2>Lokationer</h2>
         {llocationConfigRes.content}
         For at en lokation kan slettes, må der ikke være nogle:

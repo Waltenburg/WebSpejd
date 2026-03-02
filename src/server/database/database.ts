@@ -138,5 +138,7 @@ export const enum SETTINGS_TABLE {
     VALUE = "value",
 
     SETTING_MASTER_PASSWORD = "master_password",
-    SETTING_FIRST_LOCATION_ID = 'first_location'
+    SETTING_FIRST_LOCATION_ID = 'first_location',
+    SETTING_MANDSKAB_PAGE_INFO = 'mandskab_page_info',
+    SETTING_PARSED_MANDSKAB_PAGE_INFO = 'parsed_mandskab_page_info'
 }
