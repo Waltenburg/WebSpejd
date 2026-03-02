@@ -202,12 +202,6 @@ class Server {
             .route(Endpoints.GetPatrolConfigTableBody, UserType.Master, PatrolConfigHandler.getPatrolConfigTableBody, this.patrolService)
             .route(Endpoints.GetPatrolConfigTableRow, UserType.Master, PatrolConfigHandler.getPatrolConfigTableRow, this.patrolService)
             .route(Endpoints.GetPatrolConfigTableRenameRow, UserType.Master, PatrolConfigHandler.getRenamePatrolRow, this.patrolService)
-            /** TODO
-             * ADD patrol + row for it
-             * DELETE patrol
-             * RENAME patrol + row for it
-             * 
-             *  */ 
 
             // ================================ Location Status Endpoints ================================
             .route(Endpoints.GetLocationStatusTable, UserType.Master, LocationStatusHandler.getLocationStatusTable, this.locationService)
