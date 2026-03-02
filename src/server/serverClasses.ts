@@ -131,7 +131,7 @@ export namespace serverClasses{
         master: boolean
         lastAcces: number[]
         static maxAge: number = 24 * 60 * 60 * 1000 //i millisekunder
-        static deleteInterval: NodeJS.Timer
+        static deleteInterval: NodeJS.Timeout
         static users: User[]
 
         constructor(obj: any){
