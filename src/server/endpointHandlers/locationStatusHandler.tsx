@@ -4,6 +4,7 @@ import { Endpoints } from '@shared/endpoints';
 import { formatLocationAnchor } from './HTMLGeneral';
 import * as responses from '../response';
 import { parseForm, Request } from '../request';
+import { SortType } from '../database/locationService';
 
 type Response = responses.Response;
 
@@ -16,7 +17,7 @@ export const getLocationStatusTable = async (request: Request, locationService: 
     if (!Number.isNaN(locationId)) {
         locationIds = [locationId];
     } else
-        locationIds = locationService.allLocationIds();
+        locationIds = locationService.allLocationIds(SortType.TOPOLOGICAL);
     
 
     const searchParamStr = request.url.searchParams.toString();

@@ -10,6 +10,7 @@ import { getRouteConfigTable } from './RouteConfigHandler';
 import { getPatrolConfigTable } from './patrolConfigHandler';
 import { anchorToAddPatrolUpdatePage } from './HTMLGeneral';
 import { table as html_RouteTable } from './RouteConfigHandler';
+import { SortType } from '../database/locationService';
 type Request = import('../request').Request;
 
 // ========================== Endpoint Handler for Pages ==========================
@@ -124,7 +125,7 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
         return <option value={patrol.id.toString()}>{patrolStr}</option>;
     });
 
-    const locationOptions = locationService.allLocationIds().map(id => {
+    const locationOptions = locationService.allLocationIds(SortType.TOPOLOGICAL).map(id => {
         const location = locationService.locationInfo(id);
         if (location.id === locationId) {
             // @ts-expect-error

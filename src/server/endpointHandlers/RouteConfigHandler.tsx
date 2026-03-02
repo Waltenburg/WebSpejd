@@ -6,6 +6,7 @@ import { formatLocationAnchor } from './HTMLGeneral';
 import * as responses from '../response';
 import { parseForm } from '../request';
 import { Request } from '../request';
+import { SortType } from '../database/locationService';
 
 type Response = responses.Response;
 
@@ -144,7 +145,7 @@ const row = (locationService: LocationService, route: Route, skipFrom?: boolean,
 }
 
 const addRow = (locationService: LocationService, locationId?: number, skipFrom?: boolean, skipTo?: boolean, selectedFrom?: number, selectedTo?: number): string => {
-    let locationsTemp = locationService.allLocationIds().map(id => locationService.locationInfo(id)!);
+    let locationsTemp = locationService.allLocationIds(SortType.TOPOLOGICAL).map(id => locationService.locationInfo(id)!);
     if (locationId)
         locationsTemp = locationsTemp.filter(locationsTemp => locationsTemp.id !== locationId);
     const locations = locationsTemp;

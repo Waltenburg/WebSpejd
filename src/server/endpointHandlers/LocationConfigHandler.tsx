@@ -5,6 +5,7 @@ import { formatLocationAnchor, getElementById, addClassToElement, removeClassFro
 import * as responses from '../response';
 import { parseForm } from '../request';
 import { Request } from '../request';
+import { SortType } from '../database/locationService';
 
 type Response = responses.Response;
 
@@ -92,13 +93,13 @@ export const getLocationConfigTableRow = async (request: Request, locationServic
 }
 
 export const getLocationConfigTable = async (request: Request, locationService: LocationService): Promise<Response> => {
-    const locations = locationService.allLocationIds();
+    const locations = locationService.allLocationIds(SortType.TOPOLOGICAL);
     const tableHTML = html_table(locationService, locations);
     return responses.ok(tableHTML);
 }
 
 export const getLocationConfigTableBody = async (request: Request, locationService: LocationService): Promise<Response> => {
-    const locations = locationService.allLocationIds();
+    const locations = locationService.allLocationIds(SortType.TOPOLOGICAL);
     const tableHTML = html_tableBody(locationService, locations);
     return responses.ok(tableHTML);
 }
