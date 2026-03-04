@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <title>WebSpejd - Login</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/loginStyle.css" />
+    <!-- <script type="module" src="/js/cookie.js"></script>
+    <script type="module" src="/js/sendHTTPRequest.js"></script> -->
+    <script type="module" src="/js/home.js"></script>
+</head>
+
+<body>
+    <div class="bg-overlay"></div>
+    <div class="login-container">
+        <div class="logo-section">
+            <!-- <img class="logo" src="/assets/images/logo.png" alt="Logo" width="180" height="180"> -->
+            <h1 class="app-title">CCMR WebSpejd</h1>
+        </div>
+        
+        <div class="login-card">
+            <h2 class="login-heading">Log ind</h2>
+            <p class="login-subtext">Indtast dit udleverede login nedenfor</p>
+            
+            <form class="login-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="kode">Kode</label>
+                    <input type="password" id="kode" placeholder="Indtast din kode" autocomplete="off">
+                </div>
+                
+                <button type="submit" id="loginButton" class="btn btn-primary">Log ind med kode</button>
+                
+                <div class="saved-logins">
+                    <p class="saved-logins-text">Eller brug gemt login:</p>
+                    <button type="button" id="loginInMandskab" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">👤</span>
+                        <span>Mandskabsbruger</span>
+                    </button>
+                    <button type="button" id="loginInMaster" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">⚙️</span>
+                        <span>Masterbruger</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="contact-widget">
+                <div class="contact-widget__text">
+                    <strong>Brug WebSpejd til dit spejderløb?</strong>
+                    <span>Kontakt os for at høre mere.</span>
+                </div>
+                <a class="contact-widget__btn" href="/assets/html/contact.html">Læs mere / kontakt</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

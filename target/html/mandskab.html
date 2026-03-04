@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandskab - WebSpejd</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/mandskabStyle.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/master.css">
+</head>
+
+<body>
+    <header class="top-bar">
+        <div class="header-content">
+            <h1 id="locationNameHeader">Indlæser...</h1>
+            <div class="header-actions">
+                <button id="undoButton" class="btn-undo" disabled>Fortryd</button>
+                <button type="button" class="btn-logout" onclick="location.href='/logout'">Log ud</button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <h2>Info fra HQ:</h2>
+        <div id="mandskabPageInfoFromMaster" hx-get="/getMandskabPageInfo" hx-trigger="load" hx-swap="innerHTML"></div>
+        <br>
+        <h2>Check ind og ud</h2>
+        <section class="location-selector-section">
+            <label for="nextLocationSelector">Næste post:</label>
+            <select id="nextLocationSelector">
+                <option value="">Indlæser...</option>
+            </select>
+        </section>
+        
+        <section class="patrol-section">
+            <h2 class="section-title">Patruljer på post</h2>
+            <div id="listPåPost" class="patrol-list">
+                <!-- Patrols on location will be populated here -->
+            </div>
+        </section>
+
+        <section class="patrol-section">
+            <h2 class="section-title">Patruljer på vej</h2>
+            <div id="listPåVej" class="patrol-list">
+                <!-- Patrols towards location will be populated here -->
+            </div>
+        </section>
+
+        <section class="recent-actions-section">
+            <h2 class="section-title">Seneste handlinger</h2>
+            <table id="recentActionsTable">
+                <thead>
+                    <tr>
+                        <th>Tid</th>
+                        <th>Patrulje</th>
+                        <th>Handling</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Recent actions will be populated here if needed -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Load dependencies -->
+    <!-- <script type="module" src="/js/sendHTTPRequest.js"></script> -->
+    <script type="module" src="/js/mandskab.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+
+    <!-- <a class="contact-chip" href="/assets/html/contact.html" target="_blank" rel="noopener">WebSpejd til jeres konkurrence?</a> -->
+</body>
+</html>

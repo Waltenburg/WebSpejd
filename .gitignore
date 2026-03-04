@@ -1,6 +1,6 @@
 #My addings
-/target
-/test
+*.d.ts
+*.js.map
 
 # Logs
 logs
