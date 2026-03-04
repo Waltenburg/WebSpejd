@@ -9,6 +9,7 @@
         "esModuleInterop": false,
         "rootDir": "./",
         "outDir": "../../target/client",
+        "sourceMap": false
     },
     "include": ["./**/*.ts"],
     "references": [{ "path": "../shared" }]

@@ -120,6 +120,13 @@ export class UpdateService extends ServiceBase {
         return id;
     }
 
+    batchUpdatePatrol(patrolUpdates: PatrolUpdateWithNoId[]): number[]{
+        const insert = this.transaction((updates: PatrolUpdateWithNoId[]) => {
+            return updates.map((update) => this.updatePatrolWithTime(update));
+        });
+        return insert(patrolUpdates);
+    }
+
     /**
      * Get patrol update by id.
      *

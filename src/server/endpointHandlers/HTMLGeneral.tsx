@@ -69,3 +69,115 @@ export const anchorToAddPatrolUpdatePage = (patrolId?: number, locationId?: numb
         Lav patruljeopdatering
     </a>
 }
+
+export interface MultiSelectOption {
+    value: string;
+    label: string;
+}
+
+export interface MultiSelectDropdownProps {
+    id: string;
+    name: string;
+    options: MultiSelectOption[];
+    placeholder?: string;
+    selectedValues?: string[];
+}
+
+export const multiSelectDropdown = (props: MultiSelectDropdownProps): string => {
+    const { id, name, options, placeholder = "Vælg...", selectedValues = [] } = props;
+    const selectedSet = new Set(selectedValues.map(v => String(v)));
+    
+    return <div class="multi-select-container" style="position: relative; min-width: 200px;">
+        <input type="hidden" id={`${id}-hidden`} name={name} value="" />
+        <div 
+            id={`${id}-display`}
+            class="multi-select-display"
+            onclick={`window.multiSelectDropdown.toggleDropdown('${id}')`}
+            style={JSON.stringify({
+                padding: '10px 15px',
+                border: '2px solid #3498db',
+                borderRadius: '8px',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                userSelect: 'none',
+                // color: hasSelected ? '#2c3e50' : '#95a5a6',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                transition: 'all 0.3s ease'
+            })}>
+            <span style="margin-left: 10px; display: inline-block;">▼</span>
+        </div>
+        
+        <div 
+            id={`${id}-dropdown`}
+            class="multi-select-dropdown"
+            style={`
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                margin-top: 5px;
+                background-color: #fff;
+                border: 2px solid #3498db;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+                max-height: 300px;
+                overflow-y: auto
+            `}>
+            
+            <div style="padding: 10px; border-bottom: 1px solid #ecf0f1;">
+                <button 
+                    type="button"
+                    class="button"
+                    onclick={`window.multiSelectDropdown.selectAll('${id}')`}
+                    style="width: 100%; padding: 8px; font-size: 14px;">
+                    Vælg alle / Fravælg alle
+                </button>
+            </div>
+            
+            <div style="padding: 5px;">
+                {options.map(option => {
+                    const isChecked = selectedSet.has(String(option.value));
+                    return <label 
+                        style={`
+                            display: flex;
+                            align-items: center;
+                            padding: 8px 10px;
+                            cursor: pointer;
+                            transition: background-color 0.2s ease
+                        `}
+                        onmouseover="this.style.backgroundColor='#ecf0f1'"
+                        onmouseout="this.style.backgroundColor='transparent'">
+                        <input 
+                            type="checkbox" 
+                            // name={name}
+                            value={option.value}
+                            checked={isChecked}
+                            onchange={`window.multiSelectDropdown.updateDisplay('${id}')`}
+                            style="margin-right: 10px;" />
+                        <span style="flex: 1;">{option.label}</span>
+                    </label>;
+                })}
+            </div>
+        </div>
+        
+        <script>
+            {`
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.multiSelectDropdown.updateDisplay('${id}', '${placeholder}');
+                    // window.multiSelectDropdown.toggleDropdown('${id}');
+                });
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    const container = document.getElementById('${id}-display').parentElement;
+                    if (!container.contains(event.target)) {
+                        document.getElementById('${id}-dropdown').style.display = 'none';
+                    }
+                });
+            `}
+        </script>
+    </div>;
+}

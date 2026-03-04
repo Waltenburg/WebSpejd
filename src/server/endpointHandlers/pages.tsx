@@ -8,7 +8,7 @@ import { getPatrolUpdatesTable } from './patrolUpdatesHandler';
 import { getLocationConfigTable } from './LocationConfigHandler';
 import { getRouteConfigTable } from './RouteConfigHandler';
 import { getPatrolConfigTable } from './patrolConfigHandler';
-import { anchorToAddPatrolUpdatePage } from './HTMLGeneral';
+import { anchorToAddPatrolUpdatePage, multiSelectDropdown } from './HTMLGeneral';
 import { table as html_RouteTable } from './RouteConfigHandler';
 import { SortType } from '../database/locationService';
 type Request = import('../request').Request;
@@ -180,8 +180,20 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
         <h1>Tilføj Patruljeopdatering</h1>
         <form id="add-patrol-update-form">
             <div>
-                <label>Patrulje:</label>
-                <select name="patrol">{patrolOptions}</select>
+                <label>Patruljer:</label>
+                {multiSelectDropdown({
+                    id: "patrol-select",
+                    name: 'patrolIds',
+                    options: patrolService.allPatrolIds().map(id => {
+                        const patrol = patrolService.patrolInfo(id);
+                        return {
+                            value: patrol.id.toString(),
+                            label: `#${patrol.number} ${patrol.name}`
+                        }
+                    }),
+                    placeholder: "Vælg patruljer..."
+                })}
+
             </div>
             <div>
                 <label>Type:</label>
@@ -341,6 +353,7 @@ const renderMasterPage = (title: string, content: string, script?: string) => `
         <script src="/js/master/locationPasswords.js" type="module"></script>
         <script src="/js/dialog.js" type="module"></script>
         <script src="/js/cookie.js" type="module"></script>
+        <script src="/js/multipleSelectDropdown.js" type="module"></script>
         <link rel="stylesheet" href="/assets/css/master.css">
     </head>
     <body>

@@ -194,7 +194,7 @@ class Server {
             // ================================ Patrol Update Endpoints ================================
             .route(Endpoints.GetPatrolUpdatesTable, UserType.Master, PatrolUpdatesHandler.getPatrolUpdatesTable, this.updateService, this.locationService, this.patrolService)
             .route(Endpoints.DeletePatrolUpdate, UserType.Master, this.masterDeletePatrolUpdate)
-            .route(Endpoints.AddPatrolUpdate, UserType.Master, this.makeMasterPatrolUpdate)
+            .route(Endpoints.AddPatrolUpdate, UserType.Master, this.makeMasterBulkPatrolUpdates)
             
             // ================================ Patrol Status Endpoints ================================
             .route(Endpoints.GetPatrolStatusTable, UserType.Master, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
@@ -370,44 +370,85 @@ class Server {
 
     }
 
-    makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
+    // This one is currently not in use
+    // makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
+    //     const formData = parseForm(request.body);
+    //     const datetimeStr = formData['datetime'];
+
+    //     let patrolUpdate: PatrolUpdateWithNoId = {
+    //         time: new Date(datetimeStr),
+    //         patrolId: Number.parseInt(formData['patrol']),
+    //         currentLocationId: 0,
+    //         targetLocationId: 0
+    //     }
+
+    //     const type = formData['type']; // "checkin" or "checkout"
+    //     if (type === 'checkin') {
+    //         const locationId = Number.parseInt(formData['singleLocation']);
+    //         patrolUpdate.currentLocationId = locationId;
+    //         patrolUpdate.targetLocationId = locationId;
+    //     } else if (type === 'checkout') {
+    //         const fromLocationId = Number.parseInt(formData['fromLocation']);
+    //         const toLocationId = Number.parseInt(formData['toLocation']);
+    //         patrolUpdate.currentLocationId = fromLocationId;
+    //         patrolUpdate.targetLocationId = toLocationId;
+    //     } else {
+    //         return responses.response_code(400);
+    //     }
+
+
+    //     // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
+    //     if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
+    //         console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
+    //         return responses.response_code(400);
+    //     }
+
+    //     this.updateService.updatePatrolWithTime(patrolUpdate);
+
+    //     return responses.ok();
+    // }
+
+    makeMasterBulkPatrolUpdates = async (request: Request): Promise<Response> => {
         const formData = parseForm(request.body);
         const datetimeStr = formData['datetime'];
-
-        let patrolUpdate: PatrolUpdateWithNoId = {
-            time: new Date(datetimeStr),
-            patrolId: Number.parseInt(formData['patrol']),
-            currentLocationId: 0,
-            targetLocationId: 0
-        }
-
         const type = formData['type']; // "checkin" or "checkout"
-        if (type === 'checkin') {
-            const locationId = Number.parseInt(formData['singleLocation']);
-            patrolUpdate.currentLocationId = locationId;
-            patrolUpdate.targetLocationId = locationId;
-        } else if (type === 'checkout') {
-            const fromLocationId = Number.parseInt(formData['fromLocation']);
-            const toLocationId = Number.parseInt(formData['toLocation']);
-            patrolUpdate.currentLocationId = fromLocationId;
-            patrolUpdate.targetLocationId = toLocationId;
-        } else {
+        const patrolIds = formData['patrolIds'].split(',').map((id: string) => Number.parseInt(id));
+
+        let currentLocationId;
+        let targetLocationId;
+
+        if (type === 'checkin'){
+            currentLocationId = Number.parseInt(formData['singleLocation']);
+            targetLocationId = currentLocationId;
+        }else if (type === 'checkout'){
+            currentLocationId = Number.parseInt(formData['fromLocation']);
+            targetLocationId = Number.parseInt(formData['toLocation']);
+        }else {
             return responses.response_code(400);
         }
 
+        const patrolUpdates: PatrolUpdateWithNoId[] = patrolIds.map((patrolId: number) => {
+            return {
+                time: new Date(datetimeStr),
+                patrolId: patrolId,
+                currentLocationId: currentLocationId,
+                targetLocationId: targetLocationId
+            };
+        });
 
         // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
-        if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
-            console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
+        const allValid = patrolUpdates.every(update => this.updateService.isPatrolUpdateValid(update, false, false, true, false));
+        if (!allValid) {
+            console.error("One or more invalid patrol updates in master bulk update:", patrolUpdates);
             return responses.response_code(400);
         }
 
-        this.updateService.updatePatrolWithTime(patrolUpdate);
+        this.updateService.batchUpdatePatrol(patrolUpdates);
 
         return responses.ok();
+
+
     }
-
-
 
 
     masterDeletePatrolUpdate = async (request: Request): Promise<Response> => {
