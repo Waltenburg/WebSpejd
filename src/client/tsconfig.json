@@ -3,6 +3,7 @@
     "compilerOptions": {
         "composite": true,
         "module": "es6",
+        "moduleResolution": "bundler",
         "target": "es6",
         "lib": ["es6", "dom"],
         "esModuleInterop": false,
