@@ -159,4 +159,3 @@ document.addEventListener("confirm", (evt) => {
 window.showDialog = showDialog;
 window.isErrorDialogOpen = isErrorDialogOpen;
 window.confirmDialog = confirmDialog;
-//# sourceMappingURL=dialog.js.map

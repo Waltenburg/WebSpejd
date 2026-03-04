@@ -65,4 +65,3 @@ if (document.readyState === 'loading') {
 else {
     onLoadFunction();
 }
-//# sourceMappingURL=home.js.map

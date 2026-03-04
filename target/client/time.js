@@ -40,4 +40,3 @@ document.body.addEventListener('htmx:afterSwap', (evt) => {
         formatTimestamps(target);
     }
 });
-//# sourceMappingURL=time.js.map

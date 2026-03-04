@@ -29,4 +29,3 @@ export function deleteCookie(cname) {
 document.getCookie = getCookie;
 document.setCookie = setCookie;
 document.deleteCookie = deleteCookie;
-//# sourceMappingURL=cookie.js.map

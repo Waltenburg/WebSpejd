@@ -70,6 +70,12 @@ class UpdateService extends database_1.ServiceBase {
         const id = this.prepare("SELECT last_insert_rowid() as id").get().id;
         return id;
     }
+    batchUpdatePatrol(patrolUpdates) {
+        const insert = this.transaction((updates) => {
+            return updates.map((update) => this.updatePatrolWithTime(update));
+        });
+        return insert(patrolUpdates);
+    }
     updateById(patrolUpdateId) {
         const dbPatrolUpdate = this.prepare("SELECT * FROM PatrolUpdates WHERE id = ?").get(patrolUpdateId);
         if (dbPatrolUpdate == undefined) {

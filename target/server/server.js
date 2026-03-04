@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 require("source-map-support/register");
 const http = __importStar(require("http"));
@@ -39,6 +49,7 @@ const PatrolUpdatesHandler = __importStar(require("./endpointHandlers/patrolUpda
 const PatrolConfigHandler = __importStar(require("./endpointHandlers/patrolConfigHandler"));
 const LocationPasswordHandler = __importStar(require("./endpointHandlers/locationPasswordHandler"));
 const LogsHandler = __importStar(require("./endpointHandlers/logsHandler"));
+const LocationRouteGraphHandler = __importStar(require("./endpointHandlers/locationRouteGraphHandler"));
 const logService_1 = require("./database/logService");
 const fs_1 = require("fs");
 class Server {
@@ -91,6 +102,10 @@ class Server {
             };
             return responses.ok(JSON.stringify(data));
         };
+        this.infoForMandskab = async (_req) => {
+            const info = this.locationService.getParsedMandskabPageInfo();
+            return responses.ok(info);
+        };
         this.makePatrolUpdate = async (request) => {
             const user = request.user;
             const updateHeader = request.headers['update'];
@@ -112,35 +127,38 @@ class Server {
                 "checkinID": checkinID
             });
         };
-        this.makeMasterPatrolUpdate = async (request) => {
+        this.makeMasterBulkPatrolUpdates = async (request) => {
             const formData = (0, request_1.parseForm)(request.body);
             const datetimeStr = formData['datetime'];
-            let patrolUpdate = {
-                time: new Date(datetimeStr),
-                patrolId: Number.parseInt(formData['patrol']),
-                currentLocationId: 0,
-                targetLocationId: 0
-            };
             const type = formData['type'];
+            const patrolIds = formData['patrolIds'].split(',').map((id) => Number.parseInt(id));
+            let currentLocationId;
+            let targetLocationId;
             if (type === 'checkin') {
-                const locationId = Number.parseInt(formData['singleLocation']);
-                patrolUpdate.currentLocationId = locationId;
-                patrolUpdate.targetLocationId = locationId;
+                currentLocationId = Number.parseInt(formData['singleLocation']);
+                targetLocationId = currentLocationId;
             }
             else if (type === 'checkout') {
-                const fromLocationId = Number.parseInt(formData['fromLocation']);
-                const toLocationId = Number.parseInt(formData['toLocation']);
-                patrolUpdate.currentLocationId = fromLocationId;
-                patrolUpdate.targetLocationId = toLocationId;
+                currentLocationId = Number.parseInt(formData['fromLocation']);
+                targetLocationId = Number.parseInt(formData['toLocation']);
             }
             else {
                 return responses.response_code(400);
             }
-            if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
-                console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
+            const patrolUpdates = patrolIds.map((patrolId) => {
+                return {
+                    time: new Date(datetimeStr),
+                    patrolId: patrolId,
+                    currentLocationId: currentLocationId,
+                    targetLocationId: targetLocationId
+                };
+            });
+            const allValid = patrolUpdates.every(update => this.updateService.isPatrolUpdateValid(update, false, false, true, false));
+            if (!allValid) {
+                console.error("One or more invalid patrol updates in master bulk update:", patrolUpdates);
                 return responses.response_code(400);
             }
-            this.updateService.updatePatrolWithTime(patrolUpdate);
+            this.updateService.batchUpdatePatrol(patrolUpdates);
             return responses.ok();
         };
         this.masterDeletePatrolUpdate = async (request) => {
@@ -253,6 +271,7 @@ class Server {
             .file("/mandskab", `${assets}/html/mandskab.html`)
             .file("/contact", `${assets}/html/contact.html`)
             .file('/favicon.ico', `${assets}/images/favicon.ico`)
+            .route("/getMandskabPageInfo", 1, this.infoForMandskab)
             .route("/login", 0, this.login)
             .route("/logout", 0, this.logout)
             .route("/deletePatrolUpdateMandskab", 1, this.mandskabDeleteUpdate)
@@ -260,11 +279,14 @@ class Server {
             .route("/getData", 1, this.locationDataForMandskab)
             .route("/master", 2, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
             .route("/master/locationRouteConfig", 2, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
+            .route("/master/locationRouteGraph", 2, pages.locationRouteGraphPage)
             .route("/master/patrolConfig", 2, pages.patrolConfigPage, this.patrolService)
             .route("/master/patrol_page", 2, pages.patrolPage, this.patrolService, this.locationService, this.updateService)
             .route("/master/updatePage", 2, pages.addPatrolUpdatePage, this.patrolService, this.locationService)
             .route("/master/location_page", 2, pages.locationPage, this.locationService, this.updateService, this.patrolService)
             .route("/master/heartbeat", 2, async () => responses.ok())
+            .route("/master/locationRouteGraphData", 2, LocationRouteGraphHandler.getLocationRouteGraphData, this.locationService, this.patrolService, this.updateService)
+            .route("/master/locationRouteGraphLayout", 2, LocationRouteGraphHandler.setLocationRouteGraphLayout, this.locationService)
             .route("/master/addRoute", 2, RouteConfigHandler.addRoute, this.locationService)
             .route("/master/deleteRoute", 2, RouteConfigHandler.deleteRoute, this.locationService)
             .route("/master/changeRouteStatus", 2, RouteConfigHandler.changeRouteStatus, this.locationService)
@@ -272,7 +294,7 @@ class Server {
             .route("/master/getRoutesTable", 2, RouteConfigHandler.getRouteConfigTable, this.locationService)
             .route("/master/patrolUpdatesTable", 2, PatrolUpdatesHandler.getPatrolUpdatesTable, this.updateService, this.locationService, this.patrolService)
             .route("/master/deletePatrolUpdate", 2, this.masterDeletePatrolUpdate)
-            .route("/master/addPatrolUpdate", 2, this.makeMasterPatrolUpdate)
+            .route("/master/addPatrolUpdate", 2, this.makeMasterBulkPatrolUpdates)
             .route("/master/patrolStatusTable", 2, PatrolStatusHandler.getPatrolStatusTable, this.locationService, this.patrolService, this.updateService)
             .route("/master/patrolStatus", 2, PatrolConfigHandler.changePatrolStatus, this.patrolService)
             .route("/master/addPatrol", 2, PatrolConfigHandler.addPatrol, this.patrolService)
@@ -292,6 +314,7 @@ class Server {
             .route("/master/getLocationsTableBody", 2, LocationConfigHandler.getLocationConfigTableBody, this.locationService)
             .route("/master/renameLocationRow", 2, LocationConfigHandler.getRenameLocationRow, this.locationService)
             .route("/master/makeLocationFirstLocation", 2, LocationConfigHandler.makeLocationFirstLocation, this.locationService)
+            .route("/master/setMandskabPageInfo", 2, LocationConfigHandler.setInfoOnMandskabPage, this.locationService)
             .route("/master/getLocationPasswords", 2, LocationPasswordHandler.getLocationPasswords, this.adminService, this.locationService)
             .route("/master/addLocationPassword", 2, LocationPasswordHandler.addLocationPassword, this.adminService)
             .route("/master/deleteLocationPassword", 2, LocationPasswordHandler.deleteLocationPassword, this.adminService)

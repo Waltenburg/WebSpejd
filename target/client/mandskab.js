@@ -232,4 +232,3 @@ class autoEmptyingFILO {
         this.isEmptyCallback = isEmptyCallback;
     }
 }
-//# sourceMappingURL=mandskab.js.map

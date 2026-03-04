@@ -3,7 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDatabase = exports.runSchema = void 0;
+exports.runSchema = runSchema;
+exports.createDatabase = createDatabase;
 const fs_1 = require("fs");
 const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const readline_1 = __importDefault(require("readline"));
@@ -22,7 +23,6 @@ const masterPasswordSet = typeof masterPassword === "string" && masterPassword.l
 function runSchema(db) {
     db.exec(schemaSQL);
 }
-exports.runSchema = runSchema;
 function askYesNo(question) {
     const rl = readline_1.default.createInterface({
         input: process.stdin,
@@ -51,7 +51,6 @@ async function createDatabase(dbPath, masterPassword) {
     db.prepare("INSERT INTO Settings (key, value) VALUES (?, ?)").run("master_password", masterPassword);
     return db;
 }
-exports.createDatabase = createDatabase;
 createDatabase(dbPath, masterPasswordSet ? masterPassword : defaultMasterPassword).then(() => {
     console.log("Database created at " + dbPath);
     if (!masterPasswordSet)

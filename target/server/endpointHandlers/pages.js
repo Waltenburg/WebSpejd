@@ -15,15 +15,25 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.patrolsUrl = exports.locationPage = exports.addPatrolUpdatePage = exports.patrolPage = exports.patrolConfigPage = exports.locatonAndRouteConfigPage = exports.mainMasterPage = void 0;
+exports.patrolsUrl = exports.locationPage = exports.addPatrolUpdatePage = exports.patrolPage = exports.patrolConfigPage = exports.locationRouteGraphPage = exports.locatonAndRouteConfigPage = exports.mainMasterPage = void 0;
 const elements = __importStar(require("typed-html"));
 const responses = __importStar(require("../response"));
 const patrolStatusHandler_1 = require("./patrolStatusHandler");
@@ -43,6 +53,7 @@ const mainMasterPage = async (request, locationService, updateService, patrolSer
     const content = elements.createElement("div", { id: "content" },
         elements.createElement("h1", null, "Status p\u00E5 lokationer"),
         locationStatusRes.content,
+        elements.createElement("a", { class: "button", href: "/master/locationRouteGraph" }, "Vis lokationsgraf"),
         elements.createElement("a", { class: "button", href: "/master/locationRouteConfig" }, "Konfigurer Lokationer og Ruter"),
         elements.createElement("h1", null, "Status p\u00E5 patruljer"),
         patrolStatusRes.content,
@@ -63,7 +74,15 @@ const locatonAndRouteConfigPage = async (request, locationService, updateService
     ]);
     const content = elements.createElement("div", { id: "content" },
         elements.createElement("h1", null, "Konfiguration af lokationer og ruter"),
+        elements.createElement("h2", null, "Information til alle lokationer"),
+        elements.createElement("p", null, "Her kan du skrive tekst, der vises til alle lokationer. Anvend markdown-format. **Fed**, *kursiv*, # Overskrift"),
+        elements.createElement("div", null,
+            elements.createElement("form", { id: "set-mandskab-page-info-form" },
+                elements.createElement("textarea", { name: "info", rows: '4', cols: '50' }, locationService.getMandskabPageInfo()),
+                elements.createElement("input", { "hx-post": "/master/setMandskabPageInfo", type: "button", value: "Opdater info p\u00E5 mandskabssider", class: "button button-primary", "hx-include": "#set-mandskab-page-info-form", "hx-on--after-request": "window.location.reload()" }))),
         elements.createElement("h2", null, "Lokationer"),
+        elements.createElement("a", { class: "button", href: "/master/locationRouteGraph" }, "\u00C5bn lokationsgraf"),
+        elements.createElement("br", null),
         llocationConfigRes.content,
         "For at en lokation kan slettes, m\u00E5 der ikke v\u00E6re nogle:",
         elements.createElement("ul", null,
@@ -80,6 +99,29 @@ const locatonAndRouteConfigPage = async (request, locationService, updateService
     return responses.ok(html);
 };
 exports.locatonAndRouteConfigPage = locatonAndRouteConfigPage;
+const locationRouteGraphPage = async (_request) => {
+    const content = elements.createElement("div", { id: "content" },
+        elements.createElement("h1", null, "Lokationsgraf"),
+        elements.createElement("p", null, "Dobbelklik p\u00E5 en lokation for at \u00E5bne lokationssiden. Tr\u00E6k lokationer rundt, s\u00E5 kortet passer til jeres behov."),
+        elements.createElement("h2", null, "S\u00E5dan l\u00E6ses kortet"),
+        elements.createElement("ul", null,
+            elements.createElement("li", null, "Hver cirkel er en lokation, og hver pil en rute mellem to lokationer."),
+            elements.createElement("li", null, "Jo flere patruljer p\u00E5 en lokation, jo st\u00F8rre er cirklen. Liges\u00E5 med ruter"),
+            elements.createElement("li", null, "Lokation markeret som stjerne er start-lokationen."),
+            elements.createElement("li", null, "Kantens farve p\u00E5 en lokation indikerer om lokationen er \u00E5ben eller lukket. Gr\u00F8n: \u00E5ben, gr\u00E5: lukket."),
+            elements.createElement("li", null, "Fyldets farve p\u00E5 en lokation indikerer om der er patruljer checket ind p\u00E5 lokationen. Gr\u00F8n: ingen patruljer, gr\u00E5: en eller flere patruljer."),
+            elements.createElement("li", null, "Stiplet pil betyder, at ruten ikke er oprettet som rute (men patruljer kan stadig v\u00E6re p\u00E5 den)."),
+            elements.createElement("li", null, "Gr\u00F8n pil betyder, at ruten er \u00E5ben, mens orange pil betyder, at ruten er lukket.")),
+        elements.createElement("div", { id: "location-route-graph-status" }),
+        elements.createElement("div", { id: "location-route-graph", style: "height: 72vh; border: 1px solid #d1d5db;" }));
+    const script = `
+        <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+        <script src="/js/master/locationRouteGraph.js" type="module"></script>
+    `;
+    const html = renderMasterPage("Lokationsgraf", content, script);
+    return responses.ok(html);
+};
+exports.locationRouteGraphPage = locationRouteGraphPage;
 const patrolConfigPage = async (request, patrolService) => {
     const patrolConfigRes = await (0, patrolConfigHandler_1.getPatrolConfigTable)(request, patrolService);
     const content = elements.createElement("div", { id: "content" },
@@ -127,7 +169,7 @@ const addPatrolUpdatePage = async (request, patrolService, locationService) => {
         }
         return elements.createElement("option", { value: patrol.id.toString() }, patrolStr);
     });
-    const locationOptions = locationService.allLocationIds().map(id => {
+    const locationOptions = locationService.allLocationIds("TOPOLOGICAL").map(id => {
         const location = locationService.locationInfo(id);
         if (location.id === locationId) {
             return elements.createElement("option", { value: location.id.toString(), selected: true }, location.name);
@@ -138,8 +180,19 @@ const addPatrolUpdatePage = async (request, patrolService, locationService) => {
         elements.createElement("h1", null, "Tilf\u00F8j Patruljeopdatering"),
         elements.createElement("form", { id: "add-patrol-update-form" },
             elements.createElement("div", null,
-                elements.createElement("label", null, "Patrulje:"),
-                elements.createElement("select", { name: "patrol" }, patrolOptions)),
+                elements.createElement("label", null, "Patruljer:"),
+                (0, HTMLGeneral_1.multiSelectDropdown)({
+                    id: "patrol-select",
+                    name: 'patrolIds',
+                    options: patrolService.allPatrolIds().map(id => {
+                        const patrol = patrolService.patrolInfo(id);
+                        return {
+                            value: patrol.id.toString(),
+                            label: `#${patrol.number} ${patrol.name}`
+                        };
+                    }),
+                    placeholder: "Vælg patruljer..."
+                })),
             elements.createElement("div", null,
                 elements.createElement("label", null, "Type:"),
                 elements.createElement("select", { name: "type", onchange: "toggle(this.value)" },
@@ -235,6 +288,7 @@ const renderMasterPage = (title, content, script) => `
         <script src="/js/master/locationPasswords.js" type="module"></script>
         <script src="/js/dialog.js" type="module"></script>
         <script src="/js/cookie.js" type="module"></script>
+        <script src="/js/multipleSelectDropdown.js" type="module"></script>
         <link rel="stylesheet" href="/assets/css/master.css">
     </head>
     <body>

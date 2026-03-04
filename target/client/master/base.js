@@ -49,4 +49,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3100);
     updateFunction();
 });
-//# sourceMappingURL=base.js.map

@@ -64,4 +64,3 @@ export function getDiffArr(Arr1, Arr2) {
     }
     return [arr1, arr2];
 }
-//# sourceMappingURL=sendHTTPRequest.js.map
