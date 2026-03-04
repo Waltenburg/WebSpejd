@@ -25,6 +25,7 @@ import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
 import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler';
 import * as LocationPasswordHandler from './endpointHandlers/locationPasswordHandler';
 import * as LogsHandler from './endpointHandlers/logsHandler';
+import * as LocationRouteGraphHandler from './endpointHandlers/locationRouteGraphHandler';
 import { LogService } from './database/logService';
 
 // ========== Miscenlaneous Types ========== 
@@ -174,11 +175,14 @@ class Server {
             // ================================ Master Pages Endpoints ==================================
             .route(Endpoints.MainMasterPage, UserType.Master, pages.mainMasterPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.LocationRouteConfigPage, UserType.Master, pages.locatonAndRouteConfigPage, this.locationService, this.updateService, this.patrolService)
+            .route(Endpoints.LocationRouteGraphPage, UserType.Master, pages.locationRouteGraphPage)
             .route(Endpoints.PatrolConfigPage, UserType.Master, pages.patrolConfigPage, this.patrolService)
             .route(Endpoints.MasterPatrolPage, UserType.Master, pages.patrolPage, this.patrolService, this.locationService, this.updateService)
             .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, pages.addPatrolUpdatePage, this.patrolService, this.locationService)
             .route(Endpoints.MasterLocationPage, UserType.Master, pages.locationPage, this.locationService, this.updateService, this.patrolService)
             .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
+            .route(Endpoints.GetLocationRouteGraphData, UserType.Master, LocationRouteGraphHandler.getLocationRouteGraphData, this.locationService, this.patrolService, this.updateService)
+            .route(Endpoints.SetLocationRouteGraphLayout, UserType.Master, LocationRouteGraphHandler.setLocationRouteGraphLayout, this.locationService)
             
             // ================================ Route Config Endpoints ================================
             .route(Endpoints.AddRoute, UserType.Master, RouteConfigHandler.addRoute, this.locationService)

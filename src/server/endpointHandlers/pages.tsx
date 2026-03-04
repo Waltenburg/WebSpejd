@@ -24,6 +24,7 @@ export const mainMasterPage = async (request: Request, locationService: Location
     const content = <div id="content">
         <h1>Status på lokationer</h1>
         {locationStatusRes.content}
+        <a class="button" href={Endpoints.LocationRouteGraphPage}>Vis lokationsgraf</a>
         <a class="button" href={Endpoints.LocationRouteConfigPage}>Konfigurer Lokationer og Ruter</a>
         <h1>Status på patruljer</h1>
         {patrolStatusRes.content}
@@ -44,11 +45,12 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
 
     const content = <div id="content">
         <h1>Konfiguration af lokationer og ruter</h1>
-        <p>Tekst der vises til alle lokationer</p>
-        <p>Anvend markdown-format. **Fed**, *kursiv*, # Overskrift</p>
+        <h2>Information til alle lokationer</h2>
+        <p>Her kan du skrive tekst, der vises til alle lokationer.
+            Anvend markdown-format. **Fed**, *kursiv*, # Overskrift</p>
         <div>
             <form id="set-mandskab-page-info-form">
-                <textarea name="info" rows={'4'} cols={'50'}>{locationService.getMandskabPageInfo()}</textarea><br></br>
+                <textarea name="info" rows={'4'} cols={'50'}>{locationService.getMandskabPageInfo()}</textarea>
                 <input hx-post={Endpoints.SetInfoOnMandskabPage} type="button" value="Opdater info på mandskabssider" class="button button-primary"
                     hx-include="#set-mandskab-page-info-form"
                     hx-on--after-request="window.location.reload()">
@@ -56,6 +58,7 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
             </form>
         </div>
         <h2>Lokationer</h2>
+        <a class="button" href={Endpoints.LocationRouteGraphPage}>Åbn lokationsgraf</a><br/>
         {llocationConfigRes.content}
         For at en lokation kan slettes, må der ikke være nogle:
         <ul>
@@ -71,6 +74,33 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
         Lokationer kan kun tjekke patruljer ud imod de lokationer, der har en åben rute fra den.
     </div>;
     const html = renderMasterPage("Master Lokationer og Ruter", content);
+    return responses.ok(html);
+}
+
+export const locationRouteGraphPage = async (_request: Request): Promise<responses.Response> => {
+    const content = <div id="content">
+        <h1>Lokationsgraf</h1>
+        <p>Dobbelklik på en lokation for at åbne lokationssiden. Træk lokationer rundt, så kortet passer til jeres behov.</p>
+        <h2>Sådan læses kortet</h2>
+        <ul>
+            <li>Hver cirkel er en lokation, og hver pil en rute mellem to lokationer.</li>
+            <li>Jo flere patruljer på en lokation, jo større er cirklen. Ligeså med ruter</li>
+            <li>Lokation markeret som stjerne er start-lokationen.</li>
+            <li>Kantens farve på en lokation indikerer om lokationen er åben eller lukket. Grøn: åben, grå: lukket.</li>
+            <li>Fyldets farve på en lokation indikerer om der er patruljer checket ind på lokationen. Grøn: ingen patruljer, grå: en eller flere patruljer.</li>
+            <li>Stiplet pil betyder, at ruten ikke er oprettet som rute (men patruljer kan stadig være på den).</li>
+            <li>Grøn pil betyder, at ruten er åben, mens orange pil betyder, at ruten er lukket.</li>
+        </ul>
+        <div id="location-route-graph-status"></div>
+        <div id="location-route-graph" style="height: 72vh; border: 1px solid #d1d5db;"></div>
+    </div>;
+
+    const script = `
+        <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+        <script src="/js/master/locationRouteGraph.js" type="module"></script>
+    `;
+
+    const html = renderMasterPage("Lokationsgraf", content, script);
     return responses.ok(html);
 }
 

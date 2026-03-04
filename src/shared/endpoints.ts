@@ -54,6 +54,8 @@ export const enum Endpoints {
      */
     MainMasterPage = "/master",
 
+    LocationRouteGraphPage = "/master/locationRouteGraph",
+
     LocationRouteConfigPage = "/master/locationRouteConfig",
 
     PatrolConfigPage = "/master/patrolConfig",
@@ -111,6 +113,10 @@ export const enum Endpoints {
     
     // ================================ Master page utility Endpoints ================================
     MasterHeartbeat = "/master/heartbeat",
+
+    GetLocationRouteGraphData = "/master/locationRouteGraphData",
+
+    SetLocationRouteGraphLayout = "/master/locationRouteGraphLayout",
     
     // ================================ Patrol Update management Endpoints ================================
     /**

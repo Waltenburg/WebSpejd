@@ -408,4 +408,16 @@ export class LocationService extends ServiceBase {
         const result = this.prepare(`select value from ${SETTINGS_TABLE.TABLE_NAME} where ${SETTINGS_TABLE.KEY} = ?`).get(SETTINGS_TABLE.SETTING_PARSED_MANDSKAB_PAGE_INFO) as { value: string } | undefined;
         return result?.value || "";
     }
+
+    getLocationRouteGraphLayout(): string {
+        const result = this.prepare(`select value from ${SETTINGS_TABLE.TABLE_NAME} where ${SETTINGS_TABLE.KEY} = ?`).get(SETTINGS_TABLE.SETTING_LOCATION_ROUTE_GRAPH_LAYOUT) as { value: string } | undefined;
+        return result?.value || "";
+    }
+
+    setLocationRouteGraphLayout(layoutJson: string): void {
+        this.prepare(`
+            INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)
+            ON CONFLICT(${SETTINGS_TABLE.KEY}) DO UPDATE SET ${SETTINGS_TABLE.VALUE} = excluded.${SETTINGS_TABLE.VALUE}
+        `).run(SETTINGS_TABLE.SETTING_LOCATION_ROUTE_GRAPH_LAYOUT, layoutJson);
+    }
 }
