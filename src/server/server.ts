@@ -284,7 +284,7 @@ class Server {
         let towardsLocation = this.locationService.patrolsTowardsLocation(user.locationId);
 
         // if the location is the first location, include patrols that have no patrol update yet
-        if (location.id === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID])) {
+        if (location.id === this.locationService.getFirstLocationId()) {
             const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
             towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
         }
@@ -356,7 +356,7 @@ class Server {
             targetLocationId: update.targetLocationId
         };
 
-        const thisIsFirstLocation = user.locationId === Number.parseInt(this.adminService.settings[SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID]);
+        const thisIsFirstLocation = user.locationId === this.locationService.getFirstLocationId();
         if (!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
             return responses.response_code(400);
         }

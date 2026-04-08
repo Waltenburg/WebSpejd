@@ -2,11 +2,11 @@ import { Database, ServiceBase, SETTINGS_TABLE } from "./database";
 import { User } from "@shared/types";
 
 export class AdminService extends ServiceBase {
-    public readonly settings: { [key: string]: string };
+    // public readonly settings: { [key: string]: string };
     
     constructor(db: Database) {
         super(db);
-        this.settings = this.getAllSettings();
+        // this.settings = this.getAllSettings();
     }
     
     
@@ -65,7 +65,7 @@ export class AdminService extends ServiceBase {
 
     setMasterPassword(newPassword: string): void {
         this.prepare("UPDATE settings SET value = ? WHERE key = 'master_password'").run(newPassword);
-        this.settings["master_password"] = newPassword;
+        // this.settings["master_password"] = newPassword;
     }
 
     /**
