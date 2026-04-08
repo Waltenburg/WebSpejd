@@ -52,6 +52,7 @@ const LogsHandler = __importStar(require("./endpointHandlers/logsHandler"));
 const LocationRouteGraphHandler = __importStar(require("./endpointHandlers/locationRouteGraphHandler"));
 const logService_1 = require("./database/logService");
 const fs_1 = require("fs");
+const process_1 = require("process");
 class Server {
     constructor(address, port, assets, db, adminService, locationService, patrolService, updateService) {
         this.login = async (req) => {
@@ -77,7 +78,7 @@ class Server {
             if (location === undefined)
                 return responses.not_found(`post ${user.locationId} not found`);
             let towardsLocation = this.locationService.patrolsTowardsLocation(user.locationId);
-            if (location.id === Number.parseInt(this.adminService.settings["first_location"])) {
+            if (location.id === this.locationService.getFirstLocationId()) {
                 const patrolsWithNoUpdates = this.patrolService.allPatrolsWithNoUpdates();
                 towardsLocation = towardsLocation.concat(patrolsWithNoUpdates);
             }
@@ -118,7 +119,7 @@ class Server {
                 currentLocationId: user.locationId,
                 targetLocationId: update.targetLocationId
             };
-            const thisIsFirstLocation = user.locationId === Number.parseInt(this.adminService.settings["first_location"]);
+            const thisIsFirstLocation = user.locationId === this.locationService.getFirstLocationId();
             if (!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
                 return responses.response_code(400);
             }
@@ -348,6 +349,7 @@ async function main() {
     const inMemory = config["inMemory"] ?? false;
     const resetDatabase = config["resetDatabase"] ?? false;
     const masterPassword = config["master_password"];
+    const competitionName = config['competition_name'] ?? "";
     console.log(`Starting server with options: ${(0, util_1.inspect)({
         address: address,
         port: port,
@@ -356,6 +358,7 @@ async function main() {
         inMemory: inMemory,
         resetDatabase: resetDatabase,
         master_password: masterPassword ? masterPassword : "<Inherited from existing database>",
+        competition_name: competitionName,
     }, { colors: true, depth: null })}`);
     const db = new databaseBarrel_1.Database(database, inMemory, resetDatabase);
     const adminService = new databaseBarrel_1.AdminService(db);
@@ -368,6 +371,7 @@ async function main() {
     }
     if (masterPassword)
         adminService.setMasterPassword(masterPassword);
+    process_1.env.COMPETITION_NAME = competitionName;
     const server = new Server(address, port, assets, db, adminService, locationService, patrolService, updateService);
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
         process.on(eventType, server.cleanup.bind(null, eventType));

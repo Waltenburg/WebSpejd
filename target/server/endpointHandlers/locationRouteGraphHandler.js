@@ -32,9 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-
-
- ///////////////////dwqjoidjwqoid
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setLocationRouteGraphLayout = exports.getLocationRouteGraphData = void 0;
 const request_1 = require("../request");

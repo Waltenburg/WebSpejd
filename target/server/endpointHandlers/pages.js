@@ -44,6 +44,7 @@ const RouteConfigHandler_1 = require("./RouteConfigHandler");
 const patrolConfigHandler_1 = require("./patrolConfigHandler");
 const HTMLGeneral_1 = require("./HTMLGeneral");
 const RouteConfigHandler_2 = require("./RouteConfigHandler");
+const process_1 = require("process");
 const mainMasterPage = async (request, locationService, updateService, patrolService) => {
     const [locationStatusRes, patrolStatusRes, patrolUpdatesRes] = await Promise.all([
         (0, locationStatusHandler_1.getLocationStatusTable)(request, locationService),
@@ -293,7 +294,7 @@ const renderMasterPage = (title, content, script) => `
     </head>
     <body>
         <div id="header">
-            <span class="brand-title">CCMR Part XXIX · WebSpejd</span>
+            <span class="brand-title">${process_1.env.COMPETITION_NAME + ' ⋅ WebSpejd' || "WebSpejd"}</span>
             <a href="/" class="header-link" title="Hjem">🏠</a>
             <a href="/master" class="header-link" title="Master">📊</a>
         </div>

@@ -5,7 +5,6 @@ const database_1 = require("./database");
 class AdminService extends database_1.ServiceBase {
     constructor(db) {
         super(db);
-        this.settings = this.getAllSettings();
     }
     authenticate(password) {
         const masterPassword = this.prepare("SELECT value FROM settings WHERE key = 'master_password'").get();
@@ -37,7 +36,6 @@ class AdminService extends database_1.ServiceBase {
     }
     setMasterPassword(newPassword) {
         this.prepare("UPDATE settings SET value = ? WHERE key = 'master_password'").run(newPassword);
-        this.settings["master_password"] = newPassword;
     }
     getAllSettings() {
         const rows = this.prepare(`SELECT * FROM ${"settings"}`).all();
