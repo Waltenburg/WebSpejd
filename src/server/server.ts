@@ -495,7 +495,7 @@ async function main(): Promise<void> {
     const inMemory = config["inMemory"] as boolean ?? false;
     const resetDatabase = config["resetDatabase"] as boolean ?? false;
     const masterPassword = config[SETTINGS_TABLE.SETTING_MASTER_PASSWORD] as string;
-    const competitionName = config[SETTINGS_TABLE.SETTING_COMPETITION_NAME] as string ?? "";
+    const competitionName = config['competition_name'] as string ?? "";
 
     console.log(`Starting server with options: ${inspect(
         {
@@ -528,7 +528,7 @@ async function main(): Promise<void> {
         adminService.setMasterPassword(masterPassword);
 
     env.COMPETITION_NAME = competitionName;
-    
+
     const server = new Server(address, port, assets, db,
         adminService, locationService, patrolService, updateService
     );
