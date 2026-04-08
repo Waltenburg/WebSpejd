@@ -135,7 +135,9 @@ class LocationService extends database_1.ServiceBase {
         }
         else {
             this.prepare(`
-                INSERT INTO ${"settings"} (${"key"}, ${"value"}) VALUES (?, ?)`).run("first_location", locationId.toString());
+                INSERT INTO ${"settings"} (${"key"}, ${"value"}) VALUES (?, ?)
+                ON CONFLICT(${"key"}) DO UPDATE SET ${"value"} = excluded.${"value"}`)
+                .run("first_location", locationId.toString());
         }
     }
     allLocationIds(sortType = "ID") {
