@@ -516,8 +516,8 @@ async function main(): Promise<void> {
     const patrolService = new PatrolService(db);
     const updateService = new UpdateService(db);
 
-    const csvContent = toCSVString(updateService, patrolService, locationService);
-    writeFileSync('Data.csv', csvContent);
+    // const csvContent = toCSVString(updateService, patrolService, locationService);
+    // writeFileSync('Data.csv', csvContent);
 
     if (resetDatabase) {
         console.log("Resetting database: Deleting all patrol updates");
