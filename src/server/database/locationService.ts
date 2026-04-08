@@ -209,7 +209,9 @@ export class LocationService extends ServiceBase {
             this.prepare(`DELETE FROM ${SETTINGS_TABLE.TABLE_NAME} WHERE ${SETTINGS_TABLE.KEY} = ?`).run(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID);
         } else {
             this.prepare(`
-                INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)`).run(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID, locationId.toString());
+                INSERT INTO ${SETTINGS_TABLE.TABLE_NAME} (${SETTINGS_TABLE.KEY}, ${SETTINGS_TABLE.VALUE}) VALUES (?, ?)
+                ON CONFLICT(${SETTINGS_TABLE.KEY}) DO UPDATE SET ${SETTINGS_TABLE.VALUE} = excluded.${SETTINGS_TABLE.VALUE}`)
+                .run(SETTINGS_TABLE.SETTING_FIRST_LOCATION_ID, locationId.toString());
         }
     }
 
