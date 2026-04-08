@@ -32,7 +32,9 @@ import { LogService } from './database/logService';
 import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@shared/types';
 import type { MandskabData, PatrolUpdateFromMandskab } from '@shared/responseTypes';
 import { SETTINGS_TABLE } from './database/database';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import { toCSVString } from './database/export';
+import { env } from 'process';
 
 
 export type { Server };
@@ -493,6 +495,7 @@ async function main(): Promise<void> {
     const inMemory = config["inMemory"] as boolean ?? false;
     const resetDatabase = config["resetDatabase"] as boolean ?? false;
     const masterPassword = config[SETTINGS_TABLE.SETTING_MASTER_PASSWORD] as string;
+    const competitionName = config[SETTINGS_TABLE.SETTING_COMPETITION_NAME] as string ?? "";
 
     console.log(`Starting server with options: ${inspect(
         {
@@ -503,6 +506,7 @@ async function main(): Promise<void> {
             inMemory: inMemory,
             resetDatabase: resetDatabase,
             master_password: masterPassword ? masterPassword : "<Inherited from existing database>",
+            competition_name: competitionName,
         },
         { colors: true, depth: null })}`);
 
@@ -512,6 +516,9 @@ async function main(): Promise<void> {
     const patrolService = new PatrolService(db);
     const updateService = new UpdateService(db);
 
+    const csvContent = toCSVString(updateService, patrolService, locationService);
+    writeFileSync('Data.csv', csvContent);
+
     if (resetDatabase) {
         console.log("Resetting database: Deleting all patrol updates");
         updateService.allPatrolUpdatesIds().forEach(id => updateService.deleteUpdate(id));
@@ -520,6 +527,8 @@ async function main(): Promise<void> {
     if(masterPassword)
         adminService.setMasterPassword(masterPassword);
 
+    env.COMPETITION_NAME = competitionName;
+    
     const server = new Server(address, port, assets, db,
         adminService, locationService, patrolService, updateService
     );

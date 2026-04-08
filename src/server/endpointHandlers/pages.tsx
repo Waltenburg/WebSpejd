@@ -1,5 +1,5 @@
 import * as elements from 'typed-html';
-import { LocationService, UpdateService, PatrolService } from "../databaseBarrel";
+import { LocationService, UpdateService, PatrolService, AdminService } from "../databaseBarrel";
 import { Endpoints } from "@shared/endpoints";
 import * as responses from '../response';
 import { getPatrolStatusTable } from './patrolStatusHandler';
@@ -11,6 +11,7 @@ import { getPatrolConfigTable } from './patrolConfigHandler';
 import { anchorToAddPatrolUpdatePage, multiSelectDropdown } from './HTMLGeneral';
 import { table as html_RouteTable } from './RouteConfigHandler';
 import { SortType } from '../database/locationService';
+import { env } from 'process';
 type Request = import('../request').Request;
 
 // ========================== Endpoint Handler for Pages ==========================
@@ -358,7 +359,7 @@ const renderMasterPage = (title: string, content: string, script?: string) => `
     </head>
     <body>
         <div id="header">
-            <span class="brand-title">CCMR Part XXIX · WebSpejd</span>
+            <span class="brand-title">${env.COMPETITION_NAME + ' ⋅ WebSpejd' || "WebSpejd"}</span>
             <a href="/" class="header-link" title="Hjem">🏠</a>
             <a href="/master" class="header-link" title="Master">📊</a>
         </div>
