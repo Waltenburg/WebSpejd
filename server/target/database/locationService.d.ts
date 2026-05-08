@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 import { Location, Route } from "@webspejd/core/types";
 export declare const enum SortType {
     TOPOLOGICAL = "TOPOLOGICAL",
@@ -74,6 +74,13 @@ export declare class LocationService extends ServiceBase {
      * @returns list of location ids
      */
     allLocationIds(sortType?: SortType): number[];
+    /**
+     * Get all locations.
+     *
+     * @param sortType the sorting of the locations
+     * @return all locations available.
+     */
+    allLocations(sortType?: SortType): Location[];
     /**
      * Get all ids of locations sorted topologically.
      *

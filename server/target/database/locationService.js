@@ -1,5 +1,5 @@
 import { Marked } from "marked";
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 export class LocationService extends ServiceBase {
     constructor() {
         super(...arguments);
@@ -199,6 +199,17 @@ export class LocationService extends ServiceBase {
         }
         const rows = this.prepare(`SELECT id FROM ${"Location" /* LOCATION_TABLE.TABLE_NAME */} ORDER BY ${orderBy}`).all();
         return rows.map((row) => row.id);
+    }
+    /**
+     * Get all locations.
+     *
+     * @param sortType the sorting of the locations
+     * @return all locations available.
+     */
+    allLocations(sortType = "ID" /* SortType.ID */) {
+        return this.allLocationIds(sortType)
+            .map(locationId => this.locationInfo(locationId))
+            .filter(location => location !== undefined);
     }
     /**
      * Get all ids of locations sorted topologically.

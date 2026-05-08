@@ -1,8 +1,8 @@
-import { Endpoints } from '@webspejd/core/endpoints';
-import type { PatrolUpdate } from '@webspejd/core/types';
-import type { LocationService, PatrolService, UpdateService } from '../databaseBarrel';
-import { parseForm, Request } from '../request';
-import * as responses from '../response';
+import { Endpoints } from '@webspejd/core/endpoints.js';
+import type { PatrolUpdate } from '@webspejd/core/types.js';
+import type { LocationService, PatrolService, UpdateService } from '../databaseBarrel.js';
+import { parseForm, Request } from '../request.js';
+import { Response } from '../response.js';
 
 interface Position {
     x: number;
@@ -111,7 +111,7 @@ const latestActivePatrolUpdates = (patrolService: PatrolService, updateService: 
     return updates;
 };
 
-export const getLocationRouteGraphData = async (_request: Request, locationService: LocationService, patrolService: PatrolService, updateService: UpdateService): Promise<responses.Response> => {
+export const getLocationRouteGraphData = async (_request: Request, locationService: LocationService, patrolService: PatrolService, updateService: UpdateService): Promise<Response> => {
     const locationIds = locationService.allLocationIds();
     const firstLocationId = locationService.getFirstLocationId();
     const routes = locationService.allRoutes();
@@ -197,12 +197,14 @@ export const getLocationRouteGraphData = async (_request: Request, locationServi
         };
     });
 
-    return responses.ok(JSON.stringify({ nodes, edges, firstLocationId }), {
-        'Content-Type': 'application/json'
-    });
+    return Response.ok(JSON.stringify({ nodes, edges, firstLocationId }))
+        .setHeader("Content-Type", "application/json");
 };
 
-export const setLocationRouteGraphLayout = async (request: Request, locationService: LocationService): Promise<responses.Response> => {
+export const setLocationRouteGraphLayout = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const contentType = request.headers['content-type'] ?? '';
 
     let layoutRaw = '';
@@ -215,10 +217,10 @@ export const setLocationRouteGraphLayout = async (request: Request, locationServ
     }
 
     if (!layoutRaw) {
-        return responses.response_code(400, 'Missing layout payload');
+        return Response.badRequest('Missing layout payload');
     }
 
     const parsedLayout = parseLayout(layoutRaw);
     locationService.setLocationRouteGraphLayout(JSON.stringify(parsedLayout));
-    return responses.ok();
+    return Response.ok();
 };

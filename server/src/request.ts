@@ -1,7 +1,7 @@
-import { User, UserCache, UserType } from "./users";
+import { User, UserCache, UserType } from "./users.js";
 import * as http from 'http'
-import * as responses from "./response";
-import type { ServiceBase } from "./databaseBarrel";
+import { Response } from "./response.js";
+import type { ServiceBase } from "./databaseBarrel.js";
 
 export interface Request {
     user: User;
@@ -34,15 +34,6 @@ export class Router {
         return this;
     }
 
-    // route(path: string, userType: UserType, func: RouteFunction): Router {
-    //     this.routes.push({
-    //         userType: userType,
-    //         path: path,
-    //         func: func
-    //     });
-    //     return this;
-    // }
-
     /**
      * Registers a route with dependency injection.
      * 
@@ -73,7 +64,7 @@ export class Router {
         return this.route(
             path,
             UserType.None,
-            async (_request) => await responses.file(file)
+            async (_request) => await Response.file(file)
         );
     }
 
@@ -94,24 +85,28 @@ export class Router {
             if (assetDir != undefined) {
                 let relativePath = path.slice(assetDir.urlPath.length + 1);
                 let fullPath = `${assetDir.dir}/${relativePath}`;
-                return responses.file(fullPath);
+                return await Response.file(fullPath);
             }
 
             // Function routes
             let route = this.routes
                 .find((route) => route.path === path);
             if (route === undefined) {
-                return responses.not_found("Page not found");
+                return Response.notFound().setContent("Page not found");
             }
             //TODO: Autherization check is failing
             if (!this.isAuthorized(request, route)) {
-                return responses.unauthorized("Not authorized");
+                return Response.unauthorized().setContent("Not authorized");
             }
 
             return await route.func(request);
         } catch (err) {
             console.error(err);
-            return responses.server_error(err);
+            let response = Response.serverError();
+            if(err instanceof Error) {
+                response.setContent(err.toString())
+            }
+            return response;
         }
     }
 
@@ -123,8 +118,6 @@ export class Router {
      * @returns `true` if request is authorized, `false` otherwise
      */
     isAuthorized(request: Request, route: Route): boolean {
-        return true;
-        
         const userType = route.userType;
         const user = request.user;
         return (userType === UserType.Master && user.isMasterUser())
@@ -167,7 +160,7 @@ export class Router {
                 : this.users.userFromIdentifier(userIdentifier);
 
         // Get body asynchronously
-        let body: string | null = null;
+        let body: string | undefined = undefined;
         if (request.method === "POST" || request.method === "PUT") {
             const chunks: Buffer[] = [];
             for await (const chunk of request) {
@@ -196,7 +189,6 @@ export const parseForm = (body: string | null): Record<string, string> => {
     }, {} as Record<string, string>);
 }
 
-type Response = responses.Response;
 type RouteFunction<T extends ServiceBase[]> = (request: Request, ...services: T) => Promise<Response>;
 
 interface Route {

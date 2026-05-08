@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 export class AdminService extends ServiceBase {
     // public readonly settings: { [key: string]: string };
     constructor(db) {

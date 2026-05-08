@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 import { Patrol } from "@webspejd/core/types";
 export declare class PatrolService extends ServiceBase {
     /**

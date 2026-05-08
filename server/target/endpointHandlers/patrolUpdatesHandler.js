@@ -1,10 +1,15 @@
 import * as elements from "typed-html";
-import { formatPatrol, formatUpdateLocation } from "./HTMLGeneral";
-import * as responses from '../response';
+import { formatPatrol, formatUpdateLocation } from "./HTMLGeneral.js";
+import { Response } from '../response.js';
+import * as zod from "zod";
+import * as validation from "@webspejd/core/validation.js";
+const PatrolUpdatesTableParams = zod.object({
+    locationId: validation.AnyNumber,
+    patrolId: validation.AnyNumber,
+});
 // =================================== Endpoint handler for Patrol Updates Table =======================================
 export const getPatrolUpdatesTable = async (request, updateService, locationService, patrolService) => {
-    const locationId = Number.parseInt(request.url.searchParams.get("locationId"));
-    const patrolId = Number.parseInt(request.url.searchParams.get("patrolId"));
+    const { locationId, patrolId } = validation.parseUrlParams(PatrolUpdatesTableParams, request.url);
     const searchParamStr = request.url.searchParams.toString();
     let skipLocation = false;
     let skipPatrol = false;
@@ -19,7 +24,7 @@ export const getPatrolUpdatesTable = async (request, updateService, locationServ
     else
         updates = updateService.lastUpdates(20);
     const html = PatrolUpdateTable(updates, searchParamStr, skipLocation, skipPatrol, locationService, patrolService);
-    return responses.ok(html);
+    return Response.ok().setContent(html);
 };
 // =================================== HTML Generation Functions =======================================
 var ids;
@@ -27,10 +32,6 @@ var ids;
     ids["table"] = "patrol-updates-table";
     ids["tableBody"] = "patrol-updates-table-body";
 })(ids || (ids = {}));
-var classes;
-(function (classes) {
-    classes["deletingRow"] = "deleting-patrol-update-row";
-})(classes || (classes = {}));
 const html_patrolUpdateRow = (update, skipLocation, skipPatrol, locationService, patrolService) => {
     if (!update) {
         return elements.createElement("tr", { class: "hover-grey" },

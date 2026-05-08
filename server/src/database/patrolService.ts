@@ -1,8 +1,7 @@
 import { RunResult } from "better-sqlite3";
-import { deletePatrol } from "../endpointHandlers/patrolConfigHandler";
-import { PatrolNotFoundError } from "../error";
-import { PATROL_TABLE, PATROL_UPDATE_TABLE, ServiceBase } from "./database";
-import { PatrolLocationType, Patrol } from "@webspejd/core/types";
+import { PatrolNotFoundError } from "../error.js";
+import { PATROL_UPDATE_TABLE, ServiceBase } from "./database.js";
+import { Patrol } from "@webspejd/core/types";
 
 export class PatrolService extends ServiceBase {
     /**
@@ -12,8 +11,9 @@ export class PatrolService extends ServiceBase {
     */
     patrolInfo(patrolId: number): Patrol{
         const patrol = this.prepare("SELECT * FROM patrol WHERE id = ?").get(patrolId) as Patrol | undefined;
-        if(!patrol)
+        if(!patrol) {
             throw new PatrolNotFoundError(patrolId);
+        }
         // @ts-expect-error - converting from integer to boolean
         patrol.udgået = patrol.udgået === 1;
         return patrol;

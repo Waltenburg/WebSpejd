@@ -1,8 +1,8 @@
-import type { Request } from "../request";
-import * as responses from "../response";
-import { LogService } from "../database/logService";
+import type { Request } from "../request.js";
+import { Response } from "../response.js";
+import { LogService } from "../database/logService.js";
 
-export const getLogs = async (request: Request, logService: LogService): Promise<responses.Response> => {
+export const getLogs = async (request: Request, logService: LogService): Promise<Response> => {
     const params = request.url.searchParams;
 
     const severity = params.get("severity") ?? undefined;
@@ -31,7 +31,6 @@ export const getLogs = async (request: Request, logService: LogService): Promise
         offset: toNumber(offsetStr),
     });
 
-    return responses.ok(JSON.stringify(logs), {
-        "Content-Type": "application/json",
-    });
+    return Response.ok(JSON.stringify(logs))
+        .setHeader("Content-Type", "application/json");
 };

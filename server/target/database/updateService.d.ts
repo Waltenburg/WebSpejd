@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 import { PatrolUpdate, PatrolUpdateWithNoId } from "@webspejd/core/types";
 export declare class UpdateService extends ServiceBase {
     /** Converts from `DatabasePatrolUpdate` to `PatrolUpdate` as used in the rest of the application */
@@ -63,5 +63,6 @@ export declare class UpdateService extends ServiceBase {
      * @returns list of patrol update ids
      */
     allPatrolUpdatesIds(): number[];
+    allPatrolUpdates(): PatrolUpdate[];
 }
 //# sourceMappingURL=updateService.d.ts.map

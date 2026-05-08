@@ -15,9 +15,9 @@ const headers = [
 ]
 
 export function toCSVString(updateService: UpdateService, patrolService: PatrolService, locationService: LocationService): string {
-    const updates = updateService.allPatrolUpdatesIds().map(id => updateService.updateById(id));
+    const updates = updateService.allPatrolUpdates();
     const patrolNames = patrolService.allPatrolIds().map(id => patrolService.patrolInfo(id).name);
-    const locationNames = locationService.allLocationIds().map(id => locationService.locationInfo(id).name);
+    const locationNames = locationService.allLocations().map(location => location.name);
 
     const csvContent = [
         headers.join(delimiter),

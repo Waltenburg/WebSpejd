@@ -1,11 +1,9 @@
-import 'source-map-support/register';
-import { Request } from "./request";
-import { UpdateService, AdminService, PatrolService, LocationService, Database } from "./databaseBarrel";
-import * as responses from "./response";
+import 'source-map-support/register.js';
+import { Request } from "./request.js";
+import { UpdateService, AdminService, PatrolService, LocationService, Database } from "./databaseBarrel.js";
+import { Response } from "./response.js";
 export type { Server };
-type Response = responses.Response;
 declare class Server {
-    private db;
     private adminService;
     private locationService;
     private patrolService;
@@ -46,6 +44,5 @@ declare class Server {
     makeMasterBulkPatrolUpdates: (request: Request) => Promise<Response>;
     masterDeletePatrolUpdate: (request: Request) => Promise<Response>;
     mandskabDeleteUpdate: (request: Request) => Promise<Response>;
-    masterHeartbeat: (_request: Request) => Promise<Response>;
 }
 //# sourceMappingURL=server.d.ts.map

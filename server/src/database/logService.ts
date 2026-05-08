@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 
 export interface LogRow {
     id?: number;

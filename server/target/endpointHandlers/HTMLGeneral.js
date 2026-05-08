@@ -15,13 +15,15 @@ export const hxTrigger = (element, triggerName) => {
     return `htmx.trigger(${element}, '${triggerName}')`;
 };
 export const formatLocationAnchor = (location) => {
-    if (location == null)
+    if (location === undefined) {
         return "Ukendt lokation";
+    }
     return elements.createElement("a", { href: `${"/master/location_page" /* Endpoints.MasterLocationPage */}?locationId=${location.id}`, class: "hover-underline" }, location.name);
 };
 export const formatUpdateLocation = (locationService, update) => {
-    if (update == null)
+    if (update == null) {
         return "Ukendt lokation";
+    }
     if (update.currentLocationId === update.targetLocationId) {
         return elements.createElement("span", null,
             "P\u00E5 ",

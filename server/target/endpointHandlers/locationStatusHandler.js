@@ -1,6 +1,6 @@
 import * as elements from 'typed-html';
-import { formatLocationAnchor } from './HTMLGeneral';
-import * as responses from '../response';
+import { formatLocationAnchor } from './HTMLGeneral.js';
+import { Response } from '../response.js';
 // ========================== Endpoint Handler for Location Status ==========================
 export const getLocationStatusTable = async (request, locationService) => {
     const locationId = Number.parseInt(request.url.searchParams.get("locationId") ?? "");
@@ -12,7 +12,7 @@ export const getLocationStatusTable = async (request, locationService) => {
         locationIds = locationService.allLocationIds("TOPOLOGICAL" /* SortType.TOPOLOGICAL */);
     const searchParamStr = request.url.searchParams.toString();
     const tableHTML = html_locationStatusTable(locationService, locationIds, searchParamStr);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 // Helper function to get location with patrol counts
 const locationWithPatrolCounts = (locationService, locationId) => {

@@ -1,21 +1,23 @@
 import * as elements from 'typed-html';
-import { LocationService, UpdateService, PatrolService } from "../databaseBarrel";
-import { Endpoints } from "@webspejd/core/endpoints";
-import * as responses from '../response';
-import { getPatrolStatusTable } from './patrolStatusHandler';
-import { getLocationStatusTable as getLocationStatusTable } from './locationStatusHandler';
-import { getPatrolUpdatesTable } from './patrolUpdatesHandler';
-import { getLocationConfigTable } from './LocationConfigHandler';
-import { getRouteConfigTable } from './RouteConfigHandler';
-import { getPatrolConfigTable } from './patrolConfigHandler';
-import { anchorToAddPatrolUpdatePage, multiSelectDropdown } from './HTMLGeneral';
-import { table as html_RouteTable } from './RouteConfigHandler';
-import { SortType } from '../database/locationService';
+import { LocationService, UpdateService, PatrolService } from "../databaseBarrel.js";
+import { Endpoints } from "@webspejd/core/endpoints.js";
+import { Response } from '../response.js';
+import { getPatrolStatusTable } from './patrolStatusHandler.js';
+import { getLocationStatusTable as getLocationStatusTable } from './locationStatusHandler.js';
+import { getPatrolUpdatesTable } from './patrolUpdatesHandler.js';
+import { getLocationConfigTable } from './LocationConfigHandler.js';
+import { getRouteConfigTable } from './RouteConfigHandler.js';
+import { getPatrolConfigTable } from './patrolConfigHandler.js';
+import { anchorToAddPatrolUpdatePage, multiSelectDropdown } from './HTMLGeneral.js';
+import { table as html_RouteTable } from './RouteConfigHandler.js';
+import { SortType } from '../database/locationService.js';
 import { env } from 'process';
-type Request = import('../request').Request;
+import { Request } from "../request.js";
+import * as zod from "zod";
+import * as validation from "@webspejd/core/validation.js";
 
 // ========================== Endpoint Handler for Pages ==========================
-export const mainMasterPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
+export const mainMasterPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
     const [locationStatusRes, patrolStatusRes, patrolUpdatesRes] = await Promise.all([
         getLocationStatusTable(request, locationService),
         getPatrolStatusTable(request, locationService, patrolService, updateService),
@@ -35,10 +37,10 @@ export const mainMasterPage = async (request: Request, locationService: Location
         {patrolUpdatesRes.content}
     </div>
     const html = renderMasterPage("Master Oversigt", content);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const locatonAndRouteConfigPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
+export const locatonAndRouteConfigPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
     const [llocationConfigRes, routeConfigRes] = await Promise.all([
         getLocationConfigTable(request, locationService),
         getRouteConfigTable(request, locationService)
@@ -75,10 +77,10 @@ export const locatonAndRouteConfigPage = async (request: Request, locationServic
         Lokationer kan kun tjekke patruljer ud imod de lokationer, der har en åben rute fra den.
     </div>;
     const html = renderMasterPage("Master Lokationer og Ruter", content);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const locationRouteGraphPage = async (_request: Request): Promise<responses.Response> => {
+export const locationRouteGraphPage = async (_request: Request): Promise<Response> => {
     const content = <div id="content">
         <h1>Lokationsgraf</h1>
         <p>Dobbelklik på en lokation for at åbne lokationssiden. Træk lokationer rundt, så kortet passer til jeres behov.</p>
@@ -102,10 +104,10 @@ export const locationRouteGraphPage = async (_request: Request): Promise<respons
     `;
 
     const html = renderMasterPage("Lokationsgraf", content, script);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const patrolConfigPage = async (request: Request, patrolService: PatrolService): Promise<responses.Response> => {
+export const patrolConfigPage = async (request: Request, patrolService: PatrolService): Promise<Response> => {
     const patrolConfigRes = await getPatrolConfigTable(request, patrolService);
 
     const content = <div id="content">
@@ -114,17 +116,17 @@ export const patrolConfigPage = async (request: Request, patrolService: PatrolSe
         For at en patrulje kan slettes, skal alle patruljens check ind og ud slettes først.
     </div>;
     const html = renderMasterPage("Master Patruljer", content);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const patrolPage = async (request: Request, patrolService: PatrolService, locationService: LocationService, updateService: UpdateService): Promise<responses.Response> => {
-    const patrolId = Number.parseInt(request.url.searchParams.get("patrolId"));
+export const patrolPage = async (request: Request, patrolService: PatrolService, locationService: LocationService, updateService: UpdateService): Promise<Response> => {
+    const { patrolId } = validation.parseUrlParams(zod.object({ "patrolId": validation.AnyNumber }), request.url);
     if (Number.isNaN(patrolId)) {
-        return responses.response_code(400, "Invalid patrol id");
+        return Response.badRequest("Invalid patrol id");
     }
     const patrol = patrolService.patrolInfo(patrolId);
     if (!patrol) {
-        return responses.not_found("Patrol not found");
+        return Response.notFound("Patrol not found");
     }
 
     const content = <div id="content">
@@ -149,12 +151,14 @@ export const patrolPage = async (request: Request, patrolService: PatrolService,
     </div>
 
     const html = renderMasterPage(`Patrulje #${patrol.number} ${patrol.name}`, content);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const addPatrolUpdatePage = async (request: Request, patrolService: PatrolService, locationService: LocationService): Promise<responses.Response> => {
-    const patrolId = Number.parseInt(request.url.searchParams.get("patrolId"));
-    const locationId = Number.parseInt(request.url.searchParams.get("locationId"));
+export const addPatrolUpdatePage = async (request: Request, patrolService: PatrolService, locationService: LocationService): Promise<Response> => {
+    const { patrolId, locationId } = validation.parseUrlParams(
+        zod.object({ "patrolId": validation.AnyNumber, "locationId": validation.AnyNumber }),
+        request.url
+    );
     const userCameFrom = request.headers["referer"] || Endpoints.MainMasterPage;
 
     const patrolOptions = patrolService.allPatrolIds().map(id => {
@@ -167,8 +171,7 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
         return <option value={patrol.id.toString()}>{patrolStr}</option>;
     });
 
-    const locationOptions = locationService.allLocationIds(SortType.TOPOLOGICAL).map(id => {
-        const location = locationService.locationInfo(id);
+    const locationOptions = locationService.allLocations(SortType.TOPOLOGICAL).map(location => {
         if (location.id === locationId) {
             // @ts-expect-error
             return <option value={location.id.toString()} selected>{location.name}</option>
@@ -269,19 +272,21 @@ export const addPatrolUpdatePage = async (request: Request, patrolService: Patro
     </script>`;
 
     const html = renderMasterPage("Tilføj Patruljeopdatering", content, script);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
-export const locationPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<responses.Response> => {
-    const locationId = Number.parseInt(request.url.searchParams.get("locationId"));
-    if (Number.isNaN(locationId))
-        return responses.response_code(400, "Invalid location id");
+export const locationPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
+    const { locationId } = validation.parseUrlParams(validation.LocationId, request.url);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest("Invalid location id");
+    }
     const location = locationService.locationInfo(locationId);
 
     const locationIsFirstLocation = locationService.getFirstLocationId() === locationId;
 
-    if (!location)
-        return responses.not_found("Location not found");
+    if (!location) {
+        return Response.notFound("Location not found");
+    }
 
     const content = <div id="content">
         <h1>Lokation: {location.name}</h1>
@@ -294,7 +299,7 @@ export const locationPage = async (request: Request, locationService: LocationSe
         </span>
 
         <div class="button-group">
-            {anchorToAddPatrolUpdatePage(null, location.id)}
+            {anchorToAddPatrolUpdatePage(undefined, location.id)}
 
             <button hx-post={Endpoints.ChangeLocationStatus} class="button button-secondary"
                 hx-vals={JSON.stringify({ locationId: location.id, open: !location.open })}
@@ -332,7 +337,7 @@ export const locationPage = async (request: Request, locationService: LocationSe
     </div>;
 
     const html = renderMasterPage(`Lokation: ${location.name}`, content);
-    return responses.ok(html);
+    return Response.ok(html);
 }
 
 

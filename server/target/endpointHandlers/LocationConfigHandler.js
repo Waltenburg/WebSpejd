@@ -1,102 +1,133 @@
 import * as elements from 'typed-html';
-import { formatLocationAnchor, getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral';
-import * as responses from '../response';
-import { parseForm } from '../request';
+import { formatLocationAnchor, getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral.js';
+import { Response } from '../response.js';
+import { parseForm } from '../request.js';
 // ========================== Endpoint Handlers for Locations CRUD operations  ==========================
 export const addLocation = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const name = form["name"];
     const team = form["team"];
     const openText = form["open"];
     const open = openText === "on" || openText === "true";
     if (!name || !team || !openText) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const locationId = locationService.addLocation(name, team, open);
     if (locationId === null) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 };
 export const changeLocationStatus = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
     const openText = form["open"];
     const open = openText === "on" || openText === "true";
-    if (Number.isNaN(locationId) || openText == null)
-        return responses.response_code(400);
-    const succes = locationService.changeLocationStatus(locationId, open);
-    if (!succes)
-        return responses.response_code(400);
-    return responses.ok();
+    if (Number.isNaN(locationId) || openText == null) {
+        return Response.badRequest();
+    }
+    const success = locationService.changeLocationStatus(locationId, open);
+    if (!success) {
+        return Response.badRequest();
+    }
+    return Response.ok();
 };
 export const renameLocation = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
     const name = form["name"];
     const team = form["team"];
     if (Number.isNaN(locationId) || (!name && !team)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    const succes = locationService.renameLocation(locationId, name, team);
-    if (!succes) {
-        return responses.response_code(400);
+    const success = locationService.renameLocation(locationId, name, team);
+    if (!success) {
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 };
 export const deleteLocation = async (request, locationService) => {
-    const form = parseForm(request.body);
-    const locationId = Number.parseInt(form["locationId"]);
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
-    const succes = locationService.deleteLocation(locationId);
-    if (!succes)
-        return responses.response_code(400);
-    return responses.ok();
-};
-export const makeLocationFirstLocation = async (request, locationService) => {
-    const form = parseForm(request.body);
-    const locationId = Number.parseInt(form["locationId"]);
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
-    locationService.setFirstLocationId(locationId);
-    return responses.ok();
-};
-export const setInfoOnMandskabPage = async (request, locationService) => {
-    const form = parseForm(request.body);
-    const info = form["info"];
-    if (info == null)
-        return responses.response_code(400);
-    locationService.setMandskabPageInfo(info);
-    return responses.ok();
-};
-// ========================== Getting HTML for Locations ==========================
-export const getLocationConfigTableRow = async (request, locationService) => {
-    const form = parseForm(request.body);
-    const locationId = Number.parseInt(form["locationId"]);
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
-    const tableHTML = html_row(locationService, locationId);
-    return responses.ok(tableHTML);
-};
-export const getLocationConfigTable = async (request, locationService) => {
-    const locations = locationService.allLocationIds("TOPOLOGICAL" /* SortType.TOPOLOGICAL */);
-    const tableHTML = html_table(locationService, locations);
-    return responses.ok(tableHTML);
-};
-export const getLocationConfigTableBody = async (request, locationService) => {
-    const locations = locationService.allLocationIds("TOPOLOGICAL" /* SortType.TOPOLOGICAL */);
-    const tableHTML = html_tableBody(locationService, locations);
-    return responses.ok(tableHTML);
-};
-export const getRenameLocationRow = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
     if (Number.isNaN(locationId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
+    }
+    const success = locationService.deleteLocation(locationId);
+    if (!success) {
+        return Response.badRequest();
+    }
+    return Response.ok();
+};
+export const makeLocationFirstLocation = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
+    }
+    locationService.setFirstLocationId(locationId);
+    return Response.ok();
+};
+export const setInfoOnMandskabPage = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
+    const form = parseForm(request.body);
+    const info = form["info"];
+    if (info === undefined) {
+        return Response.badRequest();
+    }
+    locationService.setMandskabPageInfo(info);
+    return Response.ok();
+};
+// ========================== Getting HTML for Locations ==========================
+export const getLocationConfigTableRow = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
+    }
+    const tableHTML = html_row(locationService, locationId);
+    return Response.ok(tableHTML);
+};
+export const getLocationConfigTable = async (_request, locationService) => {
+    const locations = locationService.allLocationIds("TOPOLOGICAL" /* SortType.TOPOLOGICAL */);
+    const tableHTML = html_table(locationService, locations);
+    return Response.ok(tableHTML);
+};
+export const getLocationConfigTableBody = async (_request, locationService) => {
+    const locations = locationService.allLocationIds("TOPOLOGICAL" /* SortType.TOPOLOGICAL */);
+    const tableHTML = html_tableBody(locationService, locations);
+    return Response.ok(tableHTML);
+};
+export const getRenameLocationRow = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"]);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
     }
     const tableHTML = html_renameLocationRow(locationService, locationId);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 const html_row = (locationService, locationId) => {
     const location = locationService.locationInfo(locationId);

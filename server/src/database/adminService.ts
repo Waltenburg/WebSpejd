@@ -1,4 +1,4 @@
-import { Database, ServiceBase, SETTINGS_TABLE } from "./database";
+import { Database, ServiceBase, SETTINGS_TABLE } from "./database.js";
 import { User } from "@webspejd/core/types";
 
 export class AdminService extends ServiceBase {

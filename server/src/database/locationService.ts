@@ -1,5 +1,5 @@
 import { Marked, Token, Tokens } from "marked";
-import { LOCATION_TABLE, ServiceBase, SETTINGS_TABLE } from "./database";
+import { LOCATION_TABLE, ServiceBase, SETTINGS_TABLE } from "./database.js";
 import { Location, Route } from "@webspejd/core/types";
 
 export const enum SortType {
@@ -235,6 +235,18 @@ export class LocationService extends ServiceBase {
 
         const rows = this.prepare(`SELECT id FROM ${LOCATION_TABLE.TABLE_NAME} ORDER BY ${orderBy}`).all() as { id: number }[];
         return rows.map((row) => row.id);
+    }
+
+    /**
+     * Get all locations.
+     *
+     * @param sortType the sorting of the locations
+     * @return all locations available.
+     */
+    allLocations(sortType: SortType = SortType.ID): Location[] {
+        return this.allLocationIds(sortType)
+            .map(locationId => this.locationInfo(locationId))
+            .filter(location => location !== undefined);
     }
 
     /**

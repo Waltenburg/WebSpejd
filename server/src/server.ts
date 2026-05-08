@@ -1,39 +1,39 @@
-import 'source-map-support/register';
+import 'source-map-support/register.js';
 
 import * as http from 'http'
 
 // ====== ENDPOINTS ======
-import { Endpoints } from '@webspejd/core/endpoints';
+import { Endpoints } from '@webspejd/core/endpoints.js';
 
 // ====== Core server components ======
-import { User, UserType, UserCache } from './users';
-import { Router, parseForm, Request } from "./request";
-import { UpdateService, AdminService, PatrolService, LocationService, Database } from "./databaseBarrel";
-import * as responses from "./response";
+import { UserType, UserCache } from './users.js';
+import { Router, parseForm, Request } from "./request.js";
+import { UpdateService, AdminService, PatrolService, LocationService, Database } from "./databaseBarrel.js";
+import { Response, send_response } from "./response.js";
 
 // ====== Utilities ======
-import { Command } from 'commander';
 import { inspect } from 'util';
+import * as zod from "zod";
+import * as validation from "@webspejd/core/validation.js";
 
 // ====== Pages and HTML generation ======
-import * as pages from "./endpointHandlers/pages";
-import * as LocationConfigHandler from './endpointHandlers/LocationConfigHandler';
-import * as LocationStatusHandler from './endpointHandlers/locationStatusHandler';
-import * as RouteConfigHandler from './endpointHandlers/RouteConfigHandler';
-import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler';
-import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler';
-import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler';
-import * as LocationPasswordHandler from './endpointHandlers/locationPasswordHandler';
-import * as LogsHandler from './endpointHandlers/logsHandler';
-import * as LocationRouteGraphHandler from './endpointHandlers/locationRouteGraphHandler';
-import { LogService } from './database/logService';
+import * as pages from "./endpointHandlers/pages.js";
+import * as LocationConfigHandler from './endpointHandlers/LocationConfigHandler.js';
+import * as LocationStatusHandler from './endpointHandlers/locationStatusHandler.js';
+import * as RouteConfigHandler from './endpointHandlers/RouteConfigHandler.js';
+import * as PatrolStatusHandler from './endpointHandlers/patrolStatusHandler.js';
+import * as PatrolUpdatesHandler from './endpointHandlers/patrolUpdatesHandler.js';
+import * as PatrolConfigHandler from './endpointHandlers/patrolConfigHandler.js';
+import * as LocationPasswordHandler from './endpointHandlers/locationPasswordHandler.js';
+import * as LogsHandler from './endpointHandlers/logsHandler.js';
+import * as LocationRouteGraphHandler from './endpointHandlers/locationRouteGraphHandler.js';
+import { LogService } from './database/logService.js';
 
 // ========== Miscenlaneous Types ========== 
-import type { PatrolUpdate, PatrolUpdateWithNoId, Route} from '@webspejd/core/types';
-import type { MandskabData, PatrolUpdateFromMandskab } from '@webspejd/core/responseTypes';
-import { SETTINGS_TABLE } from './database/database';
-import { readFileSync, writeFileSync } from 'fs';
-import { toCSVString } from './database/export';
+import type { PatrolUpdateWithNoId } from '@webspejd/core/types.js';
+import type { MandskabData, PatrolUpdateFromMandskab } from '@webspejd/core/responseTypes.js';
+import { SETTINGS_TABLE } from './database/database.js';
+import { readFileSync } from 'fs';
 import { env } from 'process';
 
 
@@ -44,10 +44,7 @@ const enum SETTINGS {
     MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB = 30 * 1000, // Milliseconds
 }
 
-type Response = responses.Response;
-
 class Server {
-    private db: Database;
     private adminService: AdminService;
     private locationService: LocationService;
     private patrolService: PatrolService;
@@ -66,7 +63,6 @@ class Server {
         locationService: LocationService, patrolService: PatrolService,
         updateService: UpdateService) {
 
-        this.db = db;
         this.adminService = adminService;
         this.locationService = locationService;
         this.patrolService = patrolService;
@@ -84,13 +80,13 @@ class Server {
 
         http.createServer(async (req, connection) => {
             const startTime = Date.now();
-            let response: responses.Response;
+            let response: Response;
             let errorMessage = "";
             let severity = "info";
 
             try {
                 response = await this.router.handleRequest(req);
-                responses.send(connection, response);
+                send_response(connection, response);
             } catch (softError) {
                 console.error(softError);
                 errorMessage = softError instanceof Error ? softError.message : String(softError);
@@ -107,7 +103,7 @@ class Server {
             }
 
             try {
-                const status = response.status_code ?? 0;
+                const status = 200; // TODO: fix
 
                 const sensitiveHeaders = new Set([
                     "password",
@@ -182,7 +178,7 @@ class Server {
             .route(Endpoints.MasterPatrolPage, UserType.Master, pages.patrolPage, this.patrolService, this.locationService, this.updateService)
             .route(Endpoints.MasterAddPatrolUpdatePage, UserType.Master, pages.addPatrolUpdatePage, this.patrolService, this.locationService)
             .route(Endpoints.MasterLocationPage, UserType.Master, pages.locationPage, this.locationService, this.updateService, this.patrolService)
-            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => responses.ok())
+            .route(Endpoints.MasterHeartbeat, UserType.Master, async () => Response.ok())
             .route(Endpoints.GetLocationRouteGraphData, UserType.Master, LocationRouteGraphHandler.getLocationRouteGraphData, this.locationService, this.patrolService, this.updateService)
             .route(Endpoints.SetLocationRouteGraphLayout, UserType.Master, LocationRouteGraphHandler.setLocationRouteGraphLayout, this.locationService)
             
@@ -258,18 +254,16 @@ class Server {
         const identifier = req.headers['id'];
         const locationId = this.adminService.authenticate(password);
         if (locationId === undefined) {
-            return responses.unauthorized();
+            return Response.unauthorized();
         }
         const user = this.users.addUser(identifier, locationId);
-        return responses.ok(null, {
-            "isMaster": user.isMasterUser()
-        });
+        return Response.ok()
+            .setHeader("isMaster", user.isMasterUser().toString());
     }
 
     logout = async (_request: Request): Promise<Response> => {
-        let response = responses.redirect("/");
-        response.headers["Set-Cookie"] = "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        return response;
+        return Response.redirect("/")
+            .setHeader("Set-Cookie", "identifier=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
     }
 
     // TODO: Update to work with new location routing
@@ -280,8 +274,10 @@ class Server {
         const user = req.user;
 
         const location = this.locationService.locationInfo(user.locationId);
-        if (location === undefined)
-            return responses.not_found(`post ${user.locationId} not found`);
+        if (location === undefined) {
+            return Response.notFound()
+                .setContent(`post ${user.locationId} not found`);
+        }
 
         let towardsLocation = this.locationService.patrolsTowardsLocation(user.locationId);
 
@@ -294,7 +290,10 @@ class Server {
         const patrolsOnLocation = this.locationService.patrolsOnLocation(user.locationId);
         const routesFromLocation = this.locationService.allRoutesFromLocation(user.locationId)
         const openRoutes = routesFromLocation.filter(route => route.is_open);
-        const nextLocations = openRoutes.map(route => this.locationService.locationInfo(route.toLocationId));
+        const nextLocations = openRoutes
+            .map(route => this.locationService.locationInfo(route.toLocationId))
+            .filter(location => location !== undefined);
+
         const latestUpdates = this.updateService.updatesAtLocation(user.locationId, SETTINGS.NUMBER_OF_UPDATES_SEND_TO_CLIENT)
             .map(update => {
                 return {
@@ -313,12 +312,12 @@ class Server {
 
         };
 
-        return responses.ok(JSON.stringify(data));
+        return Response.ok().setContent(JSON.stringify(data));
     }
 
     infoForMandskab = async (_req: Request): Promise<Response> => {
         const info = this.locationService.getParsedMandskabPageInfo();
-        return responses.ok(info);
+        return Response.ok().setContent(info);
     }
 
     tryGet<In, Out>(input: In, map: (input: In) => Out | undefined, errorHandler?: (error: Error) => void): Out | undefined {
@@ -326,7 +325,7 @@ class Server {
             const result = map(input);
             return result;
         } catch (error) {
-            if (errorHandler) {
+            if (errorHandler && error instanceof Error) {
                 errorHandler(error);
             }
             return undefined;
@@ -348,8 +347,9 @@ class Server {
             (err) => console.error("Error parsing update string:", err)
         ) as PatrolUpdateFromMandskab | undefined;
 
-        if (!update)
-            return responses.response_code(400);
+        if (!update) {
+            return Response.badRequest();
+        }
 
         const checkin: PatrolUpdateWithNoId = {
             time: new Date(),
@@ -360,57 +360,20 @@ class Server {
 
         const thisIsFirstLocation = user.locationId === this.locationService.getFirstLocationId();
         if (!this.updateService.isPatrolUpdateValid(checkin, true, true, thisIsFirstLocation)) {
-            return responses.response_code(400);
+            return Response.badRequest();
         }
 
         const checkinID = this.updateService.updatePatrol(checkin);
 
         //Send id back to client
-        return responses.ok("", {
-            "checkinID": checkinID
-        });
-
+        return Response.ok()
+            .setHeader("checkinID", checkinID.toString());
     }
 
-    // This one is currently not in use
-    // makeMasterPatrolUpdate = async (request: Request): Promise<Response> => {
-    //     const formData = parseForm(request.body);
-    //     const datetimeStr = formData['datetime'];
-
-    //     let patrolUpdate: PatrolUpdateWithNoId = {
-    //         time: new Date(datetimeStr),
-    //         patrolId: Number.parseInt(formData['patrol']),
-    //         currentLocationId: 0,
-    //         targetLocationId: 0
-    //     }
-
-    //     const type = formData['type']; // "checkin" or "checkout"
-    //     if (type === 'checkin') {
-    //         const locationId = Number.parseInt(formData['singleLocation']);
-    //         patrolUpdate.currentLocationId = locationId;
-    //         patrolUpdate.targetLocationId = locationId;
-    //     } else if (type === 'checkout') {
-    //         const fromLocationId = Number.parseInt(formData['fromLocation']);
-    //         const toLocationId = Number.parseInt(formData['toLocation']);
-    //         patrolUpdate.currentLocationId = fromLocationId;
-    //         patrolUpdate.targetLocationId = toLocationId;
-    //     } else {
-    //         return responses.response_code(400);
-    //     }
-
-
-    //     // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
-    //     if (!this.updateService.isPatrolUpdateValid(patrolUpdate, false, false, true, false)) {
-    //         console.error("Invalid patrol update in masterCheckin:", patrolUpdate);
-    //         return responses.response_code(400);
-    //     }
-
-    //     this.updateService.updatePatrolWithTime(patrolUpdate);
-
-    //     return responses.ok();
-    // }
-
     makeMasterBulkPatrolUpdates = async (request: Request): Promise<Response> => {
+        if(request.body === undefined) {
+            return Response.badRequest();
+        }
         const formData = parseForm(request.body);
         const datetimeStr = formData['datetime'];
         const type = formData['type']; // "checkin" or "checkout"
@@ -422,11 +385,11 @@ class Server {
         if (type === 'checkin'){
             currentLocationId = Number.parseInt(formData['singleLocation']);
             targetLocationId = currentLocationId;
-        }else if (type === 'checkout'){
+        } else if (type === 'checkout'){
             currentLocationId = Number.parseInt(formData['fromLocation']);
             targetLocationId = Number.parseInt(formData['toLocation']);
-        }else {
-            return responses.response_code(400);
+        } else {
+            return Response.badRequest();
         }
 
         const patrolUpdates: PatrolUpdateWithNoId[] = patrolIds.map((patrolId: number) => {
@@ -438,49 +401,55 @@ class Server {
             };
         });
 
-        // This checkin is made by an admin, so we skip route validation and current equals target check. Also, we allow the target to be the first location.
+        // This checkin is made by an admin, so we skip route validation and
+        // current equals target check. Also, we allow the target to be the
+        // first location.
         const allValid = patrolUpdates.every(update => this.updateService.isPatrolUpdateValid(update, false, false, true, false));
         if (!allValid) {
             console.error("One or more invalid patrol updates in master bulk update:", patrolUpdates);
-            return responses.response_code(400);
+            return Response.badRequest();
         }
 
         this.updateService.batchUpdatePatrol(patrolUpdates);
 
-        return responses.ok();
-
-
+        return Response.ok();
     }
 
 
     masterDeletePatrolUpdate = async (request: Request): Promise<Response> => {
+        if(request.body === undefined) {
+            return Response.badRequest();
+        }
         const form = parseForm(request.body);
         const updateId = Number.parseInt(form["patrolUpdateId"]);
         const succes = this.updateService.deleteUpdate(updateId);
         if (!succes) {
-            return responses.not_found("Patrol update not found");
+            return Response.notFound().setContent("Patrol update not found");
         }
-        return responses.ok();
+        return Response.ok();
     }
 
     mandskabDeleteUpdate = async (request: Request): Promise<Response> => {
-        const params = request.url.searchParams;
-        const checkinId = Number.parseInt(params.get("patrolUpdateId"));
+        const checkinId = validation.parseUrlParams(
+            zod.object({ patrolUpdateId: validation.AnyNumber }),
+            request.url
+        ).patrolUpdateId;
+
         const checkin = this.updateService.updateById(checkinId);
-        const locationIdAtCheckin = checkin?.currentLocationId;
+        if(checkin === undefined) {
+            return Response.notFound();
+        }
+
+        const locationIdAtCheckin = checkin.currentLocationId;
 
         const requestAndCheckinMatch = locationIdAtCheckin === request.user.locationId && locationIdAtCheckin != null;
-        const checkinIsRecent = checkin?.time.getTime() > Date.now() - SETTINGS.MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB;
+        const checkinIsRecent = checkin.time.getTime() > Date.now() - SETTINGS.MAX_AGE_OF_UPDATE_THAT_CAN_BE_DELETED_BY_MANDSKAB;
 
         if (requestAndCheckinMatch && checkinIsRecent) {
             this.updateService.deleteUpdate(checkinId);
-            return responses.ok();
+            return Response.ok();
         }
-        return responses.forbidden();
-    }
-
-    masterHeartbeat = async (_request: Request): Promise<Response> => {
-        return responses.ok();
+        return Response.forbidden();
     }
 
 }
@@ -515,9 +484,6 @@ async function main(): Promise<void> {
     const locationService = new LocationService(db);
     const patrolService = new PatrolService(db);
     const updateService = new UpdateService(db);
-
-    // const csvContent = toCSVString(updateService, patrolService, locationService);
-    // writeFileSync('Data.csv', csvContent);
 
     if (resetDatabase) {
         console.log("Resetting database: Deleting all patrol updates");

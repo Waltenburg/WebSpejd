@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 export class UpdateService extends ServiceBase {
     /** Converts from `DatabasePatrolUpdate` to `PatrolUpdate` as used in the rest of the application */
     convertFromDBPatrolUpdate(dbPatrolUpdate) {
@@ -151,6 +151,11 @@ export class UpdateService extends ServiceBase {
     allPatrolUpdatesIds() {
         const rows = this.prepare("SELECT id FROM PatrolUpdates").all();
         return rows.map((row) => row.id);
+    }
+    allPatrolUpdates() {
+        return this.allPatrolUpdatesIds()
+            .map(id => this.updateById(id))
+            .filter(update => update !== undefined);
     }
 }
 //# sourceMappingURL=updateService.js.map

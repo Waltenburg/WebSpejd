@@ -24,9 +24,10 @@ export const hxTrigger = (element: string, triggerName: string): string => {
     return `htmx.trigger(${element}, '${triggerName}')`;
 }
 
-export const formatLocationAnchor = (location: Location | null): string => {
-    if (location == null)
+export const formatLocationAnchor = (location: Location | undefined): string => {
+    if (location === undefined) {
         return "Ukendt lokation";
+    }
 
     return <a href={`${Endpoints.MasterLocationPage}?locationId=${location.id}`}
         class="hover-underline">
@@ -35,19 +36,20 @@ export const formatLocationAnchor = (location: Location | null): string => {
 }
 
 export const formatUpdateLocation = (locationService: LocationService, update: PatrolUpdate): string => {
-    if (update == null)
+    if (update == null) {
         return "Ukendt lokation";
-    
-    if(update.currentLocationId === update.targetLocationId){
+    }
+
+    if(update.currentLocationId === update.targetLocationId) {
         return <span>
             På {formatLocationAnchor(locationService.locationInfo(update.currentLocationId))}
         </span>;
-    }else {
+    } else {
         return <span>
             Mellem {formatLocationAnchor(locationService.locationInfo(update.currentLocationId))}
             og {formatLocationAnchor(locationService.locationInfo(update.targetLocationId))}
         </span>;
-    }      
+    }
 }
 
 export const formatPatrol = (patrolId: number, patrolService: PatrolService): string => {

@@ -1,4 +1,4 @@
-import { ServiceBase } from "./database";
+import { ServiceBase } from "./database.js";
 export class LogService extends ServiceBase {
     constructor(db) {
         super(db);

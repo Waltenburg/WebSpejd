@@ -1,5 +1,5 @@
-import { PatrolNotFoundError } from "../error";
-import { ServiceBase } from "./database";
+import { PatrolNotFoundError } from "../error.js";
+import { ServiceBase } from "./database.js";
 export class PatrolService extends ServiceBase {
     /**
     * Get information about patrol.
@@ -8,8 +8,9 @@ export class PatrolService extends ServiceBase {
     */
     patrolInfo(patrolId) {
         const patrol = this.prepare("SELECT * FROM patrol WHERE id = ?").get(patrolId);
-        if (!patrol)
+        if (!patrol) {
             throw new PatrolNotFoundError(patrolId);
+        }
         // @ts-expect-error - converting from integer to boolean
         patrol.udgået = patrol.udgået === 1;
         return patrol;

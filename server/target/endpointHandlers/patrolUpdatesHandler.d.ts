@@ -1,6 +1,5 @@
-import { PatrolService, LocationService, UpdateService } from "../databaseBarrel";
-type Request = import('../request').Request;
-import * as responses from '../response';
-export declare const getPatrolUpdatesTable: (request: Request, updateService: UpdateService, locationService: LocationService, patrolService: PatrolService) => Promise<responses.Response>;
-export {};
+import { PatrolService, LocationService, UpdateService } from "../databaseBarrel.js";
+import { Request } from "../request.js";
+import { Response } from '../response.js';
+export declare const getPatrolUpdatesTable: (request: Request, updateService: UpdateService, locationService: LocationService, patrolService: PatrolService) => Promise<Response>;
 //# sourceMappingURL=patrolUpdatesHandler.d.ts.map

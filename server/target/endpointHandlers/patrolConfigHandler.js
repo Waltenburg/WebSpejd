@@ -1,89 +1,107 @@
 import * as elements from 'typed-html';
-import * as responses from '../response';
-import { parseForm } from '../request';
-import { getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral';
+import { Response } from '../response.js';
+import { parseForm } from '../request.js';
+import { getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral.js';
 // ========================== Endpoint Handlers for Patrols CRUD operations  ==========================
 export const addPatrol = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const number = form["number"];
     const name = form["name"];
     if (!number || !name) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const patrolId = patrolService.addPatrol(number, name);
     if (patrolId === null) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 };
 export const changePatrolStatus = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const patrolId = Number.parseInt(form["patrolId"]);
     const udgået = form["udgået"] === "true";
     if (Number.isNaN(patrolId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     patrolService.changePatrolStatus(patrolId, udgået);
-    return responses.ok();
+    return Response.ok();
 };
 export const deletePatrol = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const patrolId = Number.parseInt(form["patrolId"]);
     if (Number.isNaN(patrolId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const success = patrolService.deletePatrol(patrolId);
     if (!success) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 };
 export const alterPatrolNumberAndName = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const patrolId = Number.parseInt(form["patrolId"]);
     const number = form["number"];
     const name = form["name"];
     if (Number.isNaN(patrolId) || !number || !name) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const success = patrolService.alterPatrolNumberAndName(patrolId, number, name);
     if (!success) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 };
 // ========================== Getting HTML for Patrols ==========================
 export const getPatrolConfigTableRow = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const patrolId = Number.parseInt(form["patrolId"]);
     if (Number.isNaN(patrolId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const patrol = patrolService.patrolInfo(patrolId);
     if (!patrol) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const tableHTML = row(patrol);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
-export const getPatrolConfigTableBody = async (request, patrolService) => {
+export const getPatrolConfigTableBody = async (_request, patrolService) => {
     const patrols = patrolService.allPatrolIds().map(id => patrolService.patrolInfo(id));
     const tableHTML = tableBody(patrolService, patrols);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
-export const getPatrolConfigTable = async (request, patrolService) => {
+export const getPatrolConfigTable = async (_request, patrolService) => {
     const patrols = patrolService.allPatrolIds().map(id => patrolService.patrolInfo(id));
     const tableHTML = table(patrolService, patrols);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 export const getRenamePatrolRow = async (request, patrolService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const patrolId = Number.parseInt(form["patrolId"]);
     if (Number.isNaN(patrolId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const tableHTML = html_renamePatrolRow(patrolService, patrolId);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 // ========================== HTML Generators for Patrols ==========================
 var ids;

@@ -1,10 +1,9 @@
-import { UpdateService } from "./database/updateService";
-import { AdminService } from "./database/adminService";
-import { PatrolService } from "./database/patrolService";
-import { LocationService } from "./database/locationService";
+import { UpdateService } from "./database/updateService.js";
+import { AdminService } from "./database/adminService.js";
+import { PatrolService } from "./database/patrolService.js";
+import { LocationService } from "./database/locationService.js";
 
-import { ServiceBase } from "./database/database";
-import { Database } from "./database/database";
+import { ServiceBase, Database } from "./database/database.js";
 
 export {
     UpdateService,

@@ -1,15 +1,21 @@
 import * as elements from "typed-html"
-import type { PatrolUpdate } from "@webspejd/core/types"
-import { PatrolService, LocationService, UpdateService } from "../databaseBarrel"
-import { formatPatrol, formatUpdateLocation } from "./HTMLGeneral";
-import { Endpoints } from "@webspejd/core/endpoints";
+import type { PatrolUpdate } from "@webspejd/core/types.js"
+import { PatrolService, LocationService, UpdateService } from "../databaseBarrel.js"
+import { formatPatrol, formatUpdateLocation } from "./HTMLGeneral.js";
+import { Endpoints } from "@webspejd/core/endpoints.js";
+import { Request } from "../request.js";
+import { Response } from '../response.js';
+import * as zod from "zod";
+import * as validation from "@webspejd/core/validation.js";
 
-type Request = import('../request').Request;
-import * as responses from '../response';
+const PatrolUpdatesTableParams = zod.object({
+    locationId: validation.AnyNumber,
+    patrolId: validation.AnyNumber,
+});
+
 // =================================== Endpoint handler for Patrol Updates Table =======================================
-export const getPatrolUpdatesTable = async (request: Request, updateService: UpdateService, locationService: LocationService, patrolService: PatrolService): Promise<responses.Response> => {
-    const locationId = Number.parseInt(request.url.searchParams.get("locationId"));
-    const patrolId = Number.parseInt(request.url.searchParams.get("patrolId"));
+export const getPatrolUpdatesTable = async (request: Request, updateService: UpdateService, locationService: LocationService, patrolService: PatrolService): Promise<Response> => {
+    const { locationId, patrolId } = validation.parseUrlParams(PatrolUpdatesTableParams, request.url);
     const searchParamStr = request.url.searchParams.toString();
 
     let skipLocation: boolean = false;
@@ -27,17 +33,13 @@ export const getPatrolUpdatesTable = async (request: Request, updateService: Upd
         updates = updateService.lastUpdates(20);
 
     const html = PatrolUpdateTable(updates, searchParamStr, skipLocation, skipPatrol, locationService, patrolService);
-    return responses.ok(html);
+    return Response.ok().setContent(html);
 }
 
 // =================================== HTML Generation Functions =======================================
 enum ids {
     table = "patrol-updates-table",
     tableBody = "patrol-updates-table-body"
-}
-
-enum classes {
-    deletingRow = "deleting-patrol-update-row"
 }
 
 

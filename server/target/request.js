@@ -1,5 +1,5 @@
-import { User } from "./users";
-import * as responses from "./response";
+import { User } from "./users.js";
+import { Response } from "./response.js";
 export class Router {
     constructor(address, port, users) {
         this.users = users;
@@ -15,14 +15,6 @@ export class Router {
         });
         return this;
     }
-    // route(path: string, userType: UserType, func: RouteFunction): Router {
-    //     this.routes.push({
-    //         userType: userType,
-    //         path: path,
-    //         func: func
-    //     });
-    //     return this;
-    // }
     /**
      * Registers a route with dependency injection.
      *
@@ -48,7 +40,7 @@ export class Router {
      * @returns `this`
      */
     file(path, file) {
-        return this.route(path, 0 /* UserType.None */, async (_request) => await responses.file(file));
+        return this.route(path, 0 /* UserType.None */, async (_request) => await Response.file(file));
     }
     /**
      * Handle incoming http request
@@ -66,23 +58,27 @@ export class Router {
             if (assetDir != undefined) {
                 let relativePath = path.slice(assetDir.urlPath.length + 1);
                 let fullPath = `${assetDir.dir}/${relativePath}`;
-                return responses.file(fullPath);
+                return await Response.file(fullPath);
             }
             // Function routes
             let route = this.routes
                 .find((route) => route.path === path);
             if (route === undefined) {
-                return responses.not_found("Page not found");
+                return Response.notFound().setContent("Page not found");
             }
             //TODO: Autherization check is failing
             if (!this.isAuthorized(request, route)) {
-                return responses.unauthorized("Not authorized");
+                return Response.unauthorized().setContent("Not authorized");
             }
             return await route.func(request);
         }
         catch (err) {
             console.error(err);
-            return responses.server_error(err);
+            let response = Response.serverError();
+            if (err instanceof Error) {
+                response.setContent(err.toString());
+            }
+            return response;
         }
     }
     /**
@@ -93,7 +89,6 @@ export class Router {
      * @returns `true` if request is authorized, `false` otherwise
      */
     isAuthorized(request, route) {
-        return true;
         const userType = route.userType;
         const user = request.user;
         return (userType === 2 /* UserType.Master */ && user.isMasterUser())
@@ -130,7 +125,7 @@ export class Router {
             ? new User(-1)
             : this.users.userFromIdentifier(userIdentifier);
         // Get body asynchronously
-        let body = null;
+        let body = undefined;
         if (request.method === "POST" || request.method === "PUT") {
             const chunks = [];
             for await (const chunk of request) {

@@ -1,53 +1,74 @@
 import * as elements from 'typed-html';
-import * as responses from '../response';
-import { parseForm } from '../request';
+import { Response } from '../response.js';
+import { parseForm } from '../request.js';
 // ========================== Endpoint Handlers for Routes CRUD operations  ==========================
 export const addRoute = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const fromId = Number.parseInt(form["fromLocationId"]);
     const toId = Number.parseInt(form["toLocationId"]);
     const open = form["isOpen"] === "on" || form["isOpen"] === "true";
     if (Number.isNaN(fromId) || Number.isNaN(toId) || fromId === toId) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    if (locationService.addRoute(fromId, toId, open))
-        return responses.ok();
-    return responses.response_code(400);
+    const success = locationService.addRoute(fromId, toId, open);
+    if (!success) {
+        return Response.badRequest();
+    }
+    return Response.ok();
 };
 export const changeRouteStatus = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
     const open = (form["open"] ?? request.url.searchParams.get("open")) === "true";
-    if (!Number.isNaN(routeId)) {
-        const result = locationService.changeRouteStatus(routeId, open);
-        if (result)
-            return responses.ok();
+    if (Number.isNaN(routeId)) {
+        return Response.badRequest();
     }
-    return responses.response_code(400);
+    const result = locationService.changeRouteStatus(routeId, open);
+    if (!result) {
+        return Response.badRequest();
+    }
+    return Response.ok();
 };
 export const deleteRoute = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
-    if (!Number.isNaN(routeId)) {
-        locationService.deleteRoute(routeId);
-        return responses.ok();
+    if (Number.isNaN(routeId)) {
+        return Response.badRequest();
     }
-    return responses.response_code(400);
+    locationService.deleteRoute(routeId);
+    return Response.ok();
 };
 // ========================== Getting HTML for Routes ==========================
 export const getRouteConfigTableRow = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const routeId = Number.parseInt(form["routeId"] ?? request.url.searchParams.get("id"));
     const showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
     const showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
-    if (!Number.isNaN(routeId)) {
-        const route = locationService.routeInfo(routeId);
-        if (route)
-            return responses.ok(row(locationService, route, !showFrom, !showTo));
+    if (Number.isNaN(routeId)) {
+        return Response.badRequest();
     }
-    return responses.response_code(400);
+    const route = locationService.routeInfo(routeId);
+    if (!route) {
+        return Response.badRequest();
+    }
+    return Response.ok(row(locationService, route, !showFrom, !showTo));
 };
 export const getRouteConfigTable = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     let showFrom = form["showFrom"] === "true" || request.url.searchParams.get("showFrom") === "true";
     let showTo = form["showTo"] === "true" || request.url.searchParams.get("showTo") === "true";
@@ -69,7 +90,7 @@ export const getRouteConfigTable = async (request, locationService) => {
         routes = locationService.allRoutes();
     // const routes = locationService.allRoutes();
     const tableHTML = table(locationService, routes, locationId, !showFrom, !showTo, selectedFrom, selectedTo);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 // ========================== HTML Generators for Routes ==========================
 var ids;

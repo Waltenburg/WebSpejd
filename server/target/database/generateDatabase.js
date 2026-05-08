@@ -6,8 +6,7 @@ if (!existsSync('./server.config.json')) {
     process.exit(1);
 }
 const config = JSON.parse(readFileSync('./server.config.json', 'utf-8'));
-console.log(__dirname);
-const SQLPath = "./SQLite/dbSchema.sql";
+const SQLPath = "./assets/sql/schema.sql";
 const dbPath = config["databasePath"];
 const schemaSQL = readFileSync(SQLPath, 'utf8');
 const defaultMasterPassword = "master";

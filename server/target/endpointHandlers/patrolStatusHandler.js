@@ -1,9 +1,12 @@
 import * as elements from 'typed-html';
-import * as responses from '../response';
-import { parseForm } from '../request';
-import { formatPatrol, formatUpdateLocation, getElementById } from './HTMLGeneral';
+import { Response } from '../response.js';
+import { parseForm } from '../request.js';
+import { formatPatrol, formatUpdateLocation, getElementById } from './HTMLGeneral.js';
 // ========================== Endpoint Handler for Patrol Status ==========================
 export const getPatrolStatusTable = async (request, locationService, patrolService, updateService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const includeInactivePatrols = form["includeInactivePatrols"] === "true" || form["includeInactivePatrols"] === "on";
     const patrolIds = patrolService.allPatrolIds();
@@ -15,7 +18,7 @@ export const getPatrolStatusTable = async (request, locationService, patrolServi
     if (!includeInactivePatrols)
         patrols = patrols.filter(patrol => patrol.udgået === false);
     const html = html_patrolsStatusTable(patrols, includeInactivePatrols, locationService, patrolService);
-    return responses.ok(html);
+    return Response.ok(html);
 };
 // =========================== HTML Generation Functions ==========================
 var ids;

@@ -1,4 +1,4 @@
-import { ServiceBase, PATROL_TABLE, PATROL_UPDATE_TABLE, LOCATION_TABLE, ROUTE_TABLE} from "./database";
+import { ServiceBase, PATROL_TABLE, PATROL_UPDATE_TABLE, LOCATION_TABLE, ROUTE_TABLE} from "./database.js";
 import { PatrolUpdate, PatrolUpdateWithNoId } from "@webspejd/core/types";
 
 /** Information about a patrol checkin or checkout.\
@@ -187,6 +187,11 @@ export class UpdateService extends ServiceBase {
         const rows = this.prepare("SELECT id FROM PatrolUpdates").all() as { id: number }[];
         return rows.map((row) => row.id);
     }
-      
+
+    allPatrolUpdates(): PatrolUpdate[] {
+        return this.allPatrolUpdatesIds()
+            .map(id => this.updateById(id))
+            .filter(update => update !== undefined);
+    }
 
 }

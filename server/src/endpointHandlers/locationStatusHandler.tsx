@@ -1,13 +1,10 @@
 import * as elements from 'typed-html';
-import { LocationService } from '../databaseBarrel';
-import { Endpoints } from '@webspejd/core/endpoints';
-import { formatLocationAnchor } from './HTMLGeneral';
-import * as responses from '../response';
-import { Request } from '../request';
-import { SortType } from '../database/locationService';
-
-type Response = responses.Response;
-
+import { LocationService } from '../databaseBarrel.js';
+import { Endpoints } from '@webspejd/core/endpoints.js';
+import { formatLocationAnchor } from './HTMLGeneral.js';
+import { Response } from '../response.js';
+import { Request } from '../request.js';
+import { SortType } from '../database/locationService.js';
 
 // ========================== Endpoint Handler for Location Status ==========================
 export const getLocationStatusTable = async (request: Request, locationService: LocationService): Promise<Response> => {
@@ -18,11 +15,10 @@ export const getLocationStatusTable = async (request: Request, locationService: 
         locationIds = [locationId];
     } else
         locationIds = locationService.allLocationIds(SortType.TOPOLOGICAL);
-    
 
     const searchParamStr = request.url.searchParams.toString();
     const tableHTML = html_locationStatusTable(locationService, locationIds, searchParamStr);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 };
 
 // Helper function to get location with patrol counts

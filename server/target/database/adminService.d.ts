@@ -1,4 +1,4 @@
-import { Database, ServiceBase } from "./database";
+import { Database, ServiceBase } from "./database.js";
 export declare class AdminService extends ServiceBase {
     constructor(db: Database);
     /**

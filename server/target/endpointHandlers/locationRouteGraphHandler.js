@@ -1,5 +1,5 @@
-import { parseForm } from '../request';
-import * as responses from '../response';
+import { parseForm } from '../request.js';
+import { Response } from '../response.js';
 const NODE_MIN_SIZE = 18;
 const NODE_SIZE_SCALE = 8;
 const EDGE_MIN_WIDTH = 1;
@@ -127,11 +127,13 @@ export const getLocationRouteGraphData = async (_request, locationService, patro
             title: `Patruljer på rute: ${patrolsOnRoute}\nStatus: ${routeExists ? (routeOpen ? 'Åben' : 'Lukket') : 'Rute ikke oprettet'}`
         };
     });
-    return responses.ok(JSON.stringify({ nodes, edges, firstLocationId }), {
-        'Content-Type': 'application/json'
-    });
+    return Response.ok(JSON.stringify({ nodes, edges, firstLocationId }))
+        .setHeader("Content-Type", "application/json");
 };
 export const setLocationRouteGraphLayout = async (request, locationService) => {
+    if (request.body === undefined) {
+        return Response.badRequest();
+    }
     const contentType = request.headers['content-type'] ?? '';
     let layoutRaw = '';
     if (contentType.includes('application/json')) {
@@ -142,10 +144,10 @@ export const setLocationRouteGraphLayout = async (request, locationService) => {
         layoutRaw = formData['layout'];
     }
     if (!layoutRaw) {
-        return responses.response_code(400, 'Missing layout payload');
+        return Response.badRequest('Missing layout payload');
     }
     const parsedLayout = parseLayout(layoutRaw);
     locationService.setLocationRouteGraphLayout(JSON.stringify(parsedLayout));
-    return responses.ok();
+    return Response.ok();
 };
 //# sourceMappingURL=locationRouteGraphHandler.js.map

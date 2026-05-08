@@ -1,7 +1,7 @@
-import { User, UserCache, UserType } from "./users";
+import { User, UserCache, UserType } from "./users.js";
 import * as http from 'http';
-import * as responses from "./response";
-import type { ServiceBase } from "./databaseBarrel";
+import { Response } from "./response.js";
+import type { ServiceBase } from "./databaseBarrel.js";
 export interface Request {
     user: User;
     url: URL;
@@ -63,7 +63,6 @@ export declare class Router {
     parseRequest(request: http.IncomingMessage): Promise<Request>;
 }
 export declare const parseForm: (body: string | null) => Record<string, string>;
-type Response = responses.Response;
 type RouteFunction<T extends ServiceBase[]> = (request: Request, ...services: T) => Promise<Response>;
 interface Route {
     userType: UserType;

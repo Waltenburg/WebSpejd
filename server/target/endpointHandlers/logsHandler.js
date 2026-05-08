@@ -1,4 +1,4 @@
-import * as responses from "../response";
+import { Response } from "../response.js";
 export const getLogs = async (request, logService) => {
     const params = request.url.searchParams;
     const severity = params.get("severity") ?? undefined;
@@ -25,8 +25,7 @@ export const getLogs = async (request, logService) => {
         limit: toNumber(limitStr) ?? 100,
         offset: toNumber(offsetStr),
     });
-    return responses.ok(JSON.stringify(logs), {
-        "Content-Type": "application/json",
-    });
+    return Response.ok(JSON.stringify(logs))
+        .setHeader("Content-Type", "application/json");
 };
 //# sourceMappingURL=logsHandler.js.map

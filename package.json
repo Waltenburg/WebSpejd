@@ -15,6 +15,7 @@
         "start": "node server/target/server.js",
         "build": "npm run build -w core -w server -w client",
         "clean": "rm -rf */tsconfig.tsbuildinfo core/target client/target server/target",
-        "build:watch": "npx tsc --build --watch -w core -w server -w client"
+        "build:watch": "npx tsc --build --watch -w core -w server -w client",
+        "generateDatabase": "node server/target/database/generateDatabase.js"
     }
 }

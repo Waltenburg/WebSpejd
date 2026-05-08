@@ -1,14 +1,16 @@
 import * as elements from 'typed-html';
-import type { LocationService, PatrolService, UpdateService } from "../databaseBarrel";
-import type { Patrol, PatrolUpdate } from "@webspejd/core/types";
-import { Endpoints } from "@webspejd/core/endpoints";
-import * as responses from '../response';
-import { parseForm, Request } from '../request';
-
-import { formatPatrol, formatUpdateLocation, getElementById } from './HTMLGeneral';
+import type { LocationService, PatrolService, UpdateService } from "../databaseBarrel.js";
+import type { Patrol, PatrolUpdate } from "@webspejd/core/types.js";
+import { Endpoints } from "@webspejd/core/endpoints.js";
+import { Response } from '../response.js';
+import { parseForm, Request } from '../request.js';
+import { formatPatrol, formatUpdateLocation, getElementById } from './HTMLGeneral.js';
 
 // ========================== Endpoint Handler for Patrol Status ==========================
-export const getPatrolStatusTable = async (request: Request, locationService: LocationService, patrolService: PatrolService, updateService: UpdateService): Promise<responses.Response> => {
+export const getPatrolStatusTable = async (request: Request, locationService: LocationService, patrolService: PatrolService, updateService: UpdateService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const includeInactivePatrols = form["includeInactivePatrols"] === "true" || form["includeInactivePatrols"] === "on";
 
@@ -23,7 +25,7 @@ export const getPatrolStatusTable = async (request: Request, locationService: Lo
         patrols = patrols.filter(patrol => patrol.udgået === false);
 
     const html = html_patrolsStatusTable(patrols, includeInactivePatrols, locationService, patrolService);
-    return responses.ok(html);
+    return Response.ok(html);
 };
 
 

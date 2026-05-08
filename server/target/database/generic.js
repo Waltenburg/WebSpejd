@@ -1,3 +1,4 @@
+"use strict";
 // export enum PatrolUpdateType {
 //     CheckIn, CheckOut
 // }

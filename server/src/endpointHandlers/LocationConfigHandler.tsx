@@ -1,127 +1,157 @@
 import * as elements from 'typed-html';
-import { LocationService } from '../databaseBarrel';
-import { Endpoints } from '@webspejd/core/endpoints';
-import { formatLocationAnchor, getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral';
-import * as responses from '../response';
-import { parseForm } from '../request';
-import { Request } from '../request';
-import { SortType } from '../database/locationService';
-
-type Response = responses.Response;
+import { LocationService } from '../databaseBarrel.js';
+import { Endpoints } from '@webspejd/core/endpoints.js';
+import { formatLocationAnchor, getElementById, addClassToElement, removeClassFromElement, isClassOnElement, hxTrigger } from './HTMLGeneral.js';
+import { Response } from '../response.js';
+import { parseForm } from '../request.js';
+import { Request } from '../request.js';
+import { SortType } from '../database/locationService.js';
 
 // ========================== Endpoint Handlers for Locations CRUD operations  ==========================
 
 export const addLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const name = form["name"];
     const team = form["team"];
     const openText = form["open"];
     const open = openText === "on" || openText === "true";
     if (!name || !team || !openText) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
 
     const locationId = locationService.addLocation(name, team, open);
     if (locationId === null) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 }
 
 export const changeLocationStatus = async(request: Request, locationService: LocationService): Promise<Response> => {
-        const form = parseForm(request.body);
-        const locationId = Number.parseInt(form["locationId"])
-        const openText = form["open"];
-        const open = openText === "on" || openText === "true";
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
+    const form = parseForm(request.body);
+    const locationId = Number.parseInt(form["locationId"])
+    const openText = form["open"];
+    const open = openText === "on" || openText === "true";
 
-        if(Number.isNaN(locationId) || openText == null)
-            return responses.response_code(400);
+    if(Number.isNaN(locationId) || openText == null) {
+        return Response.badRequest();
+    }
 
-        const succes = locationService.changeLocationStatus(locationId, open);
-        if(!succes)
-            return responses.response_code(400);
-        return responses.ok();
+    const success = locationService.changeLocationStatus(locationId, open);
+    if(!success) {
+        return Response.badRequest();
+    }
+
+    return Response.ok();
 }
 
 export const renameLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
     const name = form["name"];
     const team = form["team"];
     if (Number.isNaN(locationId) || (!name && !team)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
-    const succes = locationService.renameLocation(locationId, name, team);
-    if (!succes) {
-        return responses.response_code(400);
+    const success = locationService.renameLocation(locationId, name, team);
+    if (!success) {
+        return Response.badRequest();
     }
-    return responses.ok();
+    return Response.ok();
 }
 
 export const deleteLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
+    }
 
-    const succes = locationService.deleteLocation(locationId);
-    if (!succes)
-        return responses.response_code(400);
+    const success = locationService.deleteLocation(locationId);
+    if (!success) {
+        return Response.badRequest();
+    }
 
-    return responses.ok();
+    return Response.ok();
 }
 
 export const makeLocationFirstLocation = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
+    }
     locationService.setFirstLocationId(locationId);
-    return responses.ok();
+    return Response.ok();
 }
 
 export const setInfoOnMandskabPage = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const info = form["info"];
-    if(info == null)
-        return responses.response_code(400);
-    
+    if(info === undefined) {
+        return Response.badRequest();
+    }
+
     locationService.setMandskabPageInfo(info);
-    return responses.ok();
+    return Response.ok();
 }
 // ========================== Getting HTML for Locations ==========================
 
 export const getLocationConfigTableRow = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
 
-    if (Number.isNaN(locationId))
-        return responses.response_code(400);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest();
+    }
 
     const tableHTML = html_row(locationService, locationId);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 }
 
-export const getLocationConfigTable = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getLocationConfigTable = async (_request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds(SortType.TOPOLOGICAL);
     const tableHTML = html_table(locationService, locations);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 }
 
-export const getLocationConfigTableBody = async (request: Request, locationService: LocationService): Promise<Response> => {
+export const getLocationConfigTableBody = async (_request: Request, locationService: LocationService): Promise<Response> => {
     const locations = locationService.allLocationIds(SortType.TOPOLOGICAL);
     const tableHTML = html_tableBody(locationService, locations);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 }
 
 export const getRenameLocationRow = async (request: Request, locationService: LocationService): Promise<Response> => {
+    if(request.body === undefined) {
+        return Response.badRequest();
+    }
     const form = parseForm(request.body);
     const locationId = Number.parseInt(form["locationId"]);
     if (Number.isNaN(locationId)) {
-        return responses.response_code(400);
+        return Response.badRequest();
     }
     const tableHTML = html_renameLocationRow(locationService, locationId);
-    return responses.ok(tableHTML);
+    return Response.ok(tableHTML);
 }
 
 
