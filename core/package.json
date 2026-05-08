@@ -1,0 +1,24 @@
+{
+    "name": "@webspejd/core",
+    "type": "module",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^18.15.10",
+        "chai": "^5.1.2",
+        "mocha": "^11.0.1",
+        "source-map-support": "^0.5.21",
+        "ts-node": "^10.9.1",
+        "typescript": "latest"
+    },
+    "dependencies": {
+        "zod": "4.0.0"
+    },
+    "scripts": {
+        "build": "npx tsc"
+    },
+    "files": [ "./src" ],
+    "exports": {
+        ".": "./target/index.js",
+        "./*": "./target/*"
+    }
+}

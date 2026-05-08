@@ -1,0 +1,1 @@
+{"version":3,"file":"logsHandler.d.ts","sourceRoot":"","sources":["../../src/endpointHandlers/logsHandler.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,YAAY,CAAC;AAC1C,OAAO,KAAK,SAAS,MAAM,aAAa,CAAC;AACzC,OAAO,EAAE,UAAU,EAAE,MAAM,wBAAwB,CAAC;AAEpD,eAAO,MAAM,OAAO,GAAU,SAAS,OAAO,EAAE,YAAY,UAAU,KAAG,OAAO,CAAC,SAAS,CAAC,QAAQ,CAgClG,CAAC"}

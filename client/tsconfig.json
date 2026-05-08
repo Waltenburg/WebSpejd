@@ -1,0 +1,16 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "strict": false,
+        "rootDir": "src",
+        "outDir": "target",
+        "baseUrl": ".",
+        "paths": {
+            "@webspejd/core/*": [ "../core/src/*" ]
+        }
+    },
+    "include": [ "src/*", "src/**/*" ],
+    "references": [
+        { "path": "../core/tsconfig.json" }
+    ]
+}
