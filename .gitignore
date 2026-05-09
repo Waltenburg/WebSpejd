@@ -1,6 +1,7 @@
 #My addings
-/target
-/test
+client/target
+core/target
+server/target
 
 # Logs
 logs
@@ -135,7 +136,5 @@ Deployed/data/ppMatrix.json
 *.txt
 *.db-wal
 *.db-shm
-SQLite/webspejd.db
-SQLite/data.csv
-SQLite/data.tsv
+webspejd.db
 server.config.json

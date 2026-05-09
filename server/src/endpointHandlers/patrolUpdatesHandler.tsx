@@ -9,8 +9,8 @@ import * as zod from "zod";
 import * as validation from "@webspejd/core/validation.js";
 
 const PatrolUpdatesTableParams = zod.object({
-    locationId: validation.AnyNumber,
-    patrolId: validation.AnyNumber,
+    locationId: zod.optional(validation.AnyNumber),
+    patrolId: zod.optional(validation.AnyNumber),
 });
 
 // =================================== Endpoint handler for Patrol Updates Table =======================================
@@ -22,15 +22,15 @@ export const getPatrolUpdatesTable = async (request: Request, updateService: Upd
     let skipPatrol: boolean = false;
     let updates: PatrolUpdate[];
 
-    if (!Number.isNaN(locationId)) {
+    if (locationId !== undefined) {
         updates = updateService.updatesAtLocation(locationId);
     }
-    else if (!Number.isNaN(patrolId)) {
+    else if (patrolId !== undefined) {
         updates = updateService.updatesOfPatrol(patrolId);
         skipPatrol = true;
-    }
-    else
+    } else {
         updates = updateService.lastUpdates(20);
+    }
 
     const html = PatrolUpdateTable(updates, searchParamStr, skipLocation, skipPatrol, locationService, patrolService);
     return Response.ok().setContent(html);

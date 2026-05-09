@@ -156,7 +156,10 @@ export const patrolPage = async (request: Request, patrolService: PatrolService,
 
 export const addPatrolUpdatePage = async (request: Request, patrolService: PatrolService, locationService: LocationService): Promise<Response> => {
     const { patrolId, locationId } = validation.parseUrlParams(
-        zod.object({ "patrolId": validation.AnyNumber, "locationId": validation.AnyNumber }),
+        zod.object({
+            "patrolId": zod.optional(validation.AnyNumber),
+            "locationId": zod.optional(validation.AnyNumber)
+        }),
         request.url
     );
     const userCameFrom = request.headers["referer"] || Endpoints.MainMasterPage;
