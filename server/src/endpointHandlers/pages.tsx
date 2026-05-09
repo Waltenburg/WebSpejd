@@ -1,0 +1,378 @@
+import * as elements from 'typed-html';
+import { LocationService, UpdateService, PatrolService } from "../databaseBarrel.js";
+import { Endpoints } from "@webspejd/core/endpoints.js";
+import { Response } from '../response.js';
+import { getPatrolStatusTable } from './patrolStatusHandler.js';
+import { getLocationStatusTable as getLocationStatusTable } from './locationStatusHandler.js';
+import { getPatrolUpdatesTable } from './patrolUpdatesHandler.js';
+import { getLocationConfigTable } from './LocationConfigHandler.js';
+import { getRouteConfigTable } from './RouteConfigHandler.js';
+import { getPatrolConfigTable } from './patrolConfigHandler.js';
+import { anchorToAddPatrolUpdatePage, multiSelectDropdown } from './HTMLGeneral.js';
+import { table as html_RouteTable } from './RouteConfigHandler.js';
+import { SortType } from '../database/locationService.js';
+import { env } from 'process';
+import { Request } from "../request.js";
+import * as zod from "zod";
+import * as validation from "@webspejd/core/validation.js";
+
+// ========================== Endpoint Handler for Pages ==========================
+export const mainMasterPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
+    const [locationStatusRes, patrolStatusRes, patrolUpdatesRes] = await Promise.all([
+        getLocationStatusTable(request, locationService),
+        getPatrolStatusTable(request, locationService, patrolService, updateService),
+        getPatrolUpdatesTable(request, updateService, locationService, patrolService)
+    ]);
+
+    const content = <div id="content">
+        <h1>Status på lokationer</h1>
+        {locationStatusRes.content}
+        <a class="button" href={Endpoints.LocationRouteGraphPage}>Vis lokationsgraf</a>
+        <a class="button" href={Endpoints.LocationRouteConfigPage}>Konfigurer Lokationer og Ruter</a>
+        <h1>Status på patruljer</h1>
+        {patrolStatusRes.content}
+        <a class="button" href={Endpoints.PatrolConfigPage}>Konfigurer Patruljer</a>
+        <h1>Seneste patruljeopdateringer</h1>
+        {anchorToAddPatrolUpdatePage()}<br></br><br></br>
+        {patrolUpdatesRes.content}
+    </div>
+    const html = renderMasterPage("Master Oversigt", content);
+    return Response.ok(html);
+}
+
+export const locatonAndRouteConfigPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
+    const [llocationConfigRes, routeConfigRes] = await Promise.all([
+        getLocationConfigTable(request, locationService),
+        getRouteConfigTable(request, locationService)
+    ]);
+
+    const content = <div id="content">
+        <h1>Konfiguration af lokationer og ruter</h1>
+        <h2>Information til alle lokationer</h2>
+        <p>Her kan du skrive tekst, der vises til alle lokationer.
+            Anvend markdown-format. **Fed**, *kursiv*, # Overskrift</p>
+        <div>
+            <form id="set-mandskab-page-info-form">
+                <textarea name="info" rows={'4'} cols={'50'}>{locationService.getMandskabPageInfo()}</textarea>
+                <input hx-post={Endpoints.SetInfoOnMandskabPage} type="button" value="Opdater info på mandskabssider" class="button button-primary"
+                    hx-include="#set-mandskab-page-info-form"
+                    hx-on--after-request="window.location.reload()">
+                </input>
+            </form>
+        </div>
+        <h2>Lokationer</h2>
+        <a class="button" href={Endpoints.LocationRouteGraphPage}>Åbn lokationsgraf</a><br/>
+        {llocationConfigRes.content}
+        For at en lokation kan slettes, må der ikke være nogle:
+        <ul>
+            <li>Patruljeopdateringer på lokationen</li>
+            <li>Ruter til eller fra lokationen.</li>
+            <li>Kodeord oprettet til lokationen</li>
+        </ul>
+        Lokationen kan altid omdøbes.
+        <h2>Ruter</h2>
+        {routeConfigRes.content}
+        Ruter kan altid slettes eller ændres, også selvom der er patruljer på ruten.
+        <br />
+        Lokationer kan kun tjekke patruljer ud imod de lokationer, der har en åben rute fra den.
+    </div>;
+    const html = renderMasterPage("Master Lokationer og Ruter", content);
+    return Response.ok(html);
+}
+
+export const locationRouteGraphPage = async (_request: Request): Promise<Response> => {
+    const content = <div id="content">
+        <h1>Lokationsgraf</h1>
+        <p>Dobbelklik på en lokation for at åbne lokationssiden. Træk lokationer rundt, så kortet passer til jeres behov.</p>
+        <h2>Sådan læses kortet</h2>
+        <ul>
+            <li>Hver cirkel er en lokation, og hver pil en rute mellem to lokationer.</li>
+            <li>Jo flere patruljer på en lokation, jo større er cirklen. Ligeså med ruter</li>
+            <li>Lokation markeret som stjerne er start-lokationen.</li>
+            <li>Kantens farve på en lokation indikerer om lokationen er åben eller lukket. Grøn: åben, grå: lukket.</li>
+            <li>Fyldets farve på en lokation indikerer om der er patruljer checket ind på lokationen. Grøn: ingen patruljer, grå: en eller flere patruljer.</li>
+            <li>Stiplet pil betyder, at ruten ikke er oprettet som rute (men patruljer kan stadig være på den).</li>
+            <li>Grøn pil betyder, at ruten er åben, mens orange pil betyder, at ruten er lukket.</li>
+        </ul>
+        <div id="location-route-graph-status"></div>
+        <div id="location-route-graph" style="height: 72vh; border: 1px solid #d1d5db;"></div>
+    </div>;
+
+    const script = `
+        <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+        <script src="/js/master/locationRouteGraph.js" type="module"></script>
+    `;
+
+    const html = renderMasterPage("Lokationsgraf", content, script);
+    return Response.ok(html);
+}
+
+export const patrolConfigPage = async (request: Request, patrolService: PatrolService): Promise<Response> => {
+    const patrolConfigRes = await getPatrolConfigTable(request, patrolService);
+
+    const content = <div id="content">
+        <h1>Konfiguration af patruljer</h1>
+        {patrolConfigRes.content}
+        For at en patrulje kan slettes, skal alle patruljens check ind og ud slettes først.
+    </div>;
+    const html = renderMasterPage("Master Patruljer", content);
+    return Response.ok(html);
+}
+
+export const patrolPage = async (request: Request, patrolService: PatrolService, locationService: LocationService, updateService: UpdateService): Promise<Response> => {
+    const { patrolId } = validation.parseUrlParams(zod.object({ "patrolId": validation.AnyNumber }), request.url);
+    if (Number.isNaN(patrolId)) {
+        return Response.badRequest("Invalid patrol id");
+    }
+    const patrol = patrolService.patrolInfo(patrolId);
+    if (!patrol) {
+        return Response.notFound("Patrol not found");
+    }
+
+    const content = <div id="content">
+        <h1>Patrulje #{patrol.number} {patrol.name}</h1>
+        <span class={`status-badge  ${patrol.udgået ? "status-out" : "status-active"}`}>
+            {patrol.udgået ? "Udgået" : "På løbet"}
+        </span>
+        <div class="button-group">
+            {anchorToAddPatrolUpdatePage(patrol.id)}
+            <button hx-post={Endpoints.ChangePatrolStatus} class="button button-secondary"
+                hx-vals={JSON.stringify({ patrolId: patrol.id, udgået: !patrol.udgået })}
+                hx-swap="none"
+                hx-on--after-request={`window.location.replace('${Endpoints.MasterPatrolPage}?patrolId=${patrol.id}')`}>
+                {patrol.udgået ? "Genindgå" : "Udgå"}
+            </button>
+
+        </div>
+        <h2>Patruljeopdateringer</h2>
+        <div>
+            {await getPatrolUpdatesTable(request, updateService, locationService, patrolService).then(res => res.content)}
+        </div>
+    </div>
+
+    const html = renderMasterPage(`Patrulje #${patrol.number} ${patrol.name}`, content);
+    return Response.ok(html);
+}
+
+export const addPatrolUpdatePage = async (request: Request, patrolService: PatrolService, locationService: LocationService): Promise<Response> => {
+    const { patrolId, locationId } = validation.parseUrlParams(
+        zod.object({
+            "patrolId": zod.optional(validation.AnyNumber),
+            "locationId": zod.optional(validation.AnyNumber)
+        }),
+        request.url
+    );
+    const userCameFrom = request.headers["referer"] || Endpoints.MainMasterPage;
+
+    const patrolOptions = patrolService.allPatrolIds().map(id => {
+        const patrol = patrolService.patrolInfo(id);
+        const patrolStr = `#${patrol.number} ${patrol.name}`;
+        if (patrol.id === patrolId) {
+            // @ts-expect-error
+            return <option value={patrol.id.toString()} selected>{patrolStr}</option>;
+        }
+        return <option value={patrol.id.toString()}>{patrolStr}</option>;
+    });
+
+    const locationOptions = locationService.allLocations(SortType.TOPOLOGICAL).map(location => {
+        if (location.id === locationId) {
+            // @ts-expect-error
+            return <option value={location.id.toString()} selected>{location.name}</option>
+        }
+        return <option value={location.id.toString()}>{location.name}
+        </option>;
+    });
+
+    const content = <div id="content">
+        <h1>Tilføj Patruljeopdatering</h1>
+        <form id="add-patrol-update-form">
+            <div>
+                <label>Patruljer:</label>
+                {multiSelectDropdown({
+                    id: "patrol-select",
+                    name: 'patrolIds',
+                    options: patrolService.allPatrolIds().map(id => {
+                        const patrol = patrolService.patrolInfo(id);
+                        return {
+                            value: patrol.id.toString(),
+                            label: `#${patrol.number} ${patrol.name}`
+                        }
+                    }),
+                    placeholder: "Vælg patruljer..."
+                })}
+
+            </div>
+            <div>
+                <label>Type:</label>
+                {/* @ts-ignore */}
+                <select name="type" onchange="toggle(this.value)">
+                    <option value="checkin">Check ind</option>
+                    <option value="checkout">Check ud</option>
+                </select>
+            </div>
+
+            <div id="singleLocation">
+                <label>Check patrulje ind på:</label>
+                <select name="singleLocation">{locationOptions}</select>
+            </div>
+
+            <div id="fromLocation">
+                <label>Check patrulje ud fra:</label>
+                <select name="fromLocation">{locationOptions}</select>
+            </div>
+
+            <div id="toLocation">
+                <label>Og imod:</label>
+                <select name="toLocation">{locationOptions}</select>
+            </div>
+
+            <div>
+                <label>Dato:</label>
+                <input id="date_local" type="date" name="date_local" required="true"
+                        hx-trigger="load" hx-target="this"
+                        hx-on="htmx:load: this" />
+            </div>
+            <div>
+                <label>Tidspunkt:</label>
+                <input id="time_local" type="time" name="time_local" required="true" />
+            </div>
+
+            <input hx-post={Endpoints.AddPatrolUpdate} type="button" value="Tilføj Opdatering" class="button button-primary"
+                hx-include="#add-patrol-update-form"
+                hx-on--after-request="afterRequestHandler(event)"
+                hx-on--config-request="
+                    const dateLocal = document.getElementById('date_local').value;
+                    const timeLocal = document.getElementById('time_local').value;
+                    const localDateTime = new Date(dateLocal + 'T' + timeLocal);
+                    event.detail.parameters['datetime'] = localDateTime.toISOString();
+                ">
+            </input>
+            <a href={userCameFrom} class="button button-secondary">Annuller</a>
+        </form>
+    </div>
+
+    const script = `<script>
+        function toggle(type) {
+            document.getElementById('singleLocation').style.display = type === 'checkout' ? 'none' : 'block';
+            document.getElementById('fromLocation').style.display = type === 'checkin' ? 'none' : 'block';
+            document.getElementById('toLocation').style.display = type === 'checkin' ? 'none' : 'block';
+        }
+        function afterRequestHandler(evt) {
+            console.log(evt);
+            if (evt.detail.successful) {
+                window.showDialog('Patruljeopdatering tilføjet succesfuldt.', ['OK', () => window.location.replace('${userCameFrom}')]);
+            }else {
+                window.showDialog('Der opstod en fejl ved tilføjelse af patruljeopdatering.', ['OK', () => {}]);
+            }
+        }
+        toggle('checkin');
+
+        const now = new Date();
+        const date = now.getFullYear() + "-" + (now.getMonth() + 1).toString().padStart(2, '0') + "-" + now.getDate().toString().padStart(2, '0'); // yyyy-mm-dd
+        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0'); // HH:MM
+        document.getElementById('date_local').value = date;
+        document.getElementById('time_local').value = time;
+    </script>`;
+
+    const html = renderMasterPage("Tilføj Patruljeopdatering", content, script);
+    return Response.ok(html);
+}
+
+export const locationPage = async (request: Request, locationService: LocationService, updateService: UpdateService, patrolService: PatrolService): Promise<Response> => {
+    const { locationId } = validation.parseUrlParams(validation.LocationId, request.url);
+    if (Number.isNaN(locationId)) {
+        return Response.badRequest("Invalid location id");
+    }
+    const location = locationService.locationInfo(locationId);
+
+    const locationIsFirstLocation = locationService.getFirstLocationId() === locationId;
+
+    if (!location) {
+        return Response.notFound("Location not found");
+    }
+
+    const content = <div id="content">
+        <h1>Lokation: {location.name}</h1>
+        <span class={`status-badge  ${location.open ? "status-active" : "status-out"}`}>
+            {location.open ? "Åben" : "Lukket"}
+        </span>
+
+        <span class={`status-badge  ${locationIsFirstLocation ? "status-active" : "status-out"}`}>
+            {locationIsFirstLocation ? "Første Lokation" : "Ikke Første Lokation"}
+        </span>
+
+        <div class="button-group">
+            {anchorToAddPatrolUpdatePage(undefined, location.id)}
+
+            <button hx-post={Endpoints.ChangeLocationStatus} class="button button-secondary"
+                hx-vals={JSON.stringify({ locationId: location.id, open: !location.open })}
+                hx-swap="none"
+                hx-on--after-request={`window.location.replace('${Endpoints.MasterLocationPage}?locationId=${location.id}')`}>
+                {location.open ? "Luk post" : "Åben post"}
+            </button>
+
+            {locationIsFirstLocation ? null : 
+            <button hx-post={Endpoints.MakeLocationFirstLocation} class="button button-secondary"
+                hx-vals={JSON.stringify({ locationId: location.id })}
+                hx-swap="none"
+                hx-on--after-request={`window.location.replace('${Endpoints.MasterLocationPage}?locationId=${location.id}')`}>
+                Gør til første lokation
+            </button>
+            }
+        </div>
+        <h2>Status</h2>
+        {await getLocationStatusTable(request, locationService).then(res => res.content)}
+
+        <h2>Ruter til lokationen</h2>
+        <div class="table-wrapper">
+            {html_RouteTable(locationService, locationService.allRoutesToLocation(location.id), location.id, false, true)}
+        </div>
+
+        <h2>Ruter fra lokationen</h2>
+        <div class="table-wrapper">
+            {html_RouteTable(locationService, locationService.allRoutesFromLocation(location.id), location.id, true, false)}
+        </div>
+
+        <h2>Patruljeopdateringer</h2>
+        <div>
+            {await getPatrolUpdatesTable(request, updateService, locationService, patrolService).then(res => res.content)}
+        </div>
+    </div>;
+
+    const html = renderMasterPage(`Lokation: ${location.name}`, content);
+    return Response.ok(html);
+}
+
+
+// ========================== HTML Generation Functions ==========================
+
+export const patrolsUrl = (patrolId: number): string => {
+    return `${Endpoints.GetPatrolUpdatesTable}?patrolId=${patrolId}`;
+}
+
+const renderMasterPage = (title: string, content: string, script?: string) => `
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title}</title>
+        <script src="/js/master/base.js" type="module"></script>
+        <script src="/js/master/locationPasswords.js" type="module"></script>
+        <script src="/js/dialog.js" type="module"></script>
+        <script src="/js/cookie.js" type="module"></script>
+        <script src="/js/multipleSelectDropdown.js" type="module"></script>
+        <link rel="stylesheet" href="/assets/css/master.css">
+    </head>
+    <body>
+        <div id="header">
+            <span class="brand-title">${env.COMPETITION_NAME + ' ⋅ WebSpejd' || "WebSpejd"}</span>
+            <a href="/" class="header-link" title="Hjem">🏠</a>
+            <a href="/master" class="header-link" title="Master">📊</a>
+        </div>
+        ${content}
+        ${script ?? ""}
+        <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    </body>
+</html>`;

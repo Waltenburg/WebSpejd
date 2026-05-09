@@ -1,46 +1,21 @@
 {
-    "name": "webspejd",
-    "version": "2024-12-10",
+    "name": "@webspejd",
+    "version": "2026-05-08",
+    "license": "MIT",
+    "private": true,
+    "workspaces": [
+        "core",
+        "server",
+        "client"
+    ],
     "devDependencies": {
-        "@types/better-sqlite3": "^7.6.13",
-        "@types/chai": "^5.0.1",
-        "@types/mocha": "^10.0.10",
-        "@types/node": "^18.19.130",
-        "@types/nunjucks": "^3.2.6",
-        "chai": "^5.1.2",
-        "htmx.org": "^2.0.8",
-        "source-map-support": "^0.5.21",
-        "ts-node": "^10.9.1",
-        "typescript": "latest"
-    },
-    "dependencies": {
-        "better-sqlite3": "^12.6.0",
-        "commander": "^12.1.0",
-        "marked": "^17.0.3",
-        "nunjucks": "^3.2.4",
-        "rimraf": "^6.0.1",
-        "typed-html": "^3.0.1"
+        "typescript": "^5.0.0"
     },
     "scripts": {
-        "start": "node target/server/server.js",
-        "start:ts": "ts-node src/server/server.ts",
-        "build": "npx tsc --build && cp -r assets target",
-        "build:watch": "npx tsc --build --watch && cp -r assets target",
-        "generateDatabase": "node target/server/database/generateDatabase.js",
-        "generateDatabase:ts": "ts-node src/server/database/generateDatabase.ts",
-        "clean": "rimraf --glob target",
-        "cleanAll": "npm run clean && npm run clean:test",
-        "test": "mocha",
-        "testAfterBuild": "npm run build:test && npm run test",
-        "clean:test": "rimraf --glob test",
-        "build:test": "npm run clean:test && npx tsc --project tsconfig.test.json && cp -r test_data test",
-        "test:watch": "mocha --watch"
-    },
-    "files": [
-        "target/"
-    ],
-    "main": "target/server.js",
-    "bin": {
-        "webspejd": "target/server.js"
+        "start": "node server/target/server.js",
+        "build": "npm run build -w core -w server -w client",
+        "clean": "rm -rf */tsconfig.tsbuildinfo core/target client/target server/target",
+        "build:watch": "npx tsc --build --watch -w core -w server -w client",
+        "generateDatabase": "node server/target/database/generateDatabase.js"
     }
 }

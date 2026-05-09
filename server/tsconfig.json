@@ -1,0 +1,18 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "strict": true,
+        "rootDir": "src",
+        "outDir": "target",
+        "baseUrl": ".",
+        "jsx": "react",
+        "jsxFactory": "elements.createElement",
+        "paths": {
+            "@webspejd/core/*": [ "../core/src/*" ]
+        }
+    },
+    "include": [ "src/*", "src/**/*" ],
+    "references": [
+        { "path": "../core/tsconfig.json" }
+    ]
+}
